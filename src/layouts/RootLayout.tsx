@@ -4,9 +4,11 @@ import TabNavigation from '../components/TabNavigation';
 
 const RootLayout: React.FC = () => {
   return (
-    <div className="relative pb-32">
-      <Outlet />
-      <TabNavigation />
+    <div className="fixed inset-0 overflow-hidden">
+      <div className="relative h-full w-full overflow-hidden">
+        <Outlet />
+        <TabNavigation />
+      </div>
     </div>
   );
 };
