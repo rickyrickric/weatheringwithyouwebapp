@@ -165,9 +165,9 @@ const Forecast: React.FC = () => {
         {/* Main container - Limited height to prevent viewport overflow + padding for nav */}
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 prayer-cleared pb-32">
           {/* SPLIT-HERO GRID LAYOUT: Left (KPI Grid) | Right (Hero Card) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" style={{ maxHeight: '80vh' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* LEFT COLUMN: KPI Grid (2x3) */}
-            <div className="lg:col-span-1 space-y-6 overflow-y-auto max-h-96">
+            <div className="lg:col-span-1 space-y-6">
               <div>
                 <h3 className="text-xl font-bold text-openweather-primary mb-4 uppercase tracking-widest">
                   ⚡ Current Conditions
