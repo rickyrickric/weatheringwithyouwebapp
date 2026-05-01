@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface CurrentConditionsHeroProps {
   temperature: number;
@@ -10,6 +10,10 @@ interface CurrentConditionsHeroProps {
   lastUpdated: Date;
 }
 
+interface TooltipState {
+  [key: string]: boolean;
+}
+
 const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
   temperature,
   condition,
@@ -19,6 +23,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
   location,
   lastUpdated,
 }) => {
+  const [hoveredMetric, setHoveredMetric] = useState<TooltipState>({});
   const getWeatherEmoji = (cond: string) => {
     switch (cond.toLowerCase()) {
       case 'sunny':
@@ -72,7 +77,11 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
           {/* Secondary Metrics - Horizontal Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-white/10">
             {/* Rain Chance */}
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 relative group cursor-help"
+              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, rain: true })}
+              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, rain: false })}
+            >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Rain Chance</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-cyan-400">{rainChance}</span>
@@ -80,14 +89,23 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               </div>
               <div className="w-full bg-white/10 rounded-full h-1.5">
                 <div
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-300"
                   style={{ width: `${rainChance}%` }}
                 />
               </div>
+              {hoveredMetric.rain && (
+                <div className="absolute bottom-full left-0 mb-2 bg-slate-800 border border-white/20 rounded-lg p-2 text-xs text-gray-200 whitespace-nowrap z-10 backdrop-blur">
+                  Probability of rainfall in next 24h
+                </div>
+              )}
             </div>
 
             {/* Humidity */}
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 relative group cursor-help"
+              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, humidity: true })}
+              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, humidity: false })}
+            >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Humidity</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-blue-400">{humidity}</span>
@@ -95,14 +113,23 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               </div>
               <div className="w-full bg-white/10 rounded-full h-1.5">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full"
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full transition-all duration-300"
                   style={{ width: `${humidity}%` }}
                 />
               </div>
+              {hoveredMetric.humidity && (
+                <div className="absolute bottom-full left-0 mb-2 bg-slate-800 border border-white/20 rounded-lg p-2 text-xs text-gray-200 whitespace-nowrap z-10 backdrop-blur">
+                  Water vapor in air mass
+                </div>
+              )}
             </div>
 
             {/* Wind Speed */}
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 relative group cursor-help"
+              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, wind: true })}
+              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, wind: false })}
+            >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Wind Speed</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-purple-400">{windSpeed}</span>
@@ -111,16 +138,30 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               <p className="text-gray-500 text-xs">
                 {windSpeed < 10 ? 'Calm' : windSpeed < 20 ? 'Light' : 'Moderate'}
               </p>
+              {hoveredMetric.wind && (
+                <div className="absolute bottom-full left-0 mb-2 bg-slate-800 border border-white/20 rounded-lg p-2 text-xs text-gray-200 whitespace-nowrap z-10 backdrop-blur">
+                  Surface wind velocity from SW
+                </div>
+              )}
             </div>
 
             {/* Feels Like / UV Index placeholder */}
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 relative group cursor-help"
+              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, feelsLike: true })}
+              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, feelsLike: false })}
+            >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Feels Like</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-orange-400">{temperature - 2}</span>
                 <span className="text-gray-400">°C</span>
               </div>
               <p className="text-gray-500 text-xs">Cooler with wind</p>
+              {hoveredMetric.feelsLike && (
+                <div className="absolute bottom-full left-0 mb-2 bg-slate-800 border border-white/20 rounded-lg p-2 text-xs text-gray-200 whitespace-nowrap z-10 backdrop-blur">
+                  Apparent temperature (wind-adjusted)
+                </div>
+              )}
             </div>
           </div>
         </div>
