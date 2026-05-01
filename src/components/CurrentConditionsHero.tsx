@@ -54,14 +54,14 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
     return (
       <div className="glass-card-light overflow-hidden flex flex-col">
         {/* Header with time */}
-        <div className="flex items-start justify-between p-6 pb-4 border-b border-gray-200">
+        <div className="flex items-start justify-between p-4 pb-3 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <span className="text-6xl">{getWeatherEmoji(condition)}</span>
+            <span className="text-4xl">{getWeatherEmoji(condition)}</span>
             <div>
-              <p className="text-4xl font-bold text-openweather-primary">
+              <p className="text-3xl font-bold text-openweather-primary leading-none">
                 {temperature}°C
               </p>
-              <p className="text-sm text-openweather-textLight capitalize">
+              <p className="text-xs text-openweather-textLight capitalize mt-1">
                 {condition} in {location}
               </p>
             </div>
@@ -69,30 +69,30 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
         </div>
 
         {/* Feels Like prominently displayed */}
-        <div className="px-6 py-4 bg-openweather-primary/5">
-          <p className="text-xs text-openweather-textLight uppercase tracking-widest font-semibold mb-1">
+        <div className="px-4 py-3 bg-openweather-primary/5">
+          <p className="text-[10px] text-openweather-textLight uppercase tracking-widest font-semibold mb-1">
             Feels Like
           </p>
-          <p className="text-3xl font-bold text-openweather-text">
+          <p className="text-2xl font-bold text-openweather-text leading-none">
             {feelsLike}°C
           </p>
         </div>
 
         {/* Quick metrics footer */}
-        <div className="px-6 py-4 grid grid-cols-2 gap-3 border-t border-gray-200">
+        <div className="px-4 py-3 grid grid-cols-2 gap-2 border-t border-gray-200">
           <div>
-            <p className="text-xs text-openweather-textLight uppercase font-semibold">
+            <p className="text-[10px] text-openweather-textLight uppercase font-semibold">
               Rain Probability
             </p>
-            <p className="text-2xl font-bold text-openweather-secondary">
+            <p className="text-xl font-bold text-openweather-secondary leading-none">
               {rainChance}%
             </p>
           </div>
           <div>
-            <p className="text-xs text-openweather-textLight uppercase font-semibold">
+            <p className="text-[10px] text-openweather-textLight uppercase font-semibold">
               Last Updated
             </p>
-            <p className="text-sm font-mono text-openweather-text">
+            <p className="text-xs font-mono text-openweather-text leading-none">
               {lastUpdated.toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',

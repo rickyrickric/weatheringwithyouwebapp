@@ -17,12 +17,12 @@ interface StatTileProps {
 }
 
 const StatTile: React.FC<StatTileProps> = ({ icon, label, value, unit }) => (
-  <div className="glass-card rounded-2xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow duration-300 group" aria-label={`${label}: ${value}${unit ? " " + unit : ""}`}>
-    <div className="flex items-center gap-2 text-openweather-textLight text-xs font-semibold uppercase tracking-widest">
+  <div className="glass-card rounded-2xl p-3 flex flex-col gap-1.5 hover:shadow-md transition-shadow duration-300 group" aria-label={`${label}: ${value}${unit ? " " + unit : ""}`}>
+    <div className="flex items-center gap-2 text-openweather-textLight text-[10px] font-semibold uppercase tracking-widest">
       <span className="text-lg group-hover:scale-110 transition-transform">{icon}</span>
       <span>{label}</span>
     </div>
-    <div className="font-serif text-3xl font-bold text-white">
+    <div className="font-serif text-2xl font-bold text-white leading-none">
       {value}
       {unit && <span className="text-lg font-normal text-openweather-textLight ml-1">{unit}</span>}
     </div>
@@ -38,7 +38,7 @@ const KPIGrid: React.FC<KPIGridProps> = ({
   dewPoint,
 }) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
       <StatTile
         icon="💨"
         label="Wind"

@@ -28,6 +28,7 @@ interface DualAxisChartProps {
   title?: string;
   currentTime?: Date;
   sunshineWindows?: SunshineWindow[];
+  height?: number;
 }
 
 // Default mock data for visualization - using consistent HH:MM format
@@ -45,6 +46,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
   data = DEFAULT_DATA,
   title = 'Temperature & Rain Probability',
   currentTime = new Date(),
+  height = 240,
   sunshineWindows = [
     { startTime: '08:00', endTime: '11:00' },
     { startTime: '14:00', endTime: '16:00' },
@@ -69,10 +71,10 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     return `${hours}:${minutes}`;
   }, [currentTime]);
   return (
-    <div className="w-full glass-card p-6" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }} aria-label="Dual-axis forecast chart showing temperature and rain probability">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-openweather-primary">{title}</h3>
-        <div className="text-sm text-openweather-textLight">
+    <div className="w-full glass-card p-4" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }} aria-label="Dual-axis forecast chart showing temperature and rain probability">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold text-openweather-primary">{title}</h3>
+        <div className="text-xs text-openweather-textLight">
           Now: <span className="font-mono font-semibold text-openweather-primary">{nowLabel}</span>
         </div>
       </div>
@@ -90,8 +92,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           }
         }
       `}</style>
-      <ResponsiveContainer width="100%" height={400}>
-        <ComposedChart data={data} margin={{ top: 20, right: 60, left: 20, bottom: 20 }}>
+      <ResponsiveContainer width="100%" height={height}>
+        <ComposedChart data={data} margin={{ top: 10, right: 36, left: 10, bottom: 10 }}>
           <defs>
             {/* Orange gradient for temperature line - matches OpenWeather primary */}
             <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
@@ -130,7 +132,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           <XAxis
             dataKey="time"
             stroke="rgba(237, 237, 237, 0.5)"
-            style={{ fontSize: '13px', fontWeight: '500', fill: '#999999' }}
+            style={{ fontSize: '11px', fontWeight: '500', fill: '#999999' }}
           />
           <YAxis
             yAxisId="left"
@@ -140,11 +142,11 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: 700,
               fill: '#EB6E4B',
             }}
-            style={{ fontSize: '12px', fontWeight: '700', fill: '#EB6E4B' }}
+            style={{ fontSize: '10px', fontWeight: '700', fill: '#EB6E4B' }}
           />
           <YAxis
             yAxisId="right"
@@ -155,11 +157,11 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: 90,
               position: 'insideRight',
               offset: 10,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: 700,
               fill: '#AEECEF',
             }}
-            style={{ fontSize: '12px', fontWeight: '700', fill: '#AEECEF' }}
+            style={{ fontSize: '10px', fontWeight: '700', fill: '#AEECEF' }}
             domain={[0, 130]}
           />
 
@@ -183,7 +185,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           />
 
           <Legend
-            wrapperStyle={{ paddingTop: '20px', fontSize: '14px', color: '#999999' }}
+            wrapperStyle={{ paddingTop: '10px', fontSize: '12px', color: '#999999' }}
             iconType="line"
           />
 

@@ -26,8 +26,8 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
           gridAutoColumns: 'minmax(72px, 1fr)',
           gap: 0,
           borderTop: '1px solid rgba(237, 237, 237, 0.3)',
-          marginTop: '16px',
-          paddingTop: '12px',
+          marginTop: '8px',
+          paddingTop: '8px',
         }}
         role="list"
       >
@@ -40,8 +40,8 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '6px',
-              padding: '0 6px',
+              gap: '4px',
+              padding: '0 4px',
               borderRight:
                 i < hourlyData.length - 1 ? '1px solid rgba(237, 237, 237, 0.2)' : 'none',
             }}
@@ -50,7 +50,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
             <span
               style={{
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 500,
                 color: '#999999',
                 textAlign: 'center',
@@ -61,13 +61,13 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
             </span>
 
             {/* Rain Icon */}
-            <RainDropIcon intensity={h.rainIntensity} size={18} />
+            <RainDropIcon intensity={h.rainIntensity} size={14} />
 
             {/* Rain % */}
             <span
               style={{
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 600,
                 color: h.rainProbability >= 80 ? '#AEECEF' : '#999999',
               }}
@@ -79,7 +79,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
             <span
               style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: 700,
                 color: '#FFFFFF',
               }}
