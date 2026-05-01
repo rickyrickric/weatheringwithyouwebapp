@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 interface CurrentConditionsHeroProps {
   temperature: number;
@@ -28,6 +28,11 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
   compact = false,
 }) => {
   const [hoveredMetric, setHoveredMetric] = useState<TooltipState>({});
+  
+  // Memoize hover handlers to avoid recreating on every render
+  const handleHoverMetric = useCallback((metric: string, isHovering: boolean) => {
+    setHoveredMetric(prev => ({ ...prev, [metric]: isHovering }));
+  }, []);
   
   const getWeatherEmoji = (cond: string) => {
     switch (cond.toLowerCase()) {
@@ -140,8 +145,8 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             {/* Rain Chance */}
             <div 
               className="space-y-2 relative group cursor-help"
-              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, rain: true })}
-              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, rain: false })}
+              onMouseEnter={() => handleHoverMetric('rain', true)}
+              onMouseLeave={() => handleHoverMetric('rain', false)}
             >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Rain Probability</p>
               <div className="flex items-baseline gap-1">
@@ -164,8 +169,8 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             {/* Humidity */}
             <div 
               className="space-y-2 relative group cursor-help"
-              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, humidity: true })}
-              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, humidity: false })}
+              onMouseEnter={() => handleHoverMetric('humidity', true)}
+              onMouseLeave={() => handleHoverMetric('humidity', false)}
             >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Humidity</p>
               <div className="flex items-baseline gap-1">
@@ -188,8 +193,8 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             {/* Wind Speed */}
             <div 
               className="space-y-2 relative group cursor-help"
-              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, wind: true })}
-              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, wind: false })}
+              onMouseEnter={() => handleHoverMetric('wind', true)}
+              onMouseLeave={() => handleHoverMetric('wind', false)}
             >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Wind Speed</p>
               <div className="flex items-baseline gap-1">
@@ -209,8 +214,8 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             {/* Feels Like */}
             <div 
               className="space-y-2 relative group cursor-help"
-              onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, feelsLike: true })}
-              onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, feelsLike: false })}
+              onMouseEnter={() => handleHoverMetric('feelsLike', true)}
+              onMouseLeave={() => handleHoverMetric('feelsLike', false)}
             >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Feels Like</p>
               <div className="flex items-baseline gap-1">

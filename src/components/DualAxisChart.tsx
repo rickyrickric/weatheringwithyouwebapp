@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   ComposedChart,
   Line,
@@ -50,6 +50,18 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     { startTime: '14:00', endTime: '16:00' },
   ],
 }) => {
+  // Check if user prefers reduced motion (memoized)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
   // Format current time as HH:MM for chart reference
   const nowLabel = useMemo(() => {
     const hours = String(currentTime.getHours()).padStart(2, '0');
@@ -164,7 +176,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             cursor={{ stroke: 'rgba(235, 110, 75, 0.3)', strokeWidth: 2 }}
             formatter={(value: any) => {
               if (typeof value === 'number') {
-                return [value.toFixed(1), ''];
+                return value.toFixed(1);
               }
               return value;
             }}
@@ -199,7 +211,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             fill="url(#rainGradient)"
             stroke="none"
             name="Rain (%)"
-            isAnimationActive={!useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])}
+            isAnimationActive={!prefersReducedMotion}
             animationDuration={800}
           />
 
@@ -213,7 +225,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             dot={{ fill: '#FB923C', r: 5, opacity: 0.8 }}
             activeDot={{ r: 7, fill: '#EB6E4B', opacity: 1 }}
             name="Temperature (°C)"
-            isAnimationActive={!useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])}
+            isAnimationActive={!prefersReducedMotion}
             animationDuration={800}
           />
         </ComposedChart>

@@ -77,7 +77,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         {/* Raindrop effects for high rain probability */}
         {rainProbability > 50 && (
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-            {[...Array(20)].map((_, i) => (
+            {Array.from({ length: 20 }).map((_, i) => (
               <div
                 key={`drop-${i}`}
                 className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-300 to-cyan-400/0 rounded-full"
@@ -96,7 +96,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         {/* Particle effects */}
         {rainProbability > 30 && (
           <div className="absolute inset-0 opacity-20 pointer-events-none">
-            {[...Array(8)].map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={`particle-${i}`}
                 className="absolute w-1 h-1 bg-white/40 rounded-full blur-sm"

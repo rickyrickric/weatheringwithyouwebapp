@@ -19,6 +19,18 @@ interface DayPickerProps {
 const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }) => {
   const [selected, setSelected] = useState<number>(0);
 
+  // Sync local state with selectedDate prop from parent
+  React.useEffect(() => {
+    if (selectedDate) {
+      const index = days.findIndex(d => 
+        d.date.getDate() === selectedDate.getDate() &&
+        d.date.getMonth() === selectedDate.getMonth() &&
+        d.date.getFullYear() === selectedDate.getFullYear()
+      );
+      if (index >= 0) setSelected(index);
+    }
+  }, [selectedDate, days]);
+
   const handleDayClick = (index: number, date: Date) => {
     setSelected(index);
     if (onDaySelect) {
