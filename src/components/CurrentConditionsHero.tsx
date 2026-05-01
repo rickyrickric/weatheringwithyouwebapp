@@ -8,6 +8,8 @@ interface CurrentConditionsHeroProps {
   windSpeed: number;
   location: string;
   lastUpdated: Date;
+  feelsLike?: number;
+  compact?: boolean; // For Split-Hero Grid layout
 }
 
 interface TooltipState {
@@ -22,8 +24,11 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
   windSpeed,
   location,
   lastUpdated,
+  feelsLike = 26,
+  compact = false,
 }) => {
   const [hoveredMetric, setHoveredMetric] = useState<TooltipState>({});
+  
   const getWeatherEmoji = (cond: string) => {
     switch (cond.toLowerCase()) {
       case 'sunny':
@@ -39,6 +44,62 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
     }
   };
 
+  if (compact) {
+    // Split-Hero Grid: Right-side hero card (compact, light theme)
+    return (
+      <div className="glass-card-light overflow-hidden flex flex-col">
+        {/* Header with time */}
+        <div className="flex items-start justify-between p-6 pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <span className="text-6xl">{getWeatherEmoji(condition)}</span>
+            <div>
+              <p className="text-4xl font-bold text-openweather-primary">
+                {temperature}°C
+              </p>
+              <p className="text-sm text-openweather-textLight capitalize">
+                {condition} in {location}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Feels Like prominently displayed */}
+        <div className="px-6 py-4 bg-openweather-primary/5">
+          <p className="text-xs text-openweather-textLight uppercase tracking-widest font-semibold mb-1">
+            Feels Like
+          </p>
+          <p className="text-3xl font-bold text-openweather-text">
+            {feelsLike}°C
+          </p>
+        </div>
+
+        {/* Quick metrics footer */}
+        <div className="px-6 py-4 grid grid-cols-2 gap-3 border-t border-gray-200">
+          <div>
+            <p className="text-xs text-openweather-textLight uppercase font-semibold">
+              Rain Probability
+            </p>
+            <p className="text-2xl font-bold text-openweather-secondary">
+              {rainChance}%
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-openweather-textLight uppercase font-semibold">
+              Last Updated
+            </p>
+            <p className="text-sm font-mono text-openweather-text">
+              {lastUpdated.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Original immersive layout (for backwards compatibility)
   return (
     <div className="relative w-full mb-8">
       {/* Immersive Hero Background */}
@@ -82,7 +143,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, rain: true })}
               onMouseLeave={() => setHoveredMetric({ ...hoveredMetric, rain: false })}
             >
-              <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Rain Chance</p>
+              <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Rain Probability</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-cyan-400">{rainChance}</span>
                 <span className="text-gray-400">%</span>
@@ -145,7 +206,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               )}
             </div>
 
-            {/* Feels Like / UV Index placeholder */}
+            {/* Feels Like */}
             <div 
               className="space-y-2 relative group cursor-help"
               onMouseEnter={() => setHoveredMetric({ ...hoveredMetric, feelsLike: true })}
@@ -153,7 +214,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             >
               <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">Feels Like</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-orange-400">{temperature - 2}</span>
+                <span className="text-3xl font-bold text-orange-400">{feelsLike}</span>
                 <span className="text-gray-400">°C</span>
               </div>
               <p className="text-gray-500 text-xs">Cooler with wind</p>

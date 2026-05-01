@@ -56,36 +56,41 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     return `${hours}:${minutes}`;
   }, [currentTime]);
   return (
-    <div className="w-full">
-      <h3 className="text-white font-semibold mb-2">{title}</h3>
-      <div className="text-xs text-gray-500 mb-4">Current time: {nowLabel}</div>
+    <div className="w-full glass-card-light p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-bold text-openweather-primary">{title}</h3>
+        <div className="text-sm text-openweather-textLight">
+          Now: <span className="font-mono font-semibold text-openweather-primary">{nowLabel}</span>
+        </div>
+      </div>
+      
       <style>{`
         @keyframes glowPulse {
           0% {
-            filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.4));
+            filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
           }
           50% {
-            filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+            filter: drop-shadow(0 0 12px rgba(235, 110, 75, 0.8));
           }
           100% {
-            filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.4));
+            filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
           }
         }
       `}</style>
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={data} margin={{ top: 20, right: 60, left: 20, bottom: 20 }}>
           <defs>
-            {/* Softer, mist-like gradient for temperature line */}
+            {/* Orange gradient for temperature line - matches OpenWeather primary */}
             <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f97316" stopOpacity={0.6} />
-              <stop offset="50%" stopColor="#f97316" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#f97316" stopOpacity={0.1} />
+              <stop offset="0%" stopColor="#EB6E4B" stopOpacity={0.6} />
+              <stop offset="50%" stopColor="#EB6E4B" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="#EB6E4B" stopOpacity={0.1} />
             </linearGradient>
-            {/* Softer, misty gradient for rain bars */}
+            {/* Pale cyan gradient for rain bars - matches OpenWeather secondary */}
             <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.5} />
-              <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.15} />
+              <stop offset="0%" stopColor="#AEECEF" stopOpacity={0.7} />
+              <stop offset="50%" stopColor="#AEECEF" stopOpacity={0.5} />
+              <stop offset="100%" stopColor="#AEECEF" stopOpacity={0.2} />
             </linearGradient>
             {/* Glow filter for "Now" line */}
             <filter id="glowNow">
@@ -107,52 +112,53 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             />
           ))}
 
-          {/* Minimal axes without grid */}
+          {/* Minimal axes with OpenWeather color coding */}
           <XAxis
             dataKey="time"
-            stroke="rgba(156, 163, 175, 0.3)"
-            style={{ fontSize: '13px', fontWeight: '500', fill: 'rgba(156, 163, 175, 0.6)' }}
+            stroke="rgba(237, 237, 237, 0.5)"
+            style={{ fontSize: '13px', fontWeight: '500', fill: '#999999' }}
           />
           <YAxis
             yAxisId="left"
-            stroke="rgba(249, 115, 22, 0.4)"
+            stroke="rgba(235, 110, 75, 0.3)"
             label={{
-              value: '°C',
+              value: '°C (Temperature)',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
               fontSize: 13,
-              fontWeight: 600,
-              fill: '#f97316',
+              fontWeight: 700,
+              fill: '#EB6E4B',
             }}
-            style={{ fontSize: '12px', fontWeight: '600', fill: '#f97316' }}
+            style={{ fontSize: '12px', fontWeight: '700', fill: '#EB6E4B' }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="rgba(6, 182, 212, 0.4)"
+            stroke="rgba(174, 236, 239, 0.3)"
             label={{
-              value: '%',
+              value: '% (Rain Probability)',
               angle: 90,
               position: 'insideRight',
               offset: 10,
               fontSize: 13,
-              fontWeight: 600,
-              fill: '#06b6d4',
+              fontWeight: 700,
+              fill: '#AEECEF',
             }}
-            style={{ fontSize: '12px', fontWeight: '600', fill: '#06b6d4' }}
+            style={{ fontSize: '12px', fontWeight: '700', fill: '#AEECEF' }}
           />
 
-          {/* Enhanced tooltip with softer styling */}
+          {/* Enhanced tooltip with light theme */}
           <Tooltip
             contentStyle={{
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid rgba(237, 237, 237, 0.8)',
               borderRadius: '12px',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
               backdropFilter: 'blur(8px)',
+              color: '#48484A',
             }}
-            cursor={{ stroke: 'rgba(168, 85, 247, 0.2)', strokeWidth: 2 }}
+            cursor={{ stroke: 'rgba(235, 110, 75, 0.3)', strokeWidth: 2 }}
             formatter={(value: any) => {
               if (typeof value === 'number') {
                 return [value.toFixed(1), ''];
@@ -162,20 +168,20 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           />
 
           <Legend
-            wrapperStyle={{ paddingTop: '20px', fontSize: '14px', color: 'rgba(156, 163, 175, 0.8)' }}
+            wrapperStyle={{ paddingTop: '20px', fontSize: '14px', color: '#999999' }}
             iconType="line"
           />
 
           {/* "NOW" Reference Line - Enhanced glowing vertical line with pulse */}
           <ReferenceLine
             x={nowLabel}
-            stroke="#f97316"
+            stroke="#EB6E4B"
             strokeWidth={3}
             strokeDasharray="6,3"
             label={{
               value: `NOW (${nowLabel})`,
               position: 'top',
-              fill: '#f97316',
+              fill: '#EB6E4B',
               fontSize: 12,
               fontWeight: 700,
               offset: 8,
@@ -187,10 +193,10 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             yAxisId="left"
             type="natural"
             dataKey="temperature"
-            stroke="#f97316"
+            stroke="#EB6E4B"
             strokeWidth={3}
-            dot={{ fill: '#fb923c', r: 5, opacity: 0.8 }}
-            activeDot={{ r: 7, fill: '#f97316', opacity: 1 }}
+            dot={{ fill: '#FB923C', r: 5, opacity: 0.8 }}
+            activeDot={{ r: 7, fill: '#EB6E4B', opacity: 1 }}
             name="Temperature (°C)"
             isAnimationActive={true}
             animationDuration={800}
@@ -202,7 +208,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             dataKey="rainProbability"
             fill="url(#rainGradient)"
             name="Rain Probability (%)"
-            opacity={0.7}
+            opacity={0.85}
             radius={[8, 8, 0, 0]}
             animationDuration={800}
           />

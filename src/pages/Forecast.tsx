@@ -5,6 +5,7 @@ import DynamicBackground from '../components/DynamicBackground';
 import DateAnchor from '../components/DateAnchor';
 import CurrentConditionsHero from '../components/CurrentConditionsHero';
 import DayPicker from '../components/DayPicker';
+import KPIGrid from '../components/KPIGrid';
 
 interface ChartDataPoint {
   time: string;
@@ -141,27 +142,51 @@ const Forecast: React.FC = () => {
 
         {/* Main container */}
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 prayer-cleared">
-          {/* IMMERSIVE HERO SECTION - Large Glass Card */}
-          <CurrentConditionsHero
-            temperature={currentTemp}
-            condition="Sunny"
-            rainChance={currentRain}
-            humidity={currentHumidity}
-            windSpeed={currentWindSpeed}
-            location="Tagum City"
-            lastUpdated={lastUpdated}
-          />
+          {/* SPLIT-HERO GRID LAYOUT: Left (KPI Grid) | Right (Hero Card) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* LEFT COLUMN: KPI Grid (2x3) */}
+            <div className="lg:col-span-1 space-y-6">
+              <div>
+                <h3 className="text-xl font-bold text-openweather-primary mb-4 uppercase tracking-widest">
+                  ⚡ Current Conditions
+                </h3>
+                <KPIGrid
+                  windSpeed={currentWindSpeed}
+                  humidity={currentHumidity}
+                  visibility={10}
+                  pressure={101325}
+                  uvIndex={6}
+                  dewPoint={20}
+                />
+              </div>
 
-          {/* HORIZONTAL 7-DAY NAVIGATOR */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400">
-              📅 7-Day Forecast
-            </h2>
-            <DayPicker
-              days={sevenDayForecast}
-              selectedDate={selectedDay}
-              onDaySelect={setSelectedDay}
-            />
+              {/* 7-Day Picker below KPI Grid */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-openweather-primary uppercase tracking-widest">
+                  📅 This Week
+                </h3>
+                <DayPicker
+                  days={sevenDayForecast}
+                  selectedDate={selectedDay}
+                  onDaySelect={setSelectedDay}
+                />
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Hero Card (Compact) */}
+            <div className="lg:col-span-2">
+              <CurrentConditionsHero
+                temperature={currentTemp}
+                condition="Sunny"
+                rainChance={currentRain}
+                humidity={currentHumidity}
+                windSpeed={currentWindSpeed}
+                location="Tagum City"
+                lastUpdated={lastUpdated}
+                feelsLike={26}
+                compact={true}
+              />
+            </div>
           </div>
 
           {/* Optimal Weather Windows - Top Priority */}
