@@ -2,10 +2,9 @@ import React from 'react';
 
 interface DateAnchorProps {
   date: Date;
-  location?: string;
 }
 
-const DateAnchor: React.FC<DateAnchorProps> = ({ date, location = 'Tagum City' }) => {
+const DateAnchor: React.FC<DateAnchorProps> = ({ date }) => {
   const formatter = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'long',
@@ -16,8 +15,8 @@ const DateAnchor: React.FC<DateAnchorProps> = ({ date, location = 'Tagum City' }
   const formattedDate = formatter.format(date);
 
   return (
-    <p className="text-sm text-amber-600/90 font-semibold tracking-wide">
-      Forecast for {formattedDate} — {location}
+    <p className="text-base md:text-lg text-amber-400 font-bold tracking-wider drop-shadow-lg">
+      📅 {formattedDate}
     </p>
   );
 };

@@ -54,7 +54,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
           {/* Main Temperature Display */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
             <div className="flex items-start gap-6">
-              <div className="text-8xl md:text-9xl filter drop-shadow-lg opacity-90">
+              <div className="text-8xl md:text-9xl filter drop-shadow-lg opacity-80 hover:opacity-100 transition-opacity" style={{ textShadow: '0 0 12px rgba(249, 115, 22, 0.3), 0 0 4px rgba(249, 115, 22, 0.2)' }}>
                 {getWeatherEmoji(condition)}
               </div>
               <div className="flex flex-col justify-center">

@@ -29,7 +29,7 @@ interface DualAxisChartProps {
   sunshineWindows?: SunshineWindow[];
 }
 
-// Default mock data for visualization
+// Default mock data for visualization - using consistent HH:MM format
 const DEFAULT_DATA: ChartDataPoint[] = [
   { time: '00:00', temperature: 23, rainProbability: 10 },
   { time: '04:00', temperature: 21, rainProbability: 15 },
@@ -37,7 +37,7 @@ const DEFAULT_DATA: ChartDataPoint[] = [
   { time: '12:00', temperature: 31, rainProbability: 20 },
   { time: '16:00', temperature: 29, rainProbability: 25 },
   { time: '20:00', temperature: 26, rainProbability: 40 },
-  { time: 'Midnight', temperature: 24, rainProbability: 35 },
+  { time: '23:00', temperature: 24, rainProbability: 35 },
 ];
 
 const DualAxisChart: React.FC<DualAxisChartProps> = ({
@@ -166,19 +166,19 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             iconType="line"
           />
 
-          {/* "NOW" Reference Line - Glowing vertical line with pulse */}
+          {/* "NOW" Reference Line - Enhanced glowing vertical line with pulse */}
           <ReferenceLine
             x={nowLabel}
             stroke="#f97316"
-            strokeWidth={2.5}
-            strokeDasharray="5,5"
+            strokeWidth={3}
+            strokeDasharray="6,3"
             label={{
-              value: 'NOW',
+              value: `NOW (${nowLabel})`,
               position: 'top',
               fill: '#f97316',
-              fontSize: 11,
-              fontWeight: 600,
-              offset: 5,
+              fontSize: 12,
+              fontWeight: 700,
+              offset: 8,
             }}
           />
 

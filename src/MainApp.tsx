@@ -174,7 +174,7 @@ const MainApp: React.FC = () => {
               {/* Detailed Chart */}
               <section className="space-y-4">
                 <Header title="📊 24-Hour Forecast" subtitle="Temperature & Rain Probability" />
-                <DateAnchor date={currentDate} location="Tagum City" />
+                <DateAnchor date={currentDate} />
                 <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-6">
                   <DualAxisChart 
                     currentTime={currentDate}
