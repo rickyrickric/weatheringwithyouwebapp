@@ -21,5 +21,13 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addComponents }) {
+      addComponents({
+        '.glass-card': {
+          '@apply bg-white/5 border border-white/10 backdrop-blur rounded-2xl': {},
+        },
+      });
+    },
+  ],
 }

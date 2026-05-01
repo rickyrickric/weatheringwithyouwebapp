@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import DualAxisChart from '../components/DualAxisChart';
 import SunshineWindow from '../components/SunshineWindow';
-import StatCard from '../components/StatCard';
 import DynamicBackground from '../components/DynamicBackground';
 import DateAnchor from '../components/DateAnchor';
+import CurrentConditionsHero from '../components/CurrentConditionsHero';
+import DayPicker from '../components/DayPicker';
 
 interface ChartDataPoint {
   time: string;
@@ -16,8 +17,22 @@ const Forecast: React.FC = () => {
   const [isOptimalWindow, setIsOptimalWindow] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [forecastDate] = useState<Date>(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const currentTemp = 28;
   const currentRain = 35;
+  const currentHumidity = 72;
+  const currentWindSpeed = 12;
+
+  // 7-day forecast data for horizontal picker
+  const sevenDayForecast = [
+    { date: new Date(), day: 'Friday', high: 31, low: 24, condition: 'Sunny', icon: '☀️', rainChance: 5 },
+    { date: new Date(Date.now() + 86400000), day: 'Saturday', high: 29, low: 23, condition: 'Cloudy', icon: '☁️', rainChance: 25 },
+    { date: new Date(Date.now() + 172800000), day: 'Sunday', high: 27, low: 22, condition: 'Rainy', icon: '🌧️', rainChance: 65 },
+    { date: new Date(Date.now() + 259200000), day: 'Monday', high: 28, low: 21, condition: 'Cloudy', icon: '☁️', rainChance: 40 },
+    { date: new Date(Date.now() + 345600000), day: 'Tuesday', high: 30, low: 24, condition: 'Sunny', icon: '☀️', rainChance: 10 },
+    { date: new Date(Date.now() + 432000000), day: 'Wednesday', high: 32, low: 25, condition: 'Sunny', icon: '☀️', rainChance: 5 },
+    { date: new Date(Date.now() + 518400000), day: 'Thursday', high: 28, low: 23, condition: 'Rainy', icon: '🌧️', rainChance: 55 },
+  ];
 
   // Dynamic greeting based on time of day
   const getGreeting = (date: Date) => {
@@ -122,36 +137,27 @@ const Forecast: React.FC = () => {
         </div>
 
         {/* Main container */}
-        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 prayer-cleared">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StatCard
-              label="Temperature"
-              value={currentTemp}
-              unit="°C"
-              icon="🌡️"
-              trend="up"
-            />
-            <StatCard
-              label="Rain Chance"
-              value={currentRain}
-              unit="%"
-              icon="🌧️"
-              trend="up"
-            />
-            <StatCard
-              label="Humidity"
-              value={72}
-              unit="%"
-              icon="💧"
-              trend="stable"
-            />
-            <StatCard
-              label="Wind Speed"
-              value={12}
-              unit="km/h"
-              icon="💨"
-              trend="down"
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 prayer-cleared">
+          {/* IMMERSIVE HERO SECTION - Large Glass Card */}
+          <CurrentConditionsHero
+            temperature={currentTemp}
+            condition="Sunny"
+            rainChance={currentRain}
+            humidity={currentHumidity}
+            windSpeed={currentWindSpeed}
+            location="Tagum City"
+            lastUpdated={lastUpdated}
+          />
+
+          {/* HORIZONTAL 7-DAY NAVIGATOR */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400">
+              📅 7-Day Forecast
+            </h2>
+            <DayPicker
+              days={sevenDayForecast}
+              selectedDate={selectedDay}
+              onDaySelect={setSelectedDay}
             />
           </div>
 
@@ -192,7 +198,7 @@ const Forecast: React.FC = () => {
           {/* Master Chart - Deep Dive */}
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400">
-              📊 Detailed Forecast
+              📊 Detailed Forecast — 24hr Timeline
             </h2>
             <p className="text-gray-400 text-sm">Temperature trends and rain probability throughout the day</p>
             <DualAxisChart
