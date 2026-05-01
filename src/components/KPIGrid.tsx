@@ -9,31 +9,22 @@ interface KPIGridProps {
   dewPoint: number;
 }
 
-interface KPITileProps {
+interface StatTileProps {
+  icon: string;
   label: string;
   value: string | number;
-  unit: string;
-  icon: string;
-  color: string;
+  unit?: string;
 }
 
-const KPITile: React.FC<KPITileProps> = ({ label, value, unit, icon, color }) => (
-  <div className="kpi-tile group">
-    <div className="flex items-start justify-between mb-3">
-      <p className="text-openweather-textLight text-xs font-semibold uppercase tracking-widest">
-        {label}
-      </p>
-      <span className="text-2xl">{icon}</span>
+const StatTile: React.FC<StatTileProps> = ({ icon, label, value, unit }) => (
+  <div className="bg-openweather-card border border-openweather-border rounded-2xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow duration-300 group">
+    <div className="flex items-center gap-2 text-openweather-textLight text-xs font-semibold uppercase tracking-widest">
+      <span className="text-lg group-hover:scale-110 transition-transform">{icon}</span>
+      <span>{label}</span>
     </div>
-    <div className="flex items-baseline gap-1">
-      <span className={`text-3xl font-bold ${color}`}>{value}</span>
-      <span className="text-openweather-textLight text-sm">{unit}</span>
-    </div>
-    <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
-      <div
-        className={`h-full ${color} opacity-60 rounded-full`}
-        style={{ width: `${Math.min(Number(value), 100)}%` }}
-      />
+    <div className="font-serif text-3xl font-bold text-openweather-text">
+      {value}
+      {unit && <span className="text-lg font-normal text-openweather-textLight ml-1">{unit}</span>}
     </div>
   </div>
 );
@@ -47,51 +38,42 @@ const KPIGrid: React.FC<KPIGridProps> = ({
   dewPoint,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Top Row */}
-      <KPITile
-        label="Wind Speed"
-        value={windSpeed}
-        unit="km/h"
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <StatTile
         icon="💨"
-        color="text-blue-600"
+        label="Wind"
+        value={windSpeed}
+        unit="m/s"
       />
-      <KPITile
+      <StatTile
+        icon="💧"
         label="Humidity"
         value={humidity}
         unit="%"
-        icon="💧"
-        color="text-cyan-600"
       />
-      <KPITile
+      <StatTile
+        icon="👁️"
         label="Visibility"
         value={visibility}
         unit="km"
-        icon="👁️"
-        color="text-purple-600"
       />
-
-      {/* Bottom Row */}
-      <KPITile
+      <StatTile
+        icon="🌡️"
         label="Pressure"
-        value={(pressure / 100).toFixed(1)}
-        unit="mb"
-        icon="🔻"
-        color="text-indigo-600"
+        value={(pressure / 100).toFixed(0)}
+        unit="hPa"
       />
-      <KPITile
+      <StatTile
+        icon="☀️"
         label="UV Index"
         value={uvIndex}
-        unit="☀️"
-        icon="🛡️"
-        color="text-openweather-primary"
+        unit="UV"
       />
-      <KPITile
+      <StatTile
+        icon="❄️"
         label="Dew Point"
         value={dewPoint}
         unit="°C"
-        icon="❄️"
-        color="text-teal-600"
       />
     </div>
   );
