@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DualAxisChart from '../components/DualAxisChart';
-import SunshineWindow from '../components/SunshineWindow';
+import HourlyForecastStrip from '../components/HourlyForecastStrip';
 import DynamicBackground from '../components/DynamicBackground';
 import DateAnchor from '../components/DateAnchor';
 import CurrentConditionsHero from '../components/CurrentConditionsHero';
@@ -13,8 +13,16 @@ interface ChartDataPoint {
   rainProbability: number;
 }
 
+interface HourlyData {
+  time: string;
+  temperature: number;
+  rainProbability: number;
+  rainIntensity: 'none' | 'tiny' | 'light' | 'heavy';
+}
+
 const Forecast: React.FC = () => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [isOptimalWindow, setIsOptimalWindow] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [forecastDate] = useState<Date>(new Date());
@@ -66,6 +74,20 @@ const Forecast: React.FC = () => {
       { time: 'Midnight', temperature: 25, rainProbability: 25 },
     ];
     setChartData(mockData);
+
+    // Mock hourly data for forecast (9 slots for next 9 hours)
+    const hourlyMockData: HourlyData[] = [
+      { time: '4 p.m', temperature: 31, rainProbability: 100, rainIntensity: 'heavy' },
+      { time: '5 p.m', temperature: 31, rainProbability: 80, rainIntensity: 'light' },
+      { time: '6 p.m', temperature: 30, rainProbability: 80, rainIntensity: 'light' },
+      { time: '7 p.m', temperature: 29, rainProbability: 100, rainIntensity: 'heavy' },
+      { time: '8 p.m', temperature: 28, rainProbability: 80, rainIntensity: 'light' },
+      { time: '9 p.m', temperature: 26, rainProbability: 3, rainIntensity: 'none' },
+      { time: '10 p.m', temperature: 26, rainProbability: 9, rainIntensity: 'tiny' },
+      { time: '11 p.m', temperature: 26, rainProbability: 5, rainIntensity: 'tiny' },
+      { time: '12 a.m', temperature: 26, rainProbability: 7, rainIntensity: 'tiny' },
+    ];
+    setHourlyData(hourlyMockData);
 
     // Check if current time falls within an optimal window
     const currentHour = dataLoadTime.getHours();
@@ -192,50 +214,21 @@ const Forecast: React.FC = () => {
           </div>
 
           {/* Optimal Weather Windows - Top Priority */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400">
-              ☀️ Optimal Weather Windows
-            </h2>
-            <p className="text-gray-400 text-sm">Best times for outdoor activities and planning</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SunshineWindow
-                timeWindow="08:00 - 11:00"
-                temperature={26}
-                rainChance={5}
-                condition="optimal"
-                description="Best window for outdoor activities"
-                emoji="☀️"
-              />
-              <SunshineWindow
-                timeWindow="14:00 - 16:00"
-                temperature={29}
-                rainChance={20}
-                condition="good"
-                description="Fair conditions for planning"
-                emoji="🌤️"
-              />
-              <SunshineWindow
-                timeWindow="19:00 - 21:00"
-                temperature={26}
-                rainChance={30}
-                condition="fair"
-                description="Evening activities possible"
-                emoji="🌆"
-              />
-            </div>
-          </div>
-
           {/* Master Chart - Deep Dive */}
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400">
               📊 Detailed Forecast — 24hr Timeline
             </h2>
             <p className="text-gray-400 text-sm">Temperature trends and rain probability throughout the day</p>
-            <DualAxisChart
-              data={chartData}
-              title="Temperature & Rain Probability - 24hr Forecast"
-              currentTime={lastUpdated}
-            />
+            <div className="glass-card-light p-6">
+              <DualAxisChart
+                data={chartData}
+                title="Temperature & Rain Probability - 24hr Forecast"
+                currentTime={lastUpdated}
+              />
+              {/* Hourly Forecast Strip below Chart */}
+              <HourlyForecastStrip hourlyData={hourlyData} />
+            </div>
           </div>
 
           {/* Meteorological Drivers - Avoid repeating visible windows */}

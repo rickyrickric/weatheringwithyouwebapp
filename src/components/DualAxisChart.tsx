@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import {
   ComposedChart,
   Line,
-  Bar,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
   Legend,
   ResponsiveContainer,
   ReferenceLine,
+  ReferenceArea,
 } from 'recharts';
 
 interface ChartDataPoint {
@@ -102,13 +103,14 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             </filter>
           </defs>
 
-          {/* Sunshine window background shading */}
+          {/* Sunshine window background shading with ReferenceArea */}
           {sunshineWindows.map((window, idx) => (
-            <ReferenceLine
+            <ReferenceArea
               key={`window-${idx}`}
-              x={window.startTime}
-              stroke="rgba(234, 179, 8, 0.1)"
-              strokeWidth={0}
+              x1={window.startTime}
+              x2={window.endTime}
+              fill="rgba(234, 179, 8, 0.08)"
+              stroke="none"
             />
           ))}
 
@@ -122,7 +124,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             yAxisId="left"
             stroke="rgba(235, 110, 75, 0.3)"
             label={{
-              value: '°C (Temperature)',
+              value: '°C',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
@@ -137,7 +139,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             orientation="right"
             stroke="rgba(174, 236, 239, 0.3)"
             label={{
-              value: '% (Rain Probability)',
+              value: '%',
               angle: 90,
               position: 'insideRight',
               offset: 10,
@@ -146,6 +148,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fill: '#AEECEF',
             }}
             style={{ fontSize: '12px', fontWeight: '700', fill: '#AEECEF' }}
+            domain={[0, 130]}
           />
 
           {/* Enhanced tooltip with light theme */}
@@ -172,20 +175,31 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             iconType="line"
           />
 
-          {/* "NOW" Reference Line - Enhanced glowing vertical line with pulse */}
+          {/* "NOW" Reference Line - Enhanced glowing vertical line */}
           <ReferenceLine
             x={nowLabel}
             stroke="#EB6E4B"
-            strokeWidth={3}
+            strokeWidth={2}
             strokeDasharray="6,3"
             label={{
               value: `NOW (${nowLabel})`,
               position: 'top',
               fill: '#EB6E4B',
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
-              offset: 8,
+              offset: 6,
             }}
+          />
+
+          {/* Rain area on right axis - teal gradient */}
+          <Area
+            yAxisId="right"
+            type="monotone"
+            dataKey="rainProbability"
+            fill="url(#rainGradient)"
+            stroke="none"
+            name="Rain (%)"
+            animationDuration={800}
           />
 
           {/* Spline curve (smooth) instead of monotone (jagged) */}
@@ -199,17 +213,6 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             activeDot={{ r: 7, fill: '#EB6E4B', opacity: 1 }}
             name="Temperature (°C)"
             isAnimationActive={true}
-            animationDuration={800}
-          />
-
-          {/* Softer rain bars - mist-like appearance */}
-          <Bar
-            yAxisId="right"
-            dataKey="rainProbability"
-            fill="url(#rainGradient)"
-            name="Rain Probability (%)"
-            opacity={0.85}
-            radius={[8, 8, 0, 0]}
             animationDuration={800}
           />
         </ComposedChart>
