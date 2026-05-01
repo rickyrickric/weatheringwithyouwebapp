@@ -106,7 +106,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-2xl" />
 
       {/* Glass Card Container */}
-      <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 md:p-12 overflow-hidden">
+      <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 md:p-12 overflow-hidden" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
         {/* Decorative gradient corners */}
         <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-orange-400/20 to-transparent rounded-full blur-3xl -ml-20 -mt-20" />
         <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-cyan-400/20 to-transparent rounded-full blur-3xl -mr-20 -mb-20" />

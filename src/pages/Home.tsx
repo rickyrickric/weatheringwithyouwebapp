@@ -14,7 +14,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen" style={{ overflow: 'hidden' }}>
       {/* Animated Background with Rain Effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900/40 to-slate-800 z-0">
         {/* Rain streaks effect */}

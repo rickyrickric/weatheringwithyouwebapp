@@ -140,24 +140,26 @@ const Forecast: React.FC = () => {
           <div className="mt-4 h-1 w-24 bg-gradient-to-r from-orange-400 to-cyan-400 mx-auto rounded-full opacity-60" />
         </div>
 
-        {/* Main container */}
-        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 prayer-cleared">
+        {/* Main container - Limited height to prevent viewport overflow + padding for nav */}
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 prayer-cleared pb-32">
           {/* SPLIT-HERO GRID LAYOUT: Left (KPI Grid) | Right (Hero Card) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" style={{ maxHeight: '80vh' }}>
             {/* LEFT COLUMN: KPI Grid (2x3) */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-6 overflow-y-auto max-h-96">
               <div>
                 <h3 className="text-xl font-bold text-openweather-primary mb-4 uppercase tracking-widest">
                   ⚡ Current Conditions
                 </h3>
-                <KPIGrid
-                  windSpeed={currentWindSpeed}
-                  humidity={currentHumidity}
-                  visibility={10}
-                  pressure={101325}
-                  uvIndex={6}
-                  dewPoint={20}
-                />
+                <div style={{ willChange: 'transform' }}>
+                  <KPIGrid
+                    windSpeed={currentWindSpeed}
+                    humidity={currentHumidity}
+                    visibility={10}
+                    pressure={101325}
+                    uvIndex={6}
+                    dewPoint={20}
+                  />
+                </div>
               </div>
 
               {/* 7-Day Picker below KPI Grid */}
@@ -174,7 +176,7 @@ const Forecast: React.FC = () => {
             </div>
 
             {/* RIGHT COLUMN: Hero Card (Compact) */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2" style={{ willChange: 'transform' }}>
               <CurrentConditionsHero
                 temperature={currentTemp}
                 condition="Sunny"

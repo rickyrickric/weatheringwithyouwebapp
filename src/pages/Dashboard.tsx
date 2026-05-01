@@ -12,8 +12,8 @@ const Dashboard: React.FC = () => {
         timeOfDay="afternoon"
       />
 
-      {/* Content */}
-      <div className="relative z-10">
+      {/* Content with scroll-snap for dense data sections */}
+      <div className="relative z-10" style={{ scrollSnapType: 'y proximity', scrollBehavior: 'smooth', maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div className="text-center py-8 px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
@@ -25,8 +25,8 @@ const Dashboard: React.FC = () => {
 
         {/* Main container */}
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-          {/* Model Accuracy */}
-          <GlassCard>
+          {/* Model Accuracy - Snap point for scrolling */}
+          <GlassCard style={{ scrollSnapAlign: 'start' }}>
             <h3 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-6">
               📈 Prediction Accuracy
             </h3>
@@ -93,8 +93,8 @@ const Dashboard: React.FC = () => {
             </div>
           </GlassCard>
 
-          {/* Data Pipeline */}
-          <GlassCard>
+          {/* Data Pipeline - Snap point for scrolling */}
+          <GlassCard style={{ scrollSnapAlign: 'start' }}>
             <h3 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-6">
               🔄 Data Pipeline
             </h3>

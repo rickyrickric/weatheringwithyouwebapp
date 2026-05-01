@@ -22,6 +22,7 @@ export default {
       },
       backdropBlur: {
         xs: '2px',
+        'sm': '4px',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

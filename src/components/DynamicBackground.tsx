@@ -57,7 +57,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
 
   return (
     <>
-      <div className={`fixed inset-0 bg-gradient-to-br ${getBackgroundGradient.gradient} z-0 w-screen h-screen`}>
+      <div className={`fixed inset-0 bg-gradient-to-br ${getBackgroundGradient.gradient} z-0 w-screen h-screen`} style={{ willChange: 'transform' }}>
         {/* Animated glow effects */}
         <div className="absolute inset-0 opacity-40 pointer-events-none overflow-hidden">
           <div

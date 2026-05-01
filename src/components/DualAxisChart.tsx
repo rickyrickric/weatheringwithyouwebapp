@@ -56,7 +56,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     return `${hours}:${minutes}`;
   }, [currentTime]);
   return (
-    <div className="w-full glass-card-light p-6">
+    <div className="w-full glass-card-light p-6" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-openweather-primary">{title}</h3>
         <div className="text-sm text-openweather-textLight">

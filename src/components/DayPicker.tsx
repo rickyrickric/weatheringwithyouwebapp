@@ -37,8 +37,8 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
 
   return (
     <div className="w-full">
-      {/* Horizontal scrollable container */}
-      <div className="overflow-x-auto pb-4 scrollbar-hide">
+      {/* Horizontal scrollable container - Fixed height to prevent vertical overflow */}
+      <div className="overflow-x-auto pb-2 scrollbar-hide max-h-64" style={{ scrollBehavior: 'smooth', scrollSnapType: 'x proximity' }}>
         <div className="flex gap-3 min-w-max px-4">
           {days.map((dayData, index) => {
             const isSelected = selected === index || (selectedDate && isToday(dayData.date));
@@ -48,7 +48,8 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
               <button
                 key={index}
                 onClick={() => handleDayClick(index, dayData.date)}
-                className={`flex flex-col items-center justify-center px-4 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap ${
+                style={{ scrollSnapAlign: 'center' }}
+                className={`flex flex-col items-center justify-center px-4 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                   isSelected
                     ? 'bg-gradient-to-br from-orange-500/80 to-orange-600/80 border border-orange-400/50 shadow-lg shadow-orange-500/30'
                     : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
