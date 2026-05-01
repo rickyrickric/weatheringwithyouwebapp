@@ -57,7 +57,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     return `${hours}:${minutes}`;
   }, [currentTime]);
   return (
-    <div className="w-full glass-card-light p-6" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
+    <div className="w-full glass-card p-6" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }} aria-label="Dual-axis forecast chart showing temperature and rain probability">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-openweather-primary">{title}</h3>
         <div className="text-sm text-openweather-textLight">
@@ -151,15 +151,15 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             domain={[0, 130]}
           />
 
-          {/* Enhanced tooltip with light theme */}
+          {/* Dark-themed tooltip for consistency */}
           <Tooltip
             contentStyle={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '1px solid rgba(237, 237, 237, 0.8)',
+              backgroundColor: 'rgba(22, 24, 28, 0.92)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
               borderRadius: '12px',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-              backdropFilter: 'blur(8px)',
-              color: '#48484A',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(12px)',
+              color: '#FFFFFF',
             }}
             cursor={{ stroke: 'rgba(235, 110, 75, 0.3)', strokeWidth: 2 }}
             formatter={(value: any) => {
@@ -199,10 +199,11 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             fill="url(#rainGradient)"
             stroke="none"
             name="Rain (%)"
+            isAnimationActive={!useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])}
             animationDuration={800}
           />
 
-          {/* Spline curve (smooth) instead of monotone (jagged) */}
+          {/* Spline curve (smooth) - respect prefers-reduced-motion */}
           <Line
             yAxisId="left"
             type="natural"
@@ -212,7 +213,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             dot={{ fill: '#FB923C', r: 5, opacity: 0.8 }}
             activeDot={{ r: 7, fill: '#EB6E4B', opacity: 1 }}
             name="Temperature (°C)"
-            isAnimationActive={true}
+            isAnimationActive={!useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])}
             animationDuration={800}
           />
         </ComposedChart>
