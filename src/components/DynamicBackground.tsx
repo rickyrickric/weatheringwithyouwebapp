@@ -5,6 +5,7 @@ interface DynamicBackgroundProps {
   rainProbability?: number;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night' | 'sunset';
   isOptimalWindow?: boolean;
+  transparentBase?: boolean;
 }
 
 // Stable random seed arrays generated once at module level
@@ -25,12 +26,13 @@ const PARTICLE_POSITIONS = Array.from({ length: 8 }, (_, i) => ({
 
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   rainProbability = 35,
+  transparentBase = false,
 }) => {
   // QA FIX: Removed all dynamic gradients and radial glows. 
-  // Unified to a single flat dark slate background (#121826).
+  // Unified to a single flat dark slate background (#121826) unless transparentBase is true.
 
   return (
-    <div className="fixed inset-0 bg-[#121826] z-0 w-screen h-screen">
+    <div className={`fixed inset-0 z-0 w-screen h-screen ${transparentBase ? 'bg-transparent' : 'bg-[#121826]'}`}>
       {/* Raindrop effects — kept for thematic relevance but without background glowing */}
       {rainProbability > 50 && (
         <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
