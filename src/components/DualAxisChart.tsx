@@ -11,17 +11,8 @@ import {
   ReferenceLine,
   ReferenceArea,
 } from 'recharts';
-
-interface ChartDataPoint {
-  time: string;
-  temperature: number;
-  rainProbability: number;
-}
-
-interface SunshineWindow {
-  startTime: string;
-  endTime: string;
-}
+import type { ChartDataPoint, SunshineWindow } from '../types/weather';
+import { DEFAULT_CHART_DATA } from '../types/weather';
 
 interface DualAxisChartProps {
   data?: ChartDataPoint[];
@@ -31,19 +22,8 @@ interface DualAxisChartProps {
   height?: number;
 }
 
-// Default mock data for visualization - using consistent HH:MM format
-const DEFAULT_DATA: ChartDataPoint[] = [
-  { time: '00:00', temperature: 23, rainProbability: 10 },
-  { time: '04:00', temperature: 21, rainProbability: 15 },
-  { time: '08:00', temperature: 26, rainProbability: 5 },
-  { time: '12:00', temperature: 31, rainProbability: 20 },
-  { time: '16:00', temperature: 29, rainProbability: 25 },
-  { time: '20:00', temperature: 26, rainProbability: 40 },
-  { time: '23:00', temperature: 24, rainProbability: 35 },
-];
-
 const DualAxisChart: React.FC<DualAxisChartProps> = ({
-  data = DEFAULT_DATA,
+  data = DEFAULT_CHART_DATA,
   title = 'Temperature & Rain Probability',
   currentTime = new Date(),
   height = 240,
@@ -70,48 +50,46 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
   }, [currentTime]);
+
   return (
     <div className="w-full glass-card p-4" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }} aria-label="Dual-axis forecast chart showing temperature and rain probability">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-openweather-primary">{title}</h3>
-        <div className="text-xs text-openweather-textLight">
+        <h3 className="text-sm md:text-base font-bold text-openweather-primary">{title}</h3>
+        <div className="text-xs text-openweather-textLight flex items-center gap-1.5">
+          <span className="now-pulse inline-block w-2 h-2 rounded-full bg-orange-500" />
           Now: <span className="font-mono font-semibold text-openweather-primary">{nowLabel}</span>
         </div>
       </div>
       
-      <style>{`
-        @keyframes glowPulse {
-          0% {
-            filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
-          }
-          50% {
-            filter: drop-shadow(0 0 12px rgba(235, 110, 75, 0.8));
-          }
-          100% {
-            filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
-          }
-        }
-      `}</style>
+      {/* glowPulse / nowPulse keyframes are defined in index.css */}
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={data} margin={{ top: 10, right: 36, left: 10, bottom: 10 }}>
           <defs>
-            {/* Orange gradient for temperature line - matches OpenWeather primary */}
+            {/* Orange gradient for temperature area fill */}
             <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#EB6E4B" stopOpacity={0.6} />
               <stop offset="50%" stopColor="#EB6E4B" stopOpacity={0.3} />
               <stop offset="100%" stopColor="#EB6E4B" stopOpacity={0.1} />
             </linearGradient>
-            {/* Pale cyan gradient for rain bars - matches OpenWeather secondary */}
+            {/* Enhanced cyan gradient for rain — increased opacity for visibility */}
             <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#AEECEF" stopOpacity={0.7} />
-              <stop offset="50%" stopColor="#AEECEF" stopOpacity={0.5} />
-              <stop offset="100%" stopColor="#AEECEF" stopOpacity={0.2} />
+              <stop offset="0%" stopColor="#67E8F9" stopOpacity={0.85} />
+              <stop offset="50%" stopColor="#22D3EE" stopOpacity={0.55} />
+              <stop offset="100%" stopColor="#AEECEF" stopOpacity={0.25} />
             </linearGradient>
             {/* Glow filter for "Now" line */}
             <filter id="glowNow">
               <feGaussianBlur stdDeviation="2" result="coloredBlur" />
               <feMerge>
                 <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Glow filter for the temperature line */}
+            <filter id="tempGlow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
@@ -128,11 +106,12 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             />
           ))}
 
-          {/* Minimal axes with OpenWeather color coding */}
+          {/* Axes — bumped font sizes for legibility at compressed widths */}
           <XAxis
             dataKey="time"
             stroke="rgba(237, 237, 237, 0.5)"
-            style={{ fontSize: '11px', fontWeight: '500', fill: '#999999' }}
+            style={{ fontSize: '12px', fontWeight: '600', fill: '#b0b0b0' }}
+            tick={{ fontSize: 12 }}
           />
           <YAxis
             yAxisId="left"
@@ -142,26 +121,28 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 700,
               fill: '#EB6E4B',
             }}
-            style={{ fontSize: '10px', fontWeight: '700', fill: '#EB6E4B' }}
+            style={{ fontSize: '12px', fontWeight: '700', fill: '#EB6E4B' }}
+            tick={{ fontSize: 12 }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="rgba(174, 236, 239, 0.3)"
+            stroke="rgba(103, 232, 249, 0.4)"
             label={{
               value: '%',
               angle: 90,
               position: 'insideRight',
               offset: 10,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 700,
-              fill: '#AEECEF',
+              fill: '#67E8F9',
             }}
-            style={{ fontSize: '10px', fontWeight: '700', fill: '#AEECEF' }}
+            style={{ fontSize: '12px', fontWeight: '700', fill: '#67E8F9' }}
+            tick={{ fontSize: 12 }}
             domain={[0, 130]}
           />
 
@@ -199,36 +180,39 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               value: `NOW (${nowLabel})`,
               position: 'top',
               fill: '#EB6E4B',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               offset: 6,
             }}
           />
 
-          {/* Rain area on right axis - teal gradient */}
+          {/* Rain area on right axis — boosted opacity for dark-bg visibility */}
           <Area
             yAxisId="right"
             type="monotone"
             dataKey="rainProbability"
             fill="url(#rainGradient)"
-            stroke="none"
+            stroke="#22D3EE"
+            strokeWidth={1}
+            strokeOpacity={0.4}
             name="Rain (%)"
             isAnimationActive={!prefersReducedMotion}
             animationDuration={800}
           />
 
-          {/* Spline curve (smooth) - respect prefers-reduced-motion */}
+          {/* Temperature line — with subtle glow filter */}
           <Line
             yAxisId="left"
             type="natural"
             dataKey="temperature"
             stroke="#EB6E4B"
             strokeWidth={3}
-            dot={{ fill: '#FB923C', r: 5, opacity: 0.8 }}
+            dot={{ fill: '#FB923C', r: 5, opacity: 0.9 }}
             activeDot={{ r: 7, fill: '#EB6E4B', opacity: 1 }}
             name="Temperature (°C)"
             isAnimationActive={!prefersReducedMotion}
             animationDuration={800}
+            filter="url(#tempGlow)"
           />
         </ComposedChart>
       </ResponsiveContainer>

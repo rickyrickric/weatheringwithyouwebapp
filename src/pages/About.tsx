@@ -60,7 +60,7 @@ const About: React.FC = () => {
                     <p className="text-xs text-gray-500">Component-based UI with hooks</p>
                   </div>
                   <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-cyan-400">React Router v6</p>
+                    <p className="font-semibold text-cyan-400">React Router v7</p>
                     <p className="text-xs text-gray-500">Seamless navigation between tabs</p>
                   </div>
                   <div className="p-3 bg-white/5 rounded border border-white/10">

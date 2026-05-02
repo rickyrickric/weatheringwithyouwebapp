@@ -22,7 +22,7 @@ const StatTile: React.FC<StatTileProps> = ({ icon, label, value, unit }) => (
       <span className="text-lg group-hover:scale-110 transition-transform">{icon}</span>
       <span>{label}</span>
     </div>
-    <div className="font-serif text-2xl font-bold text-white leading-none">
+    <div className="font-serif text-3xl font-bold text-white leading-none">
       {value}
       {unit && <span className="text-lg font-normal text-openweather-textLight ml-1">{unit}</span>}
     </div>
@@ -43,7 +43,7 @@ const KPIGrid: React.FC<KPIGridProps> = ({
         icon="💨"
         label="Wind"
         value={windSpeed}
-        unit="m/s"
+        unit="km/h"
       />
       <StatTile
         icon="💧"

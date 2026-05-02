@@ -7,41 +7,50 @@ interface DynamicBackgroundProps {
   isOptimalWindow?: boolean;
 }
 
+// Stable random seed arrays generated once at module level — prevents
+// positions from shifting on every re-render (Math.random() in JSX is an anti-pattern).
+const DROP_POSITIONS = Array.from({ length: 20 }, (_, i) => ({
+  left: (((i * 51) % 97) + 3),   // pseudo-random but deterministic
+  top: (((i * 37) % 89) + 5),
+  duration: 1.5 + ((i * 0.17) % 1.5),
+  delay: i * 0.1,
+  opacity: 0.3 + ((i * 0.04) % 0.4),
+}));
+
+const PARTICLE_POSITIONS = Array.from({ length: 8 }, (_, i) => ({
+  left: (((i * 73) % 91) + 4),
+  top: (((i * 43) % 83) + 7),
+  duration: 8 + ((i * 0.61) % 4),
+  delay: i * 0.5,
+}));
+
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   temperature = 28,
   rainProbability = 35,
   timeOfDay = 'afternoon',
   isOptimalWindow = false,
 }) => {
-  const getBackgroundGradient = useMemo(() => {
+  const { gradient, glowColor } = useMemo(() => {
     let gradient = '';
     let glowColor = '';
 
-    // If optimal window is active, use warm amber gradient
     if (isOptimalWindow) {
       gradient = 'from-amber-900/60 via-orange-900/40 to-slate-900/80';
       glowColor = 'from-amber-500/35 via-orange-500/20 to-transparent';
-    }
-    // Determine gradient based on weather conditions
-    else if (rainProbability > 60) {
-      // Rainy: cooler, grayer tones with blue energy
+    } else if (rainProbability > 60) {
       gradient = 'from-slate-900 via-slate-800 to-slate-700';
       glowColor = 'from-slate-500/30 via-blue-500/20 to-transparent';
     } else if (temperature > 28) {
-      // Hot: warm orange/amber tones
       gradient = 'from-amber-950 via-orange-900/50 to-slate-900';
       glowColor = 'from-orange-500/25 via-red-500/15 to-transparent';
     } else if (temperature < 20) {
-      // Cool: cooler blues and cyans
       gradient = 'from-blue-950 via-slate-900 to-slate-800';
       glowColor = 'from-cyan-500/25 via-blue-500/15 to-transparent';
     } else {
-      // Comfortable: purple/violet tones
       gradient = 'from-slate-900 via-purple-900/30 to-slate-900';
       glowColor = 'from-purple-500/25 via-indigo-500/15 to-transparent';
     }
 
-    // Adjust based on time of day (only if not optimal window)
     if (!isOptimalWindow) {
       if (timeOfDay === 'sunset') {
         gradient = 'from-orange-900 via-purple-900 to-slate-900';
@@ -56,91 +65,60 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   }, [temperature, rainProbability, timeOfDay, isOptimalWindow]);
 
   return (
-    <>
-      <div className={`fixed inset-0 bg-gradient-to-br ${getBackgroundGradient.gradient} z-0 w-screen h-screen`} style={{ willChange: 'transform' }}>
-        {/* Animated glow effects */}
-        <div className="absolute inset-0 opacity-40 pointer-events-none overflow-hidden">
-          <div
-            className={`absolute inset-0 bg-gradient-radial ${getBackgroundGradient.glowColor} rounded-full blur-3xl animate-pulse`}
-            style={{
-              animation: `pulse ${rainProbability > 50 ? '3s' : '4s'} ease-in-out infinite`,
-            }}
-          />
-          {rainProbability > 40 && (
-            <div className="absolute top-0 right-0 w-96 h-96 bg-slate-400/10 rounded-full blur-3xl opacity-50" />
-          )}
-          {temperature > 28 && (
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl opacity-40" />
-          )}
-        </div>
-
-        {/* Raindrop effects for high rain probability */}
-        {rainProbability > 50 && (
-          <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div
-                key={`drop-${i}`}
-                className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-300 to-cyan-400/0 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animation: `fall ${1.5 + Math.random() * 1.5}s linear infinite`,
-                  animationDelay: `${i * 0.1}s`,
-                  opacity: 0.3 + Math.random() * 0.4,
-                }}
-              />
-            ))}
-          </div>
+    <div className={`fixed inset-0 bg-gradient-to-br ${gradient} z-0 w-screen h-screen`} style={{ willChange: 'transform' }}>
+      {/* Animated glow effects */}
+      <div className="absolute inset-0 opacity-40 pointer-events-none overflow-hidden">
+        <div
+          className={`absolute inset-0 bg-gradient-radial ${glowColor} rounded-full blur-3xl`}
+          style={{
+            animation: `pulse ${rainProbability > 50 ? '3s' : '4s'} ease-in-out infinite`,
+          }}
+        />
+        {rainProbability > 40 && (
+          <div className="absolute top-0 right-0 w-96 h-96 bg-slate-400/10 rounded-full blur-3xl opacity-50" />
         )}
-
-        {/* Particle effects */}
-        {rainProbability > 30 && (
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={`particle-${i}`}
-                className="absolute w-1 h-1 bg-white/40 rounded-full blur-sm"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animation: `drift ${8 + Math.random() * 4}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.5}s`,
-                }}
-              />
-            ))}
-          </div>
+        {temperature > 28 && (
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl opacity-40" />
         )}
       </div>
 
-      <style>{`
-        @keyframes fall {
-          to {
-            transform: translateY(100vh);
-            opacity: 0;
-          }
-        }
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.3;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.6;
-            transform: scale(1.1);
-          }
-        }
-        @keyframes drift {
-          0%, 100% {
-            opacity: 0.2;
-            transform: translate(0, 0);
-          }
-          50% {
-            opacity: 0.4;
-            transform: translate(20px, -20px);
-          }
-        }
-      `}</style>
-    </>
+      {/* Raindrop effects — positions are stable (no Math.random in JSX) */}
+      {rainProbability > 50 && (
+        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+          {DROP_POSITIONS.map((drop, i) => (
+            <div
+              key={`drop-${i}`}
+              className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-300 to-cyan-400/0 rounded-full"
+              style={{
+                left: `${drop.left}%`,
+                top: `${drop.top}%`,
+                animation: `fall ${drop.duration}s linear infinite`,
+                animationDelay: `${drop.delay}s`,
+                opacity: drop.opacity,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Particle effects — positions are stable */}
+      {rainProbability > 30 && (
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          {PARTICLE_POSITIONS.map((p, i) => (
+            <div
+              key={`particle-${i}`}
+              className="absolute w-1 h-1 bg-white/40 rounded-full blur-sm"
+              style={{
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                animation: `drift ${p.duration}s ease-in-out infinite`,
+                animationDelay: `${p.delay}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

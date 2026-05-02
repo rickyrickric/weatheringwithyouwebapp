@@ -10,7 +10,7 @@ interface GlassCardProps {
 const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', onClick, style }) => {
   return (
     <div
-      className={`glass-card p-6 cursor-pointer hover:bg-white/10 hover:border-white/20 ${className}`}
+      className={`glass-card p-6 hover:bg-white/10 hover:border-white/20 ${onClick ? 'cursor-pointer' : 'cursor-default'} ${className}`}
       onClick={onClick}
       style={{ willChange: 'transform', backfaceVisibility: 'hidden', ...style }}
     >
