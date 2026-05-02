@@ -15,7 +15,7 @@ const TabNavigation: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent backdrop-blur-md border-t border-white/10">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent backdrop-blur-[20px] border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-center items-center gap-2 md:gap-4">
           {tabs.map((tab) => (

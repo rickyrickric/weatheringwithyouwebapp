@@ -110,8 +110,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           <XAxis
             dataKey="time"
             stroke="rgba(237, 237, 237, 0.5)"
-            style={{ fontSize: '12px', fontWeight: '600', fill: '#b0b0b0' }}
-            tick={{ fontSize: 12 }}
+            style={{ fontSize: '13px', fontWeight: '600', fill: '#d4d4d8' }}
+            tick={{ fontSize: 13, fill: '#d4d4d8' }}
           />
           <YAxis
             yAxisId="left"
@@ -125,8 +125,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fontWeight: 700,
               fill: '#EB6E4B',
             }}
-            style={{ fontSize: '12px', fontWeight: '700', fill: '#EB6E4B' }}
-            tick={{ fontSize: 12 }}
+            style={{ fontSize: '13px', fontWeight: '700', fill: '#EB6E4B' }}
+            tick={{ fontSize: 13, fill: '#f0a090' }}
           />
           <YAxis
             yAxisId="right"
@@ -141,8 +141,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fontWeight: 700,
               fill: '#67E8F9',
             }}
-            style={{ fontSize: '12px', fontWeight: '700', fill: '#67E8F9' }}
-            tick={{ fontSize: 12 }}
+            style={{ fontSize: '13px', fontWeight: '700', fill: '#67E8F9' }}
+            tick={{ fontSize: 13, fill: '#a5f3fc' }}
             domain={[0, 130]}
           />
 

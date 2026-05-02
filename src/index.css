@@ -236,3 +236,18 @@ input:focus:not(:focus-visible) {
 .now-pulse {
   animation: nowPulse 2s ease-in-out infinite;
 }
+
+/* SunshineWindow: Active window gentle glow */
+@keyframes activeWindowGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px 0 var(--glow-color, rgba(234, 179, 8, 0.2));
+  }
+  50% {
+    box-shadow: 0 0 24px 4px var(--glow-color, rgba(234, 179, 8, 0.35));
+  }
+}
+
+.active-window-glow {
+  animation: activeWindowGlow 3s ease-in-out infinite;
+}

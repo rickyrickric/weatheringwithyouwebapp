@@ -15,6 +15,7 @@ import type { ChartDataPoint } from '../types/weather';
 const Forecast: React.FC = () => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isOptimalWindow, setIsOptimalWindow] = useState(false);
+  const [activeWindowIndex, setActiveWindowIndex] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [forecastDate] = useState<Date>(new Date());
 
@@ -84,12 +85,16 @@ const Forecast: React.FC = () => {
       (w) => currentHour >= w.start && currentHour < w.end,
     );
     setIsOptimalWindow(inOptimalWindow);
-  }, []); // OPTIMAL_WINDOWS is a module-level constant — safe to omit from deps
+
+    // Determine which window card is currently active
+    const activeIdx = OPTIMAL_WINDOWS.findIndex(
+      (w) => currentHour >= w.start && currentHour < w.end,
+    );
+    setActiveWindowIndex(activeIdx >= 0 ? activeIdx : null);
+  }, []);
 
   return (
     <div className="relative min-h-screen">
-      {/* Keyframes are defined in index.css (prayer-cleared, prayer-header) */}
-
       {/* Dynamic Background */}
       <DynamicBackground
         temperature={currentTemp}
@@ -115,11 +120,11 @@ const Forecast: React.FC = () => {
         </div>
 
         {/* Main container */}
-        <div className="max-w-7xl mx-auto px-4 pb-24 space-y-4 prayer-cleared h-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 pb-24 prayer-cleared h-full overflow-hidden">
           {/* Top row: KPIs + Chart — side-by-side on desktop, stacked on mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-6">
             <div className="space-y-3" style={{ willChange: 'transform' }}>
-              <h3 className="text-lg font-bold text-openweather-primary uppercase tracking-widest pl-0.5">
+              <h3 className="text-base font-bold text-openweather-primary uppercase tracking-widest ml-1">
                 ⚡ Current Conditions
               </h3>
               <KPIGrid
@@ -146,12 +151,16 @@ const Forecast: React.FC = () => {
 
           {/* Bottom row: Optimal Weather Windows — fills the dead zone */}
           <section className="space-y-3">
-            <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 uppercase tracking-widest pl-0.5">
+            <h3 className="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 uppercase tracking-widest ml-1">
               ☀️ Optimal Weather Windows
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {sunshineWindows.map((window, idx) => (
-                <SunshineWindow key={idx} {...window} />
+                <SunshineWindow
+                  key={idx}
+                  {...window}
+                  isActive={activeWindowIndex === idx}
+                />
               ))}
             </div>
           </section>
