@@ -4,22 +4,29 @@ import DynamicBackground from '../components/DynamicBackground';
 import DateAnchor from '../components/DateAnchor';
 import KPIGrid from '../components/KPIGrid';
 import SunshineWindow from '../components/SunshineWindow';
+import { ChartSkeleton, KPISkeleton } from '../components/Skeleton';
+import ErrorBanner from '../components/ErrorBanner';
 import {
   OPTIMAL_WINDOWS,
   DEFAULT_CHART_DATA,
   MOCK_WEATHER,
   getTimeOfDay,
 } from '../types/weather';
-import type { ChartDataPoint } from '../types/weather';
+import type { ChartDataPoint, CurrentWeather } from '../types/weather';
 
 const Forecast: React.FC = () => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
   const [isOptimalWindow, setIsOptimalWindow] = useState(false);
   const [activeWindowIndex, setActiveWindowIndex] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [forecastDate] = useState<Date>(new Date());
+  
+  // QA Added: Loading and Error states
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  // Destructure from shared mock constants
+  // Destructure from state instead of shared mock constants
   const {
     temperature: currentTemp,
     rainChance: currentRain,
@@ -29,9 +36,8 @@ const Forecast: React.FC = () => {
     pressure,
     uvIndex,
     dewPoint,
-  } = MOCK_WEATHER;
+  } = currentWeather;
 
-  // Optimal sunshine windows data for the cards
   const sunshineWindows = [
     {
       timeWindow: '08:00 – 11:00',
@@ -59,7 +65,6 @@ const Forecast: React.FC = () => {
     },
   ];
 
-  // Dynamic greeting based on time of day
   const getGreeting = (date: Date) => {
     const hour = date.getHours();
     if (hour < 12) return '🌅 Good Morning';
@@ -68,34 +73,65 @@ const Forecast: React.FC = () => {
     return '🌙 Good Night';
   };
 
-  // Derive time-of-day label from the real current hour
   const timeOfDay = useMemo(
     () => getTimeOfDay(forecastDate.getHours()),
     [forecastDate],
   );
 
+  const fetchForecastData = async () => {
+    setIsLoading(true);
+    setHasError(false);
+    
+    try {
+      // Fetch both APIs in parallel
+      const [currentRes, forecastRes] = await Promise.all([
+        fetch('/api/weather/current'),
+        fetch('/api/weather/forecast')
+      ]);
+
+      if (!currentRes.ok || !forecastRes.ok) {
+        throw new Error("Failed to fetch weather data");
+      }
+
+      const currentData = await currentRes.json();
+      const forecastJson = await forecastRes.json();
+
+      setCurrentWeather(currentData);
+      setChartData(forecastJson.forecast || DEFAULT_CHART_DATA);
+      
+      const dataLoadTime = new Date();
+      setLastUpdated(dataLoadTime);
+
+      const currentHour = dataLoadTime.getHours();
+      // Use optimal windows from API if available, else fallback
+      const optimalWindows = forecastJson.optimalWindows || OPTIMAL_WINDOWS;
+
+      const inOptimalWindow = optimalWindows.some(
+        (w: any) => currentHour >= w.start && currentHour < w.end,
+      );
+      setIsOptimalWindow(inOptimalWindow);
+
+      const activeIdx = optimalWindows.findIndex(
+        (w: any) => currentHour >= w.start && currentHour < w.end,
+      );
+      setActiveWindowIndex(activeIdx >= 0 ? activeIdx : null);
+      
+    } catch (err) {
+      console.error(err);
+      setHasError(true);
+      // Fallback data
+      setChartData(DEFAULT_CHART_DATA);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const dataLoadTime = new Date();
-    setLastUpdated(dataLoadTime);
-    setChartData(DEFAULT_CHART_DATA);
-
-    // Check if current time falls within an optimal window
-    const currentHour = dataLoadTime.getHours();
-    const inOptimalWindow = OPTIMAL_WINDOWS.some(
-      (w) => currentHour >= w.start && currentHour < w.end,
-    );
-    setIsOptimalWindow(inOptimalWindow);
-
-    // Determine which window card is currently active
-    const activeIdx = OPTIMAL_WINDOWS.findIndex(
-      (w) => currentHour >= w.start && currentHour < w.end,
-    );
-    setActiveWindowIndex(activeIdx >= 0 ? activeIdx : null);
+    fetchForecastData();
   }, []);
 
   return (
-    <div className="relative min-h-screen">
-      {/* Dynamic Background */}
+    <div className="relative min-h-screen page-enter">
       <DynamicBackground
         temperature={currentTemp}
         rainProbability={currentRain}
@@ -103,15 +139,13 @@ const Forecast: React.FC = () => {
         isOptimalWindow={isOptimalWindow}
       />
 
-      {/* Content */}
       <div className="relative z-10 h-full overflow-hidden">
         {/* Header */}
-        <div className="text-center py-2 px-4 prayer-header">
-          <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-cyan-300 mb-2">
+        <div className="text-center py-2 px-4 prayer-header mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-100 mb-2">
             {getGreeting(forecastDate)}, Tagum City
           </h1>
-          {/* Enhanced Date Anchor */}
-          <div className="bg-gradient-to-r from-orange-500/20 to-cyan-500/20 border border-orange-400/30 rounded-xl px-3 py-1.5 mb-2 inline-block backdrop-blur-sm">
+          <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 mb-2 inline-block backdrop-blur-sm">
             <DateAnchor date={forecastDate} />
           </div>
           <p className="text-gray-400 mt-1 text-[11px] md:text-sm">
@@ -121,47 +155,99 @@ const Forecast: React.FC = () => {
 
         {/* Main container */}
         <div className="max-w-7xl mx-auto px-4 pb-24 prayer-cleared h-full overflow-hidden">
-          {/* Top row: KPIs + Chart — side-by-side on desktop, stacked on mobile */}
+          
+          {/* Feature: Rain Alert Banner */}
+          {!isLoading && currentRain > 60 && !hasError && (
+            <div className="bg-blue-500/20 border border-blue-500/30 text-blue-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-6 shadow-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🌧️</span>
+                <p className="text-sm"><strong>High Rain Alert:</strong> {currentRain}% chance of precipitation. Carry an umbrella.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State Banner */}
+          {hasError && (
+            <ErrorBanner onRetry={fetchForecastData} />
+          )}
+
+          {/* Top row: KPIs + Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-6">
-            <div className="space-y-3" style={{ willChange: 'transform' }}>
-              <h3 className="text-base font-bold text-openweather-primary uppercase tracking-widest ml-1">
+            <div className="space-y-3">
+              <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
                 ⚡ Current Conditions
               </h3>
-              <KPIGrid
-                windSpeed={currentWindSpeed}
-                humidity={currentHumidity}
-                visibility={visibility ?? 10}
-                pressure={pressure ?? 101325}
-                uvIndex={uvIndex ?? 6}
-                dewPoint={dewPoint ?? 20}
-              />
+              {isLoading ? (
+                <KPISkeleton />
+              ) : (
+                <KPIGrid
+                  windSpeed={currentWindSpeed}
+                  humidity={currentHumidity}
+                  visibility={visibility ?? 10}
+                  pressure={pressure ?? 101325}
+                  uvIndex={uvIndex ?? 6}
+                  dewPoint={dewPoint ?? 20}
+                />
+              )}
             </div>
 
-            <div className="space-y-2" style={{ willChange: 'transform' }}>
-              <div className="glass-card-light p-4">
-                <DualAxisChart
-                  data={chartData}
-                  title="Temperature & Rain Probability - 24hr Forecast"
-                  currentTime={lastUpdated}
-                  height={180}
-                />
-              </div>
+            <div className="space-y-2">
+              {isLoading ? (
+                <ChartSkeleton />
+              ) : (
+                <div className="glass-card-light p-4 animate-[pageEnter_0.3s_ease-out]">
+                  <DualAxisChart
+                    data={chartData}
+                    title="Temperature & Rain Probability - 24hr Forecast"
+                    currentTime={lastUpdated}
+                    height={180}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Bottom row: Optimal Weather Windows — fills the dead zone */}
+          {/* Feature: Hourly Breakdown Row */}
+          {!isLoading && !hasError && (
+            <section className="space-y-3 mb-6 animate-[pageEnter_0.3s_ease-out]">
+              <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
+                ⏱️ Hourly Breakdown
+              </h3>
+              <div className="flex overflow-x-auto pb-4 gap-3 snap-x scroll-smooth no-scrollbar">
+                {(chartData.length > 0 ? chartData : DEFAULT_CHART_DATA).map((point, idx) => (
+                  <div key={idx} className="glass-card min-w-[80px] p-3 flex flex-col items-center justify-center snap-center hover:bg-white/10 transition-colors">
+                    <span className="text-xs text-gray-400 font-mono mb-2">{point.time}</span>
+                    <span className="text-xl mb-2">{point.rainProbability > 50 ? '🌧️' : point.temperature > 28 ? '☀️' : '⛅'}</span>
+                    <span className="text-sm font-bold text-gray-200">{Math.round(point.temperature)}°</span>
+                    <span className="text-[10px] text-slate-400">{point.rainProbability}%</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Bottom row: Optimal Weather Windows */}
           <section className="space-y-3">
-            <h3 className="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 uppercase tracking-widest ml-1">
+            <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
               ☀️ Optimal Weather Windows
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {sunshineWindows.map((window, idx) => (
-                <SunshineWindow
-                  key={idx}
-                  {...window}
-                  isActive={activeWindowIndex === idx}
-                />
-              ))}
+              {isLoading ? (
+                <>
+                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
+                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
+                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
+                </>
+              ) : (
+                sunshineWindows.map((window, idx) => (
+                  <div key={idx} className="animate-[pageEnter_0.4s_ease-out]" style={{ animationDelay: `${idx * 0.1}s` }}>
+                    <SunshineWindow
+                      {...window}
+                      isActive={activeWindowIndex === idx}
+                    />
+                  </div>
+                ))
+              )}
             </div>
           </section>
         </div>
