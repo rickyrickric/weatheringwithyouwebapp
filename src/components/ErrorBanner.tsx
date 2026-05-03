@@ -10,7 +10,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
   onRetry 
 }) => {
   return (
-    <div className="bg-red-500/10 border border-red-500/30 text-red-200 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+    <div className="bg-amber-500/10 border border-amber-500/30 text-amber-200 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 backdrop-blur-md">
       <div className="flex items-center gap-3">
         <span className="text-xl">⚠️</span>
         <p className="text-sm">{message}</p>
@@ -18,7 +18,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
       {onRetry && (
         <button 
           onClick={onRetry}
-          className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-100 rounded-lg text-sm font-semibold transition-colors"
+          className="px-4 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 rounded-lg text-sm font-semibold transition-colors"
         >
           Retry
         </button>

@@ -88,7 +88,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             dataKey="time"
             stroke="rgba(156, 163, 175, 0.3)"
             style={{ fontSize: '13px', fontWeight: '600' }}
-            tick={{ fontSize: 13, fill: '#9ca3af' }}
+            tick={{ fontSize: 13, fill: '#9ca3af', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
           />
           <YAxis
             yAxisId="left"
@@ -101,9 +101,10 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fontSize: 13,
               fontWeight: 700,
               fill: tempColor,
+              style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
             style={{ fontSize: '13px', fontWeight: '700' }}
-            tick={{ fontSize: 13, fill: tempColor }}
+            tick={{ fontSize: 13, fill: tempColor, style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
           />
           <YAxis
             yAxisId="right"
@@ -117,9 +118,10 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fontSize: 13,
               fontWeight: 700,
               fill: rainColor,
+              style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
             style={{ fontSize: '13px', fontWeight: '700' }}
-            tick={{ fontSize: 13, fill: rainColor }}
+            tick={{ fontSize: 13, fill: rainColor, style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
             domain={[0, 130]}
           />
 
@@ -156,6 +158,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               fontSize: 12,
               fontWeight: 600,
               offset: 6,
+              style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
           />
 

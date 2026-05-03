@@ -1,11 +1,15 @@
 import React from 'react';
 
+import bgSunshine from '../assets/forecast_sunshine.png';
+import bgRaining from '../assets/forecast_raining.png';
+
 interface DynamicBackgroundProps {
   temperature?: number;
   rainProbability?: number;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night' | 'sunset';
   isOptimalWindow?: boolean;
   transparentBase?: boolean;
+  weatherId?: number;
 }
 
 // Stable random seed arrays generated once at module level
@@ -27,12 +31,32 @@ const PARTICLE_POSITIONS = Array.from({ length: 8 }, (_, i) => ({
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   rainProbability = 35,
   transparentBase = false,
+  weatherId,
 }) => {
-  // QA FIX: Removed all dynamic gradients and radial glows. 
-  // Unified to a single flat dark slate background (#121826) unless transparentBase is true.
+  // Determine background image based on OpenWeather API ID
+  const getBackgroundImage = () => {
+    if (transparentBase) return undefined;
+    if (!weatherId) return bgSunshine; // Default to sunshine
+    if (weatherId >= 200 && weatherId < 600) return bgRaining; // Thunderstorm, Drizzle, Rain
+    if (weatherId === 800 || weatherId === 801 || weatherId === 802) return bgSunshine; // Clear or few clouds
+    return bgSunshine; // Fallback
+  };
+
+  const backgroundImage = getBackgroundImage();
 
   return (
     <div className={`fixed inset-0 z-0 w-screen h-screen ${transparentBase ? 'bg-transparent' : 'bg-[#121826]'}`}>
+      {/* Background Image with Global Scrim */}
+      {backgroundImage && (
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-1000"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        >
+          {/* Global Scrim for Text Protection */}
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+      )}
+
       {/* Raindrop effects — kept for thematic relevance but without background glowing */}
       {rainProbability > 50 && (
         <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">

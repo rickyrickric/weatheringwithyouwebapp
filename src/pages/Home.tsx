@@ -58,6 +58,7 @@ const Home: FC = () => {
         timeOfDay={timeOfDay}
         isOptimalWindow={inOptimalWindow}
         transparentBase={true}
+        weatherId={currentWeather.weatherId}
       />
 
       {/* Cloud-clearing overlay */}

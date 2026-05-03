@@ -22,6 +22,7 @@ export interface CurrentWeather {
   pressure?: number;
   uvIndex?: number;
   dewPoint?: number;
+  weatherId?: number;
 }
 
 export interface OptimalWindow {
@@ -70,4 +71,5 @@ export const MOCK_WEATHER: CurrentWeather = {
   pressure: 101325,
   uvIndex: 6,
   dewPoint: 20,
+  weatherId: 800,
 };

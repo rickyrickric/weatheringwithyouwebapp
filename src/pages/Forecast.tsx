@@ -137,6 +137,7 @@ const Forecast: React.FC = () => {
         rainProbability={currentRain}
         timeOfDay={timeOfDay}
         isOptimalWindow={isOptimalWindow}
+        weatherId={currentWeather.weatherId}
       />
 
       <div className="relative z-10 h-full overflow-hidden">
