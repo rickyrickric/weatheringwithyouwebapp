@@ -37,6 +37,7 @@ const Home: FC = () => {
   return (
     <div className="relative flex flex-col items-center justify-center h-full w-full overflow-hidden page-enter bg-[#121826]">
       {/* Home Image Background */}
+      {/* TODO: Backend integration - Swap out dynamically based on "Weather State" (e.g., misty road for low visibility, wet road for rain) */}
       <div 
         className="absolute inset-0 z-0"
         style={{
@@ -73,21 +74,21 @@ const Home: FC = () => {
         }`}
       >
         {/* Main Glassmorphism Dashboard Container */}
-        <div className="flex flex-col items-center text-center p-8 md:p-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl w-full shadow-2xl">
+        <div className="flex flex-col items-center text-center p-8 md:p-12 bg-white/10 backdrop-blur-md border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-full shadow-2xl">
           {/* Prayer hero text - Flat solid white text */}
-          <div className="space-y-4 mb-10">
+          <div className="space-y-7 mb-10">
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-wide">
               A Prayer for
               <br />
               the Palm City
             </h1>
-            <div className="flex items-center justify-center gap-2 text-gray-300 text-sm md:text-base font-light">
+            <div className="flex items-center justify-center gap-2 text-gray-200 text-base md:text-lg font-normal">
               {/* Lightened pin icon */}
-              <svg className="w-4 h-4 text-gray-400 stroke-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span>Current Location: <strong className="text-white font-medium">Tagum City, Philippines</strong></span>
+              <span>Current Location: <strong className="text-white font-semibold">Tagum City, Philippines</strong></span>
             </div>
             {/* Shortened concise description */}
             <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base font-light leading-relaxed mt-2">
@@ -115,7 +116,7 @@ const Home: FC = () => {
             className={`px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 ${
               isClearing
                 ? "bg-[#D4622A] text-white cursor-wait scale-95 opacity-50"
-                : "bg-[#D4622A] hover:bg-[#b05223] text-white shadow-lg shadow-orange-900/20 hover:scale-105 active:scale-95"
+                : "bg-[#D4622A] hover:bg-[#b05223] text-white shadow-lg shadow-orange-900/20 hover:scale-105 active:scale-95 animate-cta-pulse"
             }`}
           >
             {isClearing ? "⛅ Clearing the clouds..." : "☀️ Clear the Sky"}
