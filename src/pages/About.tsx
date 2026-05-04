@@ -57,7 +57,7 @@ const About: React.FC = () => {
                       <p className="font-semibold text-gray-200 text-sm">Tailwind CSS</p>
                       <p className="text-[10px] text-gray-500">Glassmorphic design system</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
+                    <div className="grid gap-2 grid-auto-fit text-xs text-gray-300">
                       <div className="p-1.5 bg-white/5 rounded border border-white/10">
                         <p className="font-semibold text-gray-200 text-xs">React Router v7</p>
                         <p className="text-[10px] text-gray-500">Seamless navigation between tabs</p>
@@ -87,7 +87,7 @@ const About: React.FC = () => {
                       <p className="font-semibold text-gray-200 text-sm">Supabase</p>
                       <p className="text-[10px] text-gray-500">PostgreSQL + Auth + Real-time</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
+                    <div className="grid gap-2 grid-auto-fit text-xs text-gray-300">
                       <div className="p-1.5 bg-white/5 rounded border border-white/10">
                         <p className="font-semibold text-gray-200 text-xs">OpenWeather API</p>
                         <p className="text-[10px] text-gray-500">Live weather data feed</p>
@@ -106,7 +106,7 @@ const About: React.FC = () => {
             <p className="text-xs text-gray-400 mb-3">
               End-to-end weather intelligence pipeline for Tagum City.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs text-gray-300">
+            <div className="grid gap-2 grid-auto-fit text-xs text-gray-300">
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="font-semibold text-gray-200">CSV / APIs</p>
                 <p className="text-[10px] text-gray-500 mt-1">OpenWeather + Visual Crossing</p>
@@ -138,7 +138,7 @@ const About: React.FC = () => {
             <h2 className="text-lg font-bold text-gray-100 mb-3">
               ✨ Key Features
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid gap-2 grid-auto-fit">
               <ul className="space-y-2 text-xs text-gray-400">
                 <li className="flex items-start gap-1.5">
                   <span className="text-slate-500">→</span>
