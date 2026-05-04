@@ -172,7 +172,7 @@ const Forecast: React.FC = () => {
         </div>
 
         {/* Main container */}
-        <div className="relative page-container pb-12 pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
+          <div className="relative page-container pb-[100px] pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
           
           {/* Feature: Rain Alert Banner */}
           {!isLoading && currentRain > 60 && !hasError && (

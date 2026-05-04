@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DynamicBackground from "../components/DynamicBackground";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
+import backgroundHome from "../assets/background_home.png";
 
 const Home: FC = () => {
   const navigate = useNavigate();
@@ -33,9 +34,16 @@ const Home: FC = () => {
   }, [navigate]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center h-full w-full overflow-hidden page-enter bg-[#121826]">
-      {/* Flat background for reduced visual competition */}
-      <div className="absolute inset-0 z-0 bg-[#121826]" />
+    <div className="relative flex flex-col items-center justify-center min-h-screen w-full overflow-y-auto page-enter bg-[#121826] pb-[90px]">
+      {/* Restored background image with soft blur and dimming */}
+      <div
+        className="absolute inset-0 z-0 bg-center bg-cover"
+        style={{
+          backgroundImage: `url(${backgroundHome})`,
+          filter: "brightness(0.35) blur(4px)",
+          transform: "scale(1.02)",
+        }}
+      />
 
       {/* Atmospheric background — weather-reactive */}
       <DynamicBackground
@@ -61,7 +69,13 @@ const Home: FC = () => {
         }`}
       >
         {/* Main Glassmorphism Dashboard Container */}
-        <div className="flex flex-col items-center text-center p-8 md:p-10 bg-white/10 backdrop-blur-sm border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-full shadow-2xl">
+        <div
+          className="flex flex-col items-center text-center bg-white/10 backdrop-blur-sm border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-[90%] max-w-[560px] mx-auto shadow-2xl overflow-y-auto"
+          style={{
+            padding: 'clamp(24px, 5vh, 60px) clamp(20px, 4vw, 48px)',
+            maxHeight: 'calc(100vh - 90px)',
+          }}
+        >
           {/* Prayer hero text - Flat solid white text */}
           <div className="space-y-5 mb-8">
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-wide">
@@ -87,13 +101,18 @@ const Home: FC = () => {
           <div className="flex items-center justify-center gap-12 mb-10 w-full max-w-md mx-auto py-8 bg-white/5 rounded-2xl border border-white/5">
             <div className="text-center flex-1">
               <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Temperature</p>
-              <p className="text-5xl md:text-6xl font-bold text-white">{Math.round(currentWeather.temperature)}°</p>
-              <p className="text-xs text-gray-400 mt-1">Celsius</p>
+              <p className="text-[52px] leading-none font-bold text-white">
+                {Math.round(currentWeather.temperature)}
+                <span className="text-base align-super text-gray-300">°C</span>
+              </p>
             </div>
             <div className="w-px h-20 bg-white/10" />
             <div className="text-center flex-1">
               <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Sunshine</p>
-              <p className="text-3xl font-bold text-yellow-200">{sunshineProbability}<span className="text-lg">%</span></p>
+              <p className="text-[36px] leading-none font-bold text-amber-300">
+                {sunshineProbability}
+                <span className="text-lg">%</span>
+              </p>
               <p className="text-xs text-gray-400 mt-1">Probability</p>
             </div>
           </div>

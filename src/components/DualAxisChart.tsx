@@ -51,10 +51,18 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
 
   // QA FIX P1: Unify colors. Temperature is muted orange, Rain is slate gray. Remove glows.
   const tempColor = '#D4622A';
-  const rainColor = '#64748B'; 
+  const rainColor = '#64748B';
+  const rainStroke = '#7EC8D8';
 
   return (
-    <div className="w-full chart-glass p-4" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
+    <div
+      className="w-full chart-glass p-4"
+      style={{
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        backgroundColor: '#1a2035',
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm md:text-base font-bold text-gray-200">{title}</h3>
         <div className="text-xs text-gray-400 flex items-center gap-1.5">
@@ -68,8 +76,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           <defs>
             {/* Neutral slate gradient for rain */}
             <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={rainColor} stopOpacity={0.4} />
-              <stop offset="100%" stopColor={rainColor} stopOpacity={0.1} />
+              <stop offset="0%" stopColor={rainColor} stopOpacity={0.45} />
+              <stop offset="100%" stopColor={rainColor} stopOpacity={0.2} />
             </linearGradient>
             {/* Removed SVG glow filters for flattened UI approach */}
           </defs>
@@ -87,8 +95,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           <XAxis
             dataKey="time"
             stroke="rgba(156, 163, 175, 0.3)"
-            style={{ fontSize: '13px', fontWeight: '600' }}
-            tick={{ fontSize: 13, fill: '#9ca3af', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            style={{ fontSize: '12px', fontWeight: '600' }}
+            tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.55)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
             minTickGap={24}
             interval="preserveStartEnd"
           />
@@ -100,13 +108,13 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 700,
-              fill: tempColor,
+              fill: 'rgba(255,255,255,0.55)',
               style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
-            style={{ fontSize: '13px', fontWeight: '700' }}
-            tick={{ fontSize: 13, fill: tempColor, style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            style={{ fontSize: '12px', fontWeight: '700' }}
+            tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.55)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
           />
           <YAxis
             yAxisId="right"
@@ -117,13 +125,13 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: 90,
               position: 'insideRight',
               offset: 10,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 700,
-              fill: rainColor,
+              fill: 'rgba(255,255,255,0.55)',
               style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
-            style={{ fontSize: '13px', fontWeight: '700' }}
-            tick={{ fontSize: 13, fill: rainColor, style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            style={{ fontSize: '12px', fontWeight: '700' }}
+            tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.55)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
             domain={[0, 130]}
           />
 
@@ -169,9 +177,9 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             type="monotone"
             dataKey="rainProbability"
             fill="url(#rainGradient)"
-            stroke={rainColor}
-            strokeWidth={1}
-            strokeOpacity={0.6}
+            stroke={rainStroke}
+            strokeWidth={2}
+            strokeOpacity={1}
             name="Rain (%)"
             isAnimationActive={!prefersReducedMotion}
             animationDuration={800}

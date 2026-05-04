@@ -19,7 +19,7 @@ const Dashboard: React.FC = () => {
           {/* Dual-Column Layout: Prediction Accuracy + Data Pipeline */}
           <div className="grid gap-3 grid-auto-fit">
             {/* Model Accuracy */}
-            <GlassCard style={{ scrollSnapAlign: 'start' }}>
+            <GlassCard className="self-start" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
                 📈 Prediction Accuracy
               </h3>
@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
                       <p className="font-semibold text-gray-300 mb-0.5 text-sm">📊 Visual Crossing</p>
                       <p className="text-xs text-gray-500">Historical archive (5+ years)</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-200 border border-orange-400/30">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#4A90D9]/20 text-[#4A90D9] border border-[#4A90D9]/60 shadow-[0_0_8px_rgba(74,144,217,0.25)]">
                       Source
                     </span>
                   </div>
@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
                       <p className="font-semibold text-gray-300 mb-0.5 text-sm">🌐 OpenWeather API</p>
                       <p className="text-xs text-gray-500">Real-time observations</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-200 border border-orange-400/30">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/60 shadow-[0_0_8px_rgba(74,222,128,0.25)]">
                       Live Feed
                     </span>
                   </div>
@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
                       <p className="font-semibold text-gray-300 mb-0.5 text-sm">⚡ FastAPI Backend</p>
                       <p className="text-xs text-gray-500">Async ML inference</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-200 border border-orange-400/30">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/60 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
                       Processing
                     </span>
                   </div>
@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
                       <p className="font-semibold text-gray-300 mb-0.5 text-sm">🗄️ Supabase PostgreSQL</p>
                       <p className="text-xs text-gray-500">Climate memory &amp; logs</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-200 border border-orange-400/30">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#A78BFA]/20 text-[#A78BFA] border border-[#A78BFA]/60 shadow-[0_0_8px_rgba(167,139,250,0.25)]">
                       Storage
                     </span>
                   </div>
