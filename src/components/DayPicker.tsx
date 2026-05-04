@@ -66,7 +66,7 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
                 role="listitem"
                 className={`flex flex-col items-center justify-center px-4 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                   isSelected
-                    ? 'bg-gradient-to-br from-orange-500/80 to-orange-600/80 border border-orange-400/50 shadow-lg shadow-orange-500/30'
+                    ? 'bg-[#D4622A]/25 border border-[#D4622A]/40'
                     : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
@@ -82,7 +82,7 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
 
                 {/* Temperature Range */}
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-orange-400'}`}>
+                  <span className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-orange-200'}`}>
                     {dayData.high}°
                   </span>
                   <span className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-500'}`}>
@@ -92,7 +92,7 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
 
                 {/* Rain Chance Indicator */}
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-cyan-400">💧</span>
+                  <span className="text-xs text-gray-400">💧</span>
                   <span className={`text-xs ${isSelected ? 'text-white' : 'text-gray-400'}`}>
                     {dayData.rainChance}%
                   </span>

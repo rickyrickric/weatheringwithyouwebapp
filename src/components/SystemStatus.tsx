@@ -43,7 +43,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
         {/* Header with operational status */}
         <div className="border-b border-white/5 p-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span className="inline-block w-2 h-2 bg-orange-400 rounded-full"></span>
             <h2 className="text-lg font-bold text-white">System Status</h2>
           </div>
           <button
@@ -63,7 +63,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
               onClick={() => setActiveTab(tab)}
               className={`flex-1 px-3 py-3 text-xs font-semibold uppercase transition-colors border-b-2 ${
                 activeTab === tab
-                  ? 'border-green-500 text-green-400'
+                  ? 'border-orange-400 text-orange-200'
                   : 'border-transparent text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -80,11 +80,11 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
             <div className="space-y-4">
               {/* System Performance */}
               <div className="space-y-2">
-                <p className="text-gray-300 font-semibold text-green-400">System Performance</p>
+                <p className="text-gray-300 font-semibold text-orange-200">System Performance</p>
                 <div className="bg-white/5 rounded-lg p-3 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">API Latency</span>
-                    <span className="text-green-400 font-mono font-bold">{metrics.apiLatency}ms</span>
+                    <span className="text-orange-200 font-mono font-bold">{metrics.apiLatency}ms</span>
                   </div>
                   <p className="text-xs text-gray-500">FastAPI response time (target: &lt;100ms)</p>
                 </div>
@@ -94,7 +94,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* Resource Usage */}
               <div className="space-y-2">
-                <p className="text-gray-300 font-semibold text-cyan-400">Resource Usage</p>
+                <p className="text-gray-300 font-semibold text-orange-200">Resource Usage</p>
                 <div className="bg-white/5 rounded-lg p-3 space-y-3">
                   <div className="space-y-1">
                     <div className="flex justify-between items-center mb-1">
@@ -103,7 +103,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-green-500 to-cyan-500 h-full"
+                        className="bg-[#D4622A]/70 h-full"
                         style={{ width: `${metrics.cpuUsage}%` }}
                       ></div>
                     </div>
@@ -115,7 +115,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-full"
+                        className="bg-[#D4622A]/70 h-full"
                         style={{ width: `${metrics.memoryUsage}%` }}
                       ></div>
                     </div>
@@ -126,9 +126,9 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
               <div className="h-px bg-white/5"></div>
 
               {/* Availability */}
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                <p className="text-green-400 font-semibold text-xs mb-1">OPERATIONAL</p>
-                <p className="text-gray-300 text-xs">Uptime: <span className="text-green-400">{metrics.uptime}</span></p>
+              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                <p className="text-orange-200 font-semibold text-xs mb-1">OPERATIONAL</p>
+                <p className="text-gray-300 text-xs">Uptime: <span className="text-orange-200">{metrics.uptime}</span></p>
               </div>
             </div>
           )}
@@ -144,7 +144,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                 <p className="text-gray-300 font-semibold text-sm">🌐 OpenWeather API</p>
                 <p className="text-gray-400 text-xs">Live hourly updates</p>
                 <p className="text-gray-300 text-xs">
-                  Last sync: <span className="text-cyan-400 font-mono">{formatTimeDiff(metrics.openWeatherSync)}</span>
+                  Last sync: <span className="text-orange-200 font-mono">{formatTimeDiff(metrics.openWeatherSync)}</span>
                 </p>
               </div>
 
@@ -153,7 +153,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                 <p className="text-gray-300 font-semibold text-sm">📊 Visual Crossing</p>
                 <p className="text-gray-400 text-xs">6-month historical baseline</p>
                 <p className="text-gray-300 text-xs">
-                  Last sync: <span className="text-amber-400 font-mono">{formatTimeDiff(metrics.visualCrossingSync)}</span>
+                  Last sync: <span className="text-orange-200 font-mono">{formatTimeDiff(metrics.visualCrossingSync)}</span>
                 </p>
               </div>
 
@@ -162,7 +162,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                 <p className="text-gray-300 font-semibold text-sm">💾 Supabase</p>
                 <p className="text-gray-400 text-xs">Climate memory database</p>
                 <p className="text-gray-300 text-xs">
-                  Status: <span className="text-green-400">Connected</span>
+                  Status: <span className="text-orange-200">Connected</span>
                 </p>
               </div>
 
@@ -177,7 +177,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
           {activeTab === 'version' && (
             <div className="space-y-4">
               {/* Model Version & Training Date */}
-              <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-lg p-4 space-y-3">
+              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 space-y-3">
                 <p className="text-gray-300 font-semibold text-orange-400">ML Model</p>
                 <div className="space-y-2">
                   <p className="text-gray-300">
@@ -187,7 +187,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                     <span className="text-gray-400">Type:</span> <span className="font-mono">Polynomial Regression (Degree 4)</span>
                   </p>
                   <p className="text-gray-300">
-                    <span className="text-gray-400">Trained:</span> <span className="font-mono text-amber-400">{formatTimeDiff(metrics.modelTrainDate)}</span>
+                    <span className="text-gray-400">Trained:</span> <span className="font-mono text-orange-200">{formatTimeDiff(metrics.modelTrainDate)}</span>
                   </p>
                   <p className="text-gray-300">
                     <span className="text-gray-400">Baseline:</span> <span className="font-mono">6-month rolling window</span>
@@ -199,11 +199,11 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* Forecast Accuracy Summary */}
               <div className="space-y-2">
-                <p className="text-gray-300 font-semibold text-cyan-400">Forecast Accuracy</p>
+                <p className="text-gray-300 font-semibold text-orange-200">Forecast Accuracy</p>
                 <div className="space-y-1">
-                  <p className="text-gray-400 text-xs">• 24h: <span className="text-green-400 font-bold">92%</span> (RMSE: 1.2°C)</p>
-                  <p className="text-gray-400 text-xs">• 7d: <span className="text-green-400 font-bold">78%</span> (RMSE: 2.1°C)</p>
-                  <p className="text-gray-400 text-xs">• Rain: <span className="text-green-400 font-bold">85%</span> precision</p>
+                  <p className="text-gray-400 text-xs">• 24h: <span className="text-orange-200 font-bold">92%</span> (RMSE: 1.2°C)</p>
+                  <p className="text-gray-400 text-xs">• 7d: <span className="text-orange-200 font-bold">78%</span> (RMSE: 2.1°C)</p>
+                  <p className="text-gray-400 text-xs">• Rain: <span className="text-orange-200 font-bold">85%</span> precision</p>
                 </div>
               </div>
 
@@ -211,7 +211,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* Build Info */}
               <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-gray-400 text-xs mb-2">GitHub: <a href="https://github.com" className="text-orange-400 hover:text-orange-300" target="_blank" rel="noopener noreferrer">weatheringwithyou</a></p>
+                <p className="text-gray-400 text-xs mb-2">GitHub: <a href="https://github.com" className="text-gray-200 hover:underline" target="_blank" rel="noopener noreferrer">weatheringwithyou</a></p>
                 <p className="text-gray-500 text-xs">Build: React 19 + TypeScript | Deployed on Vite</p>
               </div>
             </div>

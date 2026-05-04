@@ -13,22 +13,22 @@ interface SunshineWindowProps {
 // QA FIX P2: Unified status card fills to a single hue family (orange) with opacity variation
 const conditionStyles = {
   optimal: {
-    bg: 'bg-orange-600/80',
-    border: 'border-orange-500/50',
-    badge: 'bg-orange-500/30 text-orange-200',
-    activeBorder: 'border-orange-400/80',
+    bg: 'bg-[#D4622A]/80',
+    border: 'border-[#D4622A]/45',
+    badge: 'bg-[#D4622A]/30 text-orange-100',
+    activeBorder: 'border-[#D4622A]/80',
   },
   good: {
-    bg: 'bg-orange-600/50',
-    border: 'border-orange-500/30',
-    badge: 'bg-orange-500/20 text-orange-200/80',
-    activeBorder: 'border-orange-400/60',
+    bg: 'bg-[#D4622A]/55',
+    border: 'border-[#D4622A]/30',
+    badge: 'bg-[#D4622A]/20 text-orange-100/80',
+    activeBorder: 'border-[#D4622A]/60',
   },
   fair: {
-    bg: 'bg-orange-600/20',
-    border: 'border-orange-500/20',
-    badge: 'bg-orange-500/10 text-orange-200/60',
-    activeBorder: 'border-orange-400/40',
+    bg: 'bg-[#D4622A]/25',
+    border: 'border-[#D4622A]/20',
+    badge: 'bg-[#D4622A]/10 text-orange-100/60',
+    activeBorder: 'border-[#D4622A]/40',
   },
 };
 

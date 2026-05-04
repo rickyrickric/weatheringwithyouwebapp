@@ -25,6 +25,7 @@ const Forecast: React.FC = () => {
   // QA Added: Loading and Error states
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
 
   // Destructure from state instead of shared mock constants
   const {
@@ -81,6 +82,7 @@ const Forecast: React.FC = () => {
   const fetchForecastData = async () => {
     setIsLoading(true);
     setHasError(false);
+    setShowErrorToast(false);
     
     try {
       // Fetch both APIs in parallel
@@ -120,6 +122,7 @@ const Forecast: React.FC = () => {
     } catch (err) {
       console.error(err);
       setHasError(true);
+      setShowErrorToast(true);
       // Fallback data
       setChartData(DEFAULT_CHART_DATA);
     } finally {
@@ -142,6 +145,15 @@ const Forecast: React.FC = () => {
         currentHour={lastUpdated.getHours()}
       />
 
+      {/* Error toast: never let fallback data dominate the hero */}
+      {hasError && showErrorToast && (
+        <ErrorBanner
+          variant="toast"
+          onRetry={fetchForecastData}
+          onDismiss={() => setShowErrorToast(false)}
+        />
+      )}
+
       <div className="relative z-10 h-full overflow-hidden">
         {/* Header */}
         <div className="text-center py-1 px-4 prayer-header header-section">
@@ -160,11 +172,11 @@ const Forecast: React.FC = () => {
         </div>
 
         {/* Main container */}
-        <div className="max-w-7xl mx-auto px-4 pb-12 pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
+        <div className="relative page-container pb-12 pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
           
           {/* Feature: Rain Alert Banner */}
           {!isLoading && currentRain > 60 && !hasError && (
-            <div className="bg-blue-500/20 border border-blue-500/30 text-blue-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-2 shadow-lg">
+            <div className="bg-orange-500/10 border border-orange-500/25 text-orange-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-2">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🌧️</span>
                 <p className="text-sm"><strong>High Rain Alert:</strong> {currentRain}% chance of precipitation. Carry an umbrella.</p>
@@ -172,45 +184,39 @@ const Forecast: React.FC = () => {
             </div>
           )}
 
-          {/* Error State Banner */}
-          {hasError && (
-            <ErrorBanner onRetry={fetchForecastData} />
-          )}
+          {/* Current Conditions */}
+          <div className="space-y-3 mb-2">
+            <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
+              ⚡ Current Conditions
+            </h3>
+            {isLoading ? (
+              <KPISkeleton />
+            ) : (
+              <KPIGrid
+                windSpeed={currentWindSpeed}
+                humidity={currentHumidity}
+                visibility={visibility ?? 10}
+                pressure={pressure ?? 101325}
+                uvIndex={uvIndex ?? 6}
+                dewPoint={dewPoint ?? 20}
+              />
+            )}
+          </div>
 
-          {/* Top row: KPIs + Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start mb-2">
-            <div className="space-y-3">
-              <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
-                ⚡ Current Conditions
-              </h3>
-              {isLoading ? (
-                <KPISkeleton />
-              ) : (
-                <KPIGrid
-                  windSpeed={currentWindSpeed}
-                  humidity={currentHumidity}
-                  visibility={visibility ?? 10}
-                  pressure={pressure ?? 101325}
-                  uvIndex={uvIndex ?? 6}
-                  dewPoint={dewPoint ?? 20}
+          {/* Temperature & Rain Chart */}
+          <div className="space-y-2 mb-2">
+            {isLoading ? (
+              <ChartSkeleton />
+            ) : (
+              <div className="animate-[pageEnter_0.3s_ease-out]">
+                <DualAxisChart
+                  data={chartData}
+                  title="Temperature & Rain Probability - 24hr Forecast"
+                  currentTime={lastUpdated}
+                  height={220}
                 />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : (
-                <div className="animate-[pageEnter_0.3s_ease-out]">
-                  <DualAxisChart
-                    data={chartData}
-                    title="Temperature & Rain Probability - 24hr Forecast"
-                    currentTime={lastUpdated}
-                    height={112}
-                  />
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Feature: Hourly Breakdown Row */}
@@ -256,6 +262,10 @@ const Forecast: React.FC = () => {
               )}
             </div>
           </section>
+
+          {/* Subtle fade indicator for clipped content */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-gray-400">⌄</div>
         </div>
       </div>
     </div>

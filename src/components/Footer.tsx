@@ -11,7 +11,7 @@ const Footer: React.FC<FooterProps> = ({ lastUpdated }) => {
   return (
     <>
       <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent backdrop-blur-sm border-t border-white/5 p-4 z-40">
-        <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-gray-400">
+        <div className="page-container flex items-center justify-between text-sm text-gray-400">
           <div>
             <p>Built with love, data, and a prayer for perfect weather ✨</p>
             <p className="text-xs text-gray-500 mt-1">

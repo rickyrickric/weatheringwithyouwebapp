@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import DynamicBackground from "../components/DynamicBackground";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
-import backgroundHome from "../assets/background_home.png";
 
 const Home: FC = () => {
   const navigate = useNavigate();
@@ -35,20 +34,8 @@ const Home: FC = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full w-full overflow-hidden page-enter bg-[#121826]">
-      {/* Home Image Background */}
-      {/* TODO: Backend integration - Swap out dynamically based on "Weather State" (e.g., misty road for low visibility, wet road for rain) */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${backgroundHome})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom', // ensures bottom watermark is visible
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
-      
-      {/* Vignette effect: Dark gradient overlay to ground the footer and ensure text readability */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0a0f18] via-[#121826]/50 to-transparent pointer-events-none" />
+      {/* Flat background for reduced visual competition */}
+      <div className="absolute inset-0 z-0 bg-[#121826]" />
 
       {/* Atmospheric background — weather-reactive */}
       <DynamicBackground
@@ -69,14 +56,14 @@ const Home: FC = () => {
 
       {/* Content — centered, floating above background */}
       <div
-        className={`relative z-10 flex flex-col items-center justify-center px-4 w-full max-w-4xl transition-all duration-700 h-full ${
+        className={`relative z-10 flex flex-col items-center justify-center page-container transition-all duration-700 h-full ${
           isClearing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
         {/* Main Glassmorphism Dashboard Container */}
-        <div className="flex flex-col items-center text-center p-8 md:p-12 bg-white/10 backdrop-blur-md border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-full shadow-2xl">
+        <div className="flex flex-col items-center text-center p-8 md:p-10 bg-white/10 backdrop-blur-sm border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-full shadow-2xl">
           {/* Prayer hero text - Flat solid white text */}
-          <div className="space-y-7 mb-10">
+          <div className="space-y-5 mb-8">
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-wide">
               A Prayer for
               <br />
@@ -90,37 +77,44 @@ const Home: FC = () => {
               </svg>
               <span>Current Location: <strong className="text-white font-semibold">Tagum City, Philippines</strong></span>
             </div>
-            {/* Shortened concise description */}
-            <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base font-light leading-relaxed mt-2">
-              Where weather forecasting becomes an act of connection, sacrifice, and hope.
+            {/* Tagline: Single impactful line */}
+            <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base font-light">
+              Where weather forecasting becomes an act of connection.
             </p>
           </div>
 
-          {/* Live micro-data teaser card (flattened inside the main container) */}
-          <div className="flex items-center justify-center gap-10 mb-10 w-full max-w-md mx-auto py-6 bg-white/5 rounded-2xl border border-white/5">
-            <div className="text-center w-1/2">
-              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-2">Temperature</p>
-              <p className="text-4xl font-bold text-white">{Math.round(currentWeather.temperature)}°C</p>
+          {/* Live micro-data teaser: Visual hierarchy — Temperature dominant, Sunshine supporting */}
+          <div className="flex items-center justify-center gap-12 mb-10 w-full max-w-md mx-auto py-8 bg-white/5 rounded-2xl border border-white/5">
+            <div className="text-center flex-1">
+              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Temperature</p>
+              <p className="text-5xl md:text-6xl font-bold text-white">{Math.round(currentWeather.temperature)}°</p>
+              <p className="text-xs text-gray-400 mt-1">Celsius</p>
             </div>
-            <div className="w-px h-16 bg-white/10" />
-            <div className="text-center w-1/2">
-              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-2">Sunshine</p>
-              <p className="text-4xl font-bold text-white">{sunshineProbability}%</p>
+            <div className="w-px h-20 bg-white/10" />
+            <div className="text-center flex-1">
+              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Sunshine</p>
+              <p className="text-3xl font-bold text-yellow-200">{sunshineProbability}<span className="text-lg">%</span></p>
+              <p className="text-xs text-gray-400 mt-1">Probability</p>
             </div>
           </div>
 
-          {/* CTA — muted orange */}
-          <button
-            onClick={handleClearSky}
-            disabled={isClearing}
-            className={`px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 ${
-              isClearing
-                ? "bg-[#D4622A] text-white cursor-wait scale-95 opacity-50"
-                : "bg-[#D4622A] hover:bg-[#b05223] text-white shadow-lg shadow-orange-900/20 hover:scale-105 active:scale-95 animate-cta-pulse"
-            }`}
-          >
-            {isClearing ? "⛅ Clearing the clouds..." : "☀️ Clear the Sky"}
-          </button>
+          {/* CTA — muted orange with supporting micro-copy */}
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={handleClearSky}
+              disabled={isClearing}
+              className={`px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 ${
+                isClearing
+                  ? "bg-[#D4622A]/70 text-white cursor-wait scale-95 opacity-70"
+                  : "bg-[#D4622A]/80 hover:bg-[#D4622A]/90 text-white hover:scale-105 active:scale-95"
+              }`}
+            >
+              {isClearing ? "⛅ Clearing the clouds..." : "☀️ Clear the Sky"}
+            </button>
+            <p className="text-xs text-gray-300 font-medium mt-2">
+              Find the next sunshine window →
+            </p>
+          </div>
         </div>
 
         {/* Footer - Moved outside the glass container, positioned against the vignette */}

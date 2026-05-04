@@ -64,7 +64,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
       </div>
       
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={data} margin={{ top: 10, right: 36, left: 10, bottom: 10 }}>
+        <ComposedChart data={data} margin={{ top: 10, right: 40, left: 20, bottom: 10 }}>
           <defs>
             {/* Neutral slate gradient for rain */}
             <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
@@ -89,6 +89,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             stroke="rgba(156, 163, 175, 0.3)"
             style={{ fontSize: '13px', fontWeight: '600' }}
             tick={{ fontSize: 13, fill: '#9ca3af', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            minTickGap={24}
+            interval="preserveStartEnd"
           />
           <YAxis
             yAxisId="left"
