@@ -79,7 +79,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
         </div>
 
         {/* Quick metrics footer */}
-        <div className="px-4 py-3 grid grid-cols-2 gap-2 border-t border-gray-200">
+        <div className="px-4 py-3 grid gap-2 grid-auto-fit border-t border-gray-200">
           <div>
             <p className="text-[10px] text-openweather-textLight uppercase font-semibold">
               Rain Probability
@@ -141,7 +141,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
           </div>
 
           {/* Secondary Metrics - Horizontal Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-white/10">
+          <div className="grid gap-4 grid-auto-fit pt-8 border-t border-white/10">
             {/* Rain Chance */}
             <div 
               className="space-y-2 relative group cursor-help"

@@ -243,7 +243,7 @@ const Forecast: React.FC = () => {
             <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
               ☀️ Optimal Weather Windows
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid gap-3 grid-auto-fit">
               {isLoading ? (
                 <>
                   <div className="glass-card h-28 animate-pulse bg-slate-700/50" />

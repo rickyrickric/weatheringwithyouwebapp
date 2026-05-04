@@ -23,7 +23,7 @@ const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'rectangu
 };
 
 export const KPISkeleton = () => (
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+  <div className="grid gap-3 grid-auto-fit">
     {[...Array(6)].map((_, i) => (
       <div key={i} className="glass-card p-4 space-y-3">
         <div className="flex items-center gap-2">

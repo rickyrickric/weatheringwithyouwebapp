@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
                 Live validation against OpenWeather data and 6-month climate history.
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid gap-4 grid-auto-fit">
                 {/* 24h Accuracy */}
                 <div className="space-y-3">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400">24-Hour Forecast</p>
