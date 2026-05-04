@@ -54,7 +54,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
   const rainColor = '#64748B'; 
 
   return (
-    <div className="w-full glass-card p-4" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
+    <div className="w-full chart-glass p-4" style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm md:text-base font-bold text-gray-200">{title}</h3>
         <div className="text-xs text-gray-400 flex items-center gap-1.5">

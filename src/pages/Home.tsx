@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import DynamicBackground from "../components/DynamicBackground";
-import GlassCard from "../components/GlassCard";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
 import backgroundHome from "../assets/background_home.png";

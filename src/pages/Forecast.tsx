@@ -67,10 +67,10 @@ const Forecast: React.FC = () => {
 
   const getGreeting = (date: Date) => {
     const hour = date.getHours();
-    if (hour < 12) return '🌅 Good Morning';
-    if (hour < 17) return '🌤️ Good Afternoon';
-    if (hour < 21) return '🌆 Good Evening';
-    return '🌙 Good Night';
+    if (hour < 12) return { emoji: '🌅', text: 'Good Morning' };
+    if (hour < 17) return { emoji: '🌤️', text: 'Good Afternoon' };
+    if (hour < 21) return { emoji: '🌆', text: 'Good Evening' };
+    return { emoji: '🌙', text: 'Good Night' };
   };
 
   const timeOfDay = useMemo(
@@ -86,17 +86,18 @@ const Forecast: React.FC = () => {
       // Fetch both APIs in parallel
       const [currentRes, forecastRes] = await Promise.all([
         fetch('/api/weather/current'),
-        fetch('/api/weather/forecast')
+        fetch('/api/weather/forecast'),
       ]);
 
       if (!currentRes.ok || !forecastRes.ok) {
-        throw new Error("Failed to fetch weather data");
+        throw new Error('Failed to fetch weather data');
       }
 
       const currentData = await currentRes.json();
       const forecastJson = await forecastRes.json();
 
       setCurrentWeather(currentData);
+
       setChartData(forecastJson.forecast || DEFAULT_CHART_DATA);
       
       const dataLoadTime = new Date();
@@ -131,23 +132,27 @@ const Forecast: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen page-enter">
+    <div className="relative min-h-screen page-enter tab-container">
       <DynamicBackground
         temperature={currentTemp}
         rainProbability={currentRain}
         timeOfDay={timeOfDay}
         isOptimalWindow={isOptimalWindow}
         weatherId={currentWeather.weatherId}
+        currentHour={lastUpdated.getHours()}
       />
 
       <div className="relative z-10 h-full overflow-hidden">
         {/* Header */}
-        <div className="text-center py-2 px-4 prayer-header mt-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-100 mb-2">
-            {getGreeting(forecastDate)}, Tagum City
-          </h1>
-          <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 mb-2 inline-block backdrop-blur-sm">
-            <DateAnchor date={forecastDate} />
+        <div className="text-center py-1 px-4 prayer-header header-section">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-100">
+              <span className="mr-2 text-lg md:text-xl">{getGreeting(forecastDate).emoji}</span>
+              {getGreeting(forecastDate).text}, Tagum City
+            </h1>
+            <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1 inline-flex items-center backdrop-blur-sm">
+              <DateAnchor date={forecastDate} />
+            </div>
           </div>
           <p className="text-gray-400 mt-1 text-[11px] md:text-sm">
             24-hour forecast with 92% accuracy • 6-month climate baseline
@@ -155,11 +160,11 @@ const Forecast: React.FC = () => {
         </div>
 
         {/* Main container */}
-        <div className="max-w-7xl mx-auto px-4 pb-24 prayer-cleared h-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 pb-12 pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
           
           {/* Feature: Rain Alert Banner */}
           {!isLoading && currentRain > 60 && !hasError && (
-            <div className="bg-blue-500/20 border border-blue-500/30 text-blue-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-6 shadow-lg">
+            <div className="bg-blue-500/20 border border-blue-500/30 text-blue-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-2 shadow-lg">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🌧️</span>
                 <p className="text-sm"><strong>High Rain Alert:</strong> {currentRain}% chance of precipitation. Carry an umbrella.</p>
@@ -173,7 +178,7 @@ const Forecast: React.FC = () => {
           )}
 
           {/* Top row: KPIs + Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start mb-2">
             <div className="space-y-3">
               <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
                 ⚡ Current Conditions
@@ -196,12 +201,12 @@ const Forecast: React.FC = () => {
               {isLoading ? (
                 <ChartSkeleton />
               ) : (
-                <div className="glass-card-light p-4 animate-[pageEnter_0.3s_ease-out]">
+                <div className="animate-[pageEnter_0.3s_ease-out]">
                   <DualAxisChart
                     data={chartData}
                     title="Temperature & Rain Probability - 24hr Forecast"
                     currentTime={lastUpdated}
-                    height={180}
+                    height={112}
                   />
                 </div>
               )}
@@ -210,7 +215,7 @@ const Forecast: React.FC = () => {
 
           {/* Feature: Hourly Breakdown Row */}
           {!isLoading && !hasError && (
-            <section className="space-y-3 mb-6 animate-[pageEnter_0.3s_ease-out]">
+            <section className="space-y-2 mb-2 animate-[pageEnter_0.3s_ease-out]">
               <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
                 ⏱️ Hourly Breakdown
               </h3>
@@ -228,7 +233,7 @@ const Forecast: React.FC = () => {
           )}
 
           {/* Bottom row: Optimal Weather Windows */}
-          <section className="space-y-3">
+          <section className="space-y-2">
             <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
               ☀️ Optimal Weather Windows
             </h3>

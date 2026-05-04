@@ -1,164 +1,150 @@
 import React from 'react';
 import GlassCard from '../components/GlassCard';
-import DynamicBackground from '../components/DynamicBackground';
 
 const About: React.FC = () => {
   return (
-    <div className="relative min-h-screen page-enter">
-      <DynamicBackground
-        temperature={28}
-        rainProbability={35}
-        timeOfDay="afternoon"
-      />
+    <div className="relative min-h-screen page-enter bg-[#0a0b10] technical-page tab-container">
 
       <div className="relative z-10">
         {/* Header - QA Fix: Removed gradient text */}
-        <div className="text-center py-8 px-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-100 mb-2">
+        <div className="text-center py-2 px-4 header-section">
+          <h1 className="text-2xl md:text-2.5xl font-bold text-gray-100 mb-1">
             About This Project
           </h1>
-          <p className="text-gray-400">Inspiration, technology, and vision</p>
-          <div className="mt-4 h-1 w-24 bg-slate-600 mx-auto rounded-full opacity-60" />
+          <div className="mt-3 h-1 w-24 bg-slate-600 mx-auto rounded-full opacity-60" />
         </div>
 
         {/* Main container */}
-        <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-          <GlassCard>
-            <h2 className="text-xl font-bold text-gray-200 mb-6">
-              🎬 Inspiration: "Tenki no Ko" (Weathering with You)
-            </h2>
-            <div className="space-y-4 text-gray-400 text-sm">
-              <p className="leading-relaxed">
-                This project draws inspiration from the beautiful anime film <strong>"Tenki no Ko"</strong> (Weathering with You), where weather forecasting transcends mere meteorology and becomes an act of connection, sacrifice, and hope.
-              </p>
-              <p className="leading-relaxed">
-                In the film, the protagonist Hodaka discovers that the heroine Hina possesses the ability to influence weather—a power tied to the climate itself. Their journey explores themes of destiny, love, and the intersection between human choice and natural phenomena.
-              </p>
-              <p className="leading-relaxed italic text-gray-500">
-                "A prayer for the palm city" encapsulates this philosophy: we don't merely predict weather—we understand the emotional and practical dimensions of atmospheric conditions. We recognize that sunshine and rain carry meaning beyond data points.
-              </p>
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <h2 className="text-xl font-bold text-gray-200 mb-6">
-              ⚙️ Technology Stack
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <span>🎨</span> Frontend
-                </h3>
-                <div className="space-y-2 text-sm text-gray-300">
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">React 19</p>
-                    <p className="text-xs text-gray-500">Component-based UI with hooks</p>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">React Router v7</p>
-                    <p className="text-xs text-gray-500">Seamless navigation between tabs</p>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">Tailwind CSS</p>
-                    <p className="text-xs text-gray-500">Glassmorphic design system</p>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">Recharts</p>
-                    <p className="text-xs text-gray-500">Dual-axis data visualization</p>
+        <div className="max-w-6xl mx-auto px-4 py-3 space-y-2 main-content">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            <GlassCard>
+              <h2 className="text-lg font-bold text-gray-200 mb-3">
+                🎬 Inspiration: "Tenki no Ko" (Weathering with You)
+              </h2>
+              <div className="space-y-3 text-gray-400 text-sm inspiration-scroll h-64 overflow-y-auto">
+                <p className="leading-relaxed text-xs">
+                  This project draws inspiration from the beautiful anime film <strong>"Tenki no Ko"</strong> (Weathering with You), where weather forecasting transcends mere meteorology and becomes an act of connection, sacrifice, and hope.
+                </p>
+                <p className="leading-relaxed text-xs">
+                  In the film, the protagonist Hodaka discovers that the heroine Hina possesses the ability to influence weather—a power tied to the climate itself. Their journey explores themes of destiny, love, and the intersection between human choice and natural phenomena.
+                </p>
+                <p className="leading-relaxed italic text-gray-500 text-xs">
+                  "A prayer for the palm city" encapsulates this philosophy: we don't merely predict weather—we understand the emotional and practical dimensions of atmospheric conditions. We recognize that sunshine and rain carry meaning beyond data points.
+                </p>
+                <div className="border-t border-white/10 mt-3 pt-3">
+                  <h3 className="text-sm font-bold text-gray-200 mb-2">🏗️ Architecture Overview</h3>
+                  <div className="space-y-2">
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 mb-1 text-xs">Data Flow</p>
+                      <p className="text-xs text-gray-400 font-mono">OpenWeather API → FastAPI Backend → Scikit-Learn Model → React UI</p>
+                    </div>
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 mb-1 text-xs">Database Layer</p>
+                      <p className="text-xs text-gray-400">Supabase PostgreSQL stores 6-month climate memory, prediction logs, and user "sunshine prayers"</p>
+                    </div>
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 mb-1 text-xs">ML Pipeline</p>
+                      <p className="text-xs text-gray-400">Polynomial Regression (Degree 4) trained on historical data; 92% 24h accuracy, 78% 7d accuracy</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            </GlassCard>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <span>⚡</span> Backend & ML
-                </h3>
-                <div className="space-y-2 text-sm text-gray-300">
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">FastAPI</p>
-                    <p className="text-xs text-gray-500">Async Python web framework</p>
+            <GlassCard>
+              <h2 className="text-lg font-bold text-gray-200 mb-3">
+                ⚙️ Technology Stack
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                    🎨 Frontend
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">React 19</p>
+                      <p className="text-[10px] text-gray-500">Component-based UI with hooks</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">React Router v7</p>
+                      <p className="text-[10px] text-gray-500">Seamless navigation between tabs</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">Tailwind CSS</p>
+                      <p className="text-[10px] text-gray-500">Glassmorphic design system</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">Recharts</p>
+                      <p className="text-[10px] text-gray-500">Dual-axis data visualization</p>
+                    </div>
                   </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">Scikit-Learn</p>
-                    <p className="text-xs text-gray-500">Polynomial Regression (Degree 4)</p>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">Supabase</p>
-                    <p className="text-xs text-gray-500">PostgreSQL + Auth + Real-time</p>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded border border-white/10">
-                    <p className="font-semibold text-gray-200">OpenWeather API</p>
-                    <p className="text-xs text-gray-500">Live weather data feed</p>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                    ⚡ Backend & ML
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">FastAPI</p>
+                      <p className="text-[10px] text-gray-500">Async Python web framework</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">Scikit-Learn</p>
+                      <p className="text-[10px] text-gray-500">Polynomial Regression (Degree 4)</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">Supabase</p>
+                      <p className="text-[10px] text-gray-500">PostgreSQL + Auth + Real-time</p>
+                    </div>
+                    <div className="p-1.5 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">OpenWeather API</p>
+                      <p className="text-[10px] text-gray-500">Live weather data feed</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </div>
 
           <GlassCard>
-            <h2 className="text-xl font-bold text-gray-200 mb-6">
-              🏗️ Architecture Overview
-            </h2>
-            <div className="space-y-4 text-sm text-gray-300">
-              <div className="p-4 bg-white/5 rounded border border-white/10">
-                <p className="font-semibold text-gray-200 mb-2">Data Flow</p>
-                <p className="text-xs text-gray-400 font-mono">
-                  OpenWeather API → FastAPI Backend → Scikit-Learn Model → React UI
-                </p>
-              </div>
-              <div className="p-4 bg-white/5 rounded border border-white/10">
-                <p className="font-semibold text-gray-200 mb-2">Database Layer</p>
-                <p className="text-xs text-gray-400">
-                  Supabase PostgreSQL stores 6-month climate memory, prediction logs, and user "sunshine prayers"
-                </p>
-              </div>
-              <div className="p-4 bg-white/5 rounded border border-white/10">
-                <p className="font-semibold text-gray-200 mb-2">ML Pipeline</p>
-                <p className="text-xs text-gray-400">
-                  Polynomial Regression (Degree 4) trained on historical data; 92% 24h accuracy, 78% 7d accuracy
-                </p>
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <h2 className="text-xl font-bold text-gray-200 mb-6">
+            <h2 className="text-lg font-bold text-gray-200 mb-3">
               ✨ Key Features
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ul className="space-y-3 text-sm text-gray-400">
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Dual-Axis Chart:</strong> Temperature & rain probability side-by-side</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Sunshine Windows:</strong> Actionable weather recommendations</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Dynamic Background:</strong> Responds to real-time weather</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Climate Memory:</strong> 6-month historical baseline</span>
                 </li>
               </ul>
-              <ul className="space-y-3 text-sm text-gray-400">
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Prayer System:</strong> Log sunshine wishes (future: gamification)</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Glassmorphic UI:</strong> Aesthetic consistency throughout</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Multi-Tab Navigation:</strong> Home, Forecast, Dashboard, About</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-slate-500 text-lg">→</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-slate-500">→</span>
                   <span><strong>Responsive Design:</strong> Mobile-first, works on all devices</span>
                 </li>
               </ul>
@@ -167,7 +153,7 @@ const About: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center py-12 text-gray-500 text-sm">
+        <div className="text-center py-2 text-gray-500 text-xs">
           <p>Built with love, data, and a prayer for perfect weather ✨</p>
         </div>
       </div>

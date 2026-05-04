@@ -1,7 +1,10 @@
 import React from 'react';
 
 import bgSunshine from '../assets/forecast_sunshine.png';
+import bgCloudy from '../assets/forecast_cloudy.png';
 import bgRaining from '../assets/forecast_raining.png';
+import bgStorm from '../assets/forecast_storm.png';
+import bgNighttime from '../assets/forecast_nighttime.png';
 
 interface DynamicBackgroundProps {
   temperature?: number;
@@ -10,6 +13,7 @@ interface DynamicBackgroundProps {
   isOptimalWindow?: boolean;
   transparentBase?: boolean;
   weatherId?: number;
+  currentHour?: number;
 }
 
 // Stable random seed arrays generated once at module level
@@ -30,16 +34,25 @@ const PARTICLE_POSITIONS = Array.from({ length: 8 }, (_, i) => ({
 
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   rainProbability = 35,
+  timeOfDay,
   transparentBase = false,
   weatherId,
+  currentHour,
 }) => {
   // Determine background image based on OpenWeather API ID
   const getBackgroundImage = () => {
     if (transparentBase) return undefined;
-    if (!weatherId) return bgSunshine; // Default to sunshine
-    if (weatherId >= 200 && weatherId < 600) return bgRaining; // Thunderstorm, Drizzle, Rain
-    if (weatherId === 800 || weatherId === 801 || weatherId === 802) return bgSunshine; // Clear or few clouds
-    return bgSunshine; // Fallback
+    const resolvedHour = currentHour ?? new Date().getHours();
+    const isNightHours = resolvedHour >= 18 || resolvedHour < 5;
+    const isNightTimeOfDay = timeOfDay === 'night' || timeOfDay === 'evening' || timeOfDay === 'sunset';
+
+    if (isNightHours || isNightTimeOfDay) return bgNighttime;
+    if (!weatherId) return bgSunshine;
+    if (weatherId >= 200 && weatherId < 300) return bgStorm;
+    if ((weatherId >= 300 && weatherId < 400) || (weatherId >= 500 && weatherId < 600)) return bgRaining;
+    if (weatherId >= 802 && weatherId <= 804) return bgCloudy;
+    if (weatherId === 800 || weatherId === 801) return bgSunshine;
+    return bgSunshine;
   };
 
   const backgroundImage = getBackgroundImage();
@@ -52,8 +65,8 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
           className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-1000"
           style={{ backgroundImage: `url(${backgroundImage})` }}
         >
-          {/* Global Scrim for Text Protection */}
-          <div className="absolute inset-0 bg-black/40" />
+          {/* Top scrim for header legibility without obscuring the scene */}
+          <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-b from-black/60 via-black/30 to-transparent" />
         </div>
       )}
 
