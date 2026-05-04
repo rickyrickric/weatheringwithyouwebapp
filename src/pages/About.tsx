@@ -16,7 +16,7 @@ const About: React.FC = () => {
 
         {/* Main container */}
         <div className="page-container py-3 space-y-2 main-content">
-          <div className="grid gap-2 grid-auto-fit">
+          <div className="grid gap-2 grid-auto-fit items-start">
             <GlassCard>
               <h2 className="text-lg font-bold text-gray-100 mb-3">
                 🎬 Inspiration: "Tenki no Ko" (Weathering with You)
@@ -48,7 +48,7 @@ const About: React.FC = () => {
                   <h3 className="text-xs font-semibold text-gray-100 flex items-center gap-1">
                     🎨 Frontend
                   </h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
                     <div className="p-2 bg-white/5 rounded border-l-4 border-emerald-400/70 border border-white/10">
                       <p className="font-semibold text-gray-200 text-sm">React 19</p>
                       <p className="text-[10px] text-gray-500">Component-based UI with hooks</p>
@@ -57,15 +57,13 @@ const About: React.FC = () => {
                       <p className="font-semibold text-gray-200 text-sm">Tailwind CSS</p>
                       <p className="text-[10px] text-gray-500">Glassmorphic design system</p>
                     </div>
-                    <div className="grid gap-2 grid-auto-fit text-xs text-gray-300">
-                      <div className="p-1.5 bg-white/5 rounded border border-white/10">
-                        <p className="font-semibold text-gray-200 text-xs">React Router v7</p>
-                        <p className="text-[10px] text-gray-500">Seamless navigation between tabs</p>
-                      </div>
-                      <div className="p-1.5 bg-white/5 rounded border border-white/10">
-                        <p className="font-semibold text-gray-200 text-xs">Recharts</p>
-                        <p className="text-[10px] text-gray-500">Dual-axis data visualization</p>
-                      </div>
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">React Router v7</p>
+                      <p className="text-[10px] text-gray-500">Seamless navigation between tabs</p>
+                    </div>
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">Recharts</p>
+                      <p className="text-[10px] text-gray-500">Dual-axis data visualization</p>
                     </div>
                   </div>
                 </div>
@@ -74,7 +72,7 @@ const About: React.FC = () => {
                   <h3 className="text-xs font-semibold text-gray-100 flex items-center gap-1">
                     ⚡ Backend & ML
                   </h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
                     <div className="p-2 bg-white/5 rounded border-l-4 border-amber-400/70 border border-white/10">
                       <p className="font-semibold text-gray-200 text-sm">FastAPI</p>
                       <p className="text-[10px] text-gray-500">Async Python web framework</p>
@@ -87,11 +85,9 @@ const About: React.FC = () => {
                       <p className="font-semibold text-gray-200 text-sm">Supabase</p>
                       <p className="text-[10px] text-gray-500">PostgreSQL + Auth + Real-time</p>
                     </div>
-                    <div className="grid gap-2 grid-auto-fit text-xs text-gray-300">
-                      <div className="p-1.5 bg-white/5 rounded border border-white/10">
-                        <p className="font-semibold text-gray-200 text-xs">OpenWeather API</p>
-                        <p className="text-[10px] text-gray-500">Live weather data feed</p>
-                      </div>
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                      <p className="font-semibold text-gray-200 text-xs">OpenWeather API</p>
+                      <p className="text-[10px] text-gray-500">Live weather data feed</p>
                     </div>
                   </div>
                 </div>
@@ -111,22 +107,30 @@ const About: React.FC = () => {
                 <p className="font-semibold text-gray-200">CSV / APIs</p>
                 <p className="text-[10px] text-gray-500 mt-1">OpenWeather + Visual Crossing</p>
               </div>
-              <div className="hidden md:flex items-center justify-center text-gray-500">→</div>
+              <div className="hidden md:flex items-center justify-center">
+                <span className="text-[#E8541A] text-xl">➜</span>
+              </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="font-semibold text-gray-200">ML Model</p>
                 <p className="text-[10px] text-gray-500 mt-1">Scikit-Learn (Poly Reg)</p>
               </div>
-              <div className="hidden md:flex items-center justify-center text-gray-500">→</div>
+              <div className="hidden md:flex items-center justify-center">
+                <span className="text-[#E8541A] text-xl">➜</span>
+              </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="font-semibold text-gray-200">FastAPI</p>
                 <p className="text-[10px] text-gray-500 mt-1">Prediction + Cache</p>
               </div>
-              <div className="hidden md:flex items-center justify-center text-gray-500">→</div>
+              <div className="hidden md:flex items-center justify-center">
+                <span className="text-[#E8541A] text-xl">➜</span>
+              </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="font-semibold text-gray-200">Supabase</p>
                 <p className="text-[10px] text-gray-500 mt-1">Climate memory</p>
               </div>
-              <div className="hidden md:flex items-center justify-center text-gray-500">→</div>
+              <div className="hidden md:flex items-center justify-center">
+                <span className="text-[#E8541A] text-xl">➜</span>
+              </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="font-semibold text-gray-200">React UI</p>
                 <p className="text-[10px] text-gray-500 mt-1">Forecast + Dashboard</p>
