@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import DynamicBackground from "../components/DynamicBackground";
+import { useBackgroundState } from "../hooks/useBackgroundState";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
 import backgroundHome from "../assets/background_home.png";
@@ -33,8 +34,11 @@ const Home: FC = () => {
     navigate("/forecast");
   }, [navigate]);
 
+  // Get dynamic text color based on background state
+  const { textColorClass } = useBackgroundState(currentWeather.weatherId, currentHour);
+
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen w-full overflow-y-auto page-enter bg-[#121826] pb-[90px]">
+    <div className="relative w-full min-h-screen overflow-y-auto page-enter bg-[#121826] pb-[100px] flex flex-col items-center">
       {/* Restored background image with soft blur and dimming */}
       <div
         className="absolute inset-0 z-0 bg-center bg-cover"
@@ -64,9 +68,9 @@ const Home: FC = () => {
 
       {/* Content — centered, floating above background */}
       <div
-        className={`relative z-10 flex flex-col items-center justify-center page-container transition-all duration-700 h-full ${
+        className={`relative z-10 flex flex-col items-center justify-center py-8 transition-all duration-700 w-full flex-1 ${
           isClearing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-        }`}
+        } ${textColorClass}`}
       >
         {/* Main Glassmorphism Dashboard Container */}
         <div
@@ -135,13 +139,13 @@ const Home: FC = () => {
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Footer - Moved outside the glass container, positioned against the vignette */}
-        <div className="absolute bottom-6 left-0 w-full text-center">
-          <p className="text-xs text-white font-medium tracking-wide">
-            Inspired by "Tenki no Ko" — where weather forecasting becomes connection
-          </p>
-        </div>
+      {/* Footer - Bottom of scrollable area */}
+      <div className="relative z-10 text-center py-6 px-4">
+        <p className="text-xs text-white font-medium tracking-wide">
+          Inspired by "Tenki no Ko" — where weather forecasting becomes connection
+        </p>
       </div>
     </div>
   );

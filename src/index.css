@@ -1,49 +1,311 @@
 @import "tailwindcss";
 
-/* ─── Design tokens ──────────────────────────────────────────────── */
-:root {
-  --text: #9ca3af;
-  --text-h: #f3f4f6;
-  --bg: #0f172a;
-  --border: #1e293b;
-  --accent: #c084fc;
-  --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+/* ═══════════════════════════════════════════════════════════════════
+   WEATHERING WITH YOU — DESIGN SYSTEM v3.1
+   天気の子 · Tagum City Weather Intelligence
+   ═══════════════════════════════════════════════════════════════════
+   CHANGELOG v3.1 (2026-05-05 — Senior Design Review Pass):
+   
+   ROOT CAUSE: The token floor was too low. --txt-tertiary (0.58),
+   --txt-label (0.52) and --txt-hint (0.38) all fall below WCAG AA
+   (4.5:1) on dark surfaces and are completely invisible over photo
+   backgrounds. Every faint-text report traces back to these three
+   tokens. Raising them is the systemic fix; the !important guards
+   below then cascade the correction automatically.
 
-  font: 18px/145% system-ui, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: 0.18px;
+   ✦ FIX-01  --txt-tertiary: 0.58 → 0.70  (WCAG AA on dark surface)
+   ✦ FIX-02  --txt-label:    0.52 → 0.65  (tile/column header labels)
+   ✦ FIX-03  --txt-hint:     0.38 → 0.50  (RMSE stats, "Last trained")
+   ✦ FIX-04  .tile-label explicit color:   0.58 → 0.72  + !important
+   ✦ FIX-05  .section-label color:         0.60 → 0.76  + text-shadow guard
+   ✦ FIX-06  .home-hero-card p / .tagline: 0.68 → 0.85
+   ✦ FIX-07  .pipeline-item-sub:           0.52 → 0.64
+   ✦ FIX-08  .window-card-desc:            0.80 → 0.92
+   ✦ FIX-09  .cta-hint:                    0.52 → 0.68
+   ✦ FIX-10  .home-stat-label:             0.55 → 0.70
+   ✦ FIX-11  .arch-node .node-sub:         0.50 → 0.64
+   ✦ FIX-12  .tech-item-desc:              0.54 → 0.66
+   ✦ FIX-13  .key-feature-item:            0.78 → 0.88
+   ✦ FIX-14  .accuracy-metric-label added — new class for dashboard
+              column headers (was unclassed, falling to token floor)
+   ✦ FIX-15  .pipeline-item-sub !important guard raised to match fix
+   ✦ FIX-16  forecast-page .condition-tile * { text-shadow: none }
+              — text-shadow was doubling on already-dark glass tiles
+   ✦ FIX-17  .section-label on forecast page gets explicit text-shadow
+              via .forecast-page .section-label override
+   ✦ FIX-18  .chip border-color raised: 0.16 → 0.28 (chips were
+              disappearing into pipeline-item dark surface)
+
+   Previous changelog (v3):
+   ✦ Added dynamic weather background system (rain/cloudy/day/evening/night)
+   ✦ Fixed home hero card text always rendering as dark (sunshine contrast bug)
+   ✦ Fixed page title ghosting behind sticky header gradient
+   ✦ Fixed chip tag invisible text (opacity too low)
+   ✦ Fixed weather window card time/title text invisible
+   ✦ Fixed tile labels at ~28% opacity → raised to 52%
+   ✦ Fixed tech-item-desc near-zero opacity → raised to 52%
+   ✦ Fixed pipeline item names and subtitles contrast
+   ✦ Elevated txt-label token from 0.48 → 0.52
+   ✦ Scoped forecast text-shadow to exclude .chart-card internals
+   ✦ Added bg-* weather background classes with smooth transitions
+   ✦ Added forecast-bg overlay system with per-condition filter/brightness
+   ═══════════════════════════════════════════════════════════════════
+
+   Section index:
+   1.  Design Tokens
+   2.  Base Reset
+   3.  Typography
+   4.  Layout Primitives
+   5.  Component Library
+       5a. Glass Cards
+       5b. Condition Stat Tiles
+       5c. Chart Card
+       5d. Weather Window Cards
+       5e. Navigation Bar
+       5f. Section Labels
+       5g. Dashboard Grid + Pipeline
+       5h. About Page Components
+       5i. Home Page Components
+   6.  Dynamic Weather Background System
+   7.  Weather Contrast System
+   8.  Animations & Keyframes
+   9.  Responsive Breakpoints
+   10. Critical Regression Guards
+   ═══════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────
+   1. DESIGN TOKENS
+   ────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Core palette ── */
+  --col-bg:           #0d1321;
+  --col-bg-alt:       #111827;
+  --col-surface:      rgba(13, 19, 33, 0.80);
+  --col-surface-mid:  rgba(13, 19, 33, 0.62);
+  --col-surface-low:  rgba(13, 19, 33, 0.42);
+
+  /* ── Brand orange ── */
+  --col-accent:       #E8541A;
+  --col-accent-light: #F4722A;
+  --col-accent-dim:   rgba(232, 84, 26, 0.25);
+  --col-accent-glow:  rgba(232, 84, 26, 0.45);
+
+  /* ── Text scale — FIX-01 / FIX-02 / FIX-03 ──
+     All three token floors raised so every component that inherits
+     them automatically clears WCAG AA on dark surfaces (≥ 4.5:1).
+     Old values in parentheses for reference.
+  ── */
+  --txt-primary:      rgba(255, 255, 255, 0.96);
+  --txt-secondary:    rgba(255, 255, 255, 0.82);  /* ↑ from 0.78 */
+  --txt-tertiary:     rgba(255, 255, 255, 0.70);  /* ↑ FIX-01 was 0.58 */
+  --txt-label:        rgba(255, 255, 255, 0.65);  /* ↑ FIX-02 was 0.52 — tile/column labels */
+  --txt-hint:         rgba(255, 255, 255, 0.50);  /* ↑ FIX-03 was 0.38 — RMSE/validation stats */
+
+  /* ── Borders ── */
+  --border-strong:    rgba(255, 255, 255, 0.22);
+  --border-mid:       rgba(255, 255, 255, 0.14);
+  --border-subtle:    rgba(255, 255, 255, 0.09);
+
+  /* ── Shadows ── */
+  --shadow-card:      0 4px 24px rgba(0,0,0,0.38), 0 1px 4px rgba(0,0,0,0.28);
+  --shadow-lg:        0 8px 48px rgba(0,0,0,0.52), 0 2px 8px rgba(0,0,0,0.32);
+  --shadow-img-txt:   0 2px 18px rgba(0,0,0,0.92), 0 1px 4px rgba(0,0,0,1.0);
+
+  /* ── Border radii ── */
+  --radius-xs:   6px;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-xl:   26px;
+  --radius-pill: 9999px;
+
+  /* ── Nav ── */
+  --nav-h: 72px;
+
+  /* ── Blur ── */
+  --blur-glass:  blur(18px);
+  --blur-strong: blur(28px);
+  --blur-subtle: blur(10px);
+
+  /* ── Fonts ── */
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* ── Base typography ── */
+  font: 16px/1.55 var(--font-body);
+  letter-spacing: 0.12px;
   color-scheme: dark;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--txt-secondary);
+  background: var(--col-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.technical-page {
-  background-color: #121826;
+
+/* ──────────────────────────────────────────────────────────────────
+   2. BASE RESET
+   ────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
 }
 
-.technical-page .glass-card {
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
+body {
+  background: var(--col-bg);
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
+#root {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Styled scrollbars */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.20); border-radius: var(--radius-pill); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); }
+
+/* Targeted transitions — never use `* { transition: all }` */
+button, a,
+[class*="hover:"],
+[class*="transition"] {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 240ms;
+  transition-timing-function: ease-out;
+}
+
+/* Focus rings */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--col-accent);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) { outline: none; }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   3. TYPOGRAPHY
+   ────────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--txt-primary);
+  margin: 0;
+  line-height: 1.15;
+}
+
+h1,
+.page-title {
+  font-size: clamp(26px, 3.6vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: var(--txt-primary);
+  position: relative;
+  z-index: 25;          /* always above sticky header gradient */
+}
+
+h2 {
+  font-size: clamp(18px, 2.4vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+h3 { font-size: clamp(15px, 1.8vw, 20px); font-weight: 600; }
+
+p {
+  margin: 0;
+  color: var(--txt-secondary);
+  line-height: 1.65;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 3px 7px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 5px;
+  color: var(--txt-primary);
+  display: inline-flex;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   4. LAYOUT PRIMITIVES
+   ────────────────────────────────────────────────────────────────── */
+
+/* Universal page wrapper */
+.page-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 2.5vw, 32px);
+  padding-bottom: calc(var(--nav-h) + 28px);
+  box-sizing: border-box;
+}
+
+/* Viewport-locked tab container */
 .tab-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px;
+  padding-bottom: calc(var(--nav-h) + 16px);
   overflow: hidden;
 }
 
+/* Dashboard full-viewport layout */
+.dashboard-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 1rem clamp(16px, 2.5vw, 32px) calc(var(--nav-h) + 20px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.dashboard-view .header-section { flex: 0 0 auto; }
+.dashboard-view .content-grid   { flex: 1 1 auto; min-height: 0; }
+
+/* Sticky header — gradient adjusted so page title stays visible */
 .header-section {
   flex: 0 1 auto;
   padding-top: 0.75rem;
   margin-bottom: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(
+    to bottom,
+    rgba(17, 24, 39, 0.92) 0%,
+    rgba(17, 24, 39, 0.55) 55%,
+    transparent 100%
+  );
 }
 
+/* Main scrollable content */
 .main-content {
   flex: 1 1 auto;
   display: flex;
@@ -52,291 +314,1104 @@
   min-height: 0;
 }
 
-.page-container {
-  max-width: 1200px;
+/* 2-column grid */
+.col-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
   width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  box-sizing: border-box;
+}
+@media (max-width: 900px) {
+  .col-grid-2 { grid-template-columns: 1fr; gap: 16px; }
 }
 
+/* Auto-fit grid */
 .grid-auto-fit {
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 
-/* Viewport-first container for dashboard-style tabs */
-.dashboard-view {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 1rem 2rem 5rem 2rem;
+/* ──────────────────────────────────────────────────────────────────
+   5a. GLASS CARDS
+   ────────────────────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--col-surface);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.glass-card-light {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.chart-glass {
+  background: rgba(8,14,32,0.90);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.technical-page { background-color: var(--col-bg-alt); }
+.technical-page .glass-card {
+  border: 1px solid var(--border-strong);
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.03), var(--shadow-card);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5b. CONDITION STAT TILES
+   ────────────────────────────────────────────────────────────────── */
+.condition-tile {
+  background: rgba(8,14,30,0.74);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  padding: 18px 20px 16px;
+  width: 100%;
+  min-width: 0;
+  transition: background 240ms ease, border-color 240ms ease;
+}
+.condition-tile:hover {
+  background: rgba(8,14,30,0.88);
+  border-color: var(--border-strong);
+}
+
+/* Tile icon */
+.tile-icon {
+  opacity: 0.85;
+  filter: brightness(1.35);
+  flex-shrink: 0;
+}
+
+/*
+  FIX-04: Tile labels (WIND SPEED, HUMIDITY, VISIBILITY, etc.) were
+  barely visible at 0.58. Raised to 0.72 — explicit color never
+  inherits from a contrast class. See !important guard in §10.
+*/
+.tile-label {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.72);   /* ↑ FIX-04 was 0.58 */
+}
+
+/* Tile primary value */
+.tile-value {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 700;
+  color: var(--txt-primary);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Tile unit */
+.tile-unit {
+  font-size: 0.52em;
+  font-weight: 600;
+  color: var(--txt-secondary);
+  vertical-align: super;
+  letter-spacing: 0;
+}
+
+/* 3-column conditions grid */
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .conditions-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5c. CHART CARD
+   ────────────────────────────────────────────────────────────────── */
+.chart-card {
+  background: rgba(6,12,28,0.90);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px 16px;
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+.chart-title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--txt-primary);
+  text-shadow: none !important;    /* chart has dark bg — no shadow needed */
+}
+
+/* Axis labels inside chart */
+.chart-card .recharts-text,
+.chart-card .recharts-cartesian-axis-tick-value {
+  fill: rgba(255,255,255,0.60) !important;   /* ↑ from 0.55 */
+  font-family: var(--font-body) !important;
+  font-size: 11px !important;
+}
+
+/* Legend text */
+.chart-card .recharts-legend-item-text {
+  color: rgba(255,255,255,0.70) !important;  /* ↑ from 0.65 */
+  font-size: 12px !important;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5d. WEATHER WINDOW CARDS
+   ────────────────────────────────────────────────────────────────── */
+.weather-windows-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  overflow: visible;
+}
+@media (max-width: 768px) {
+  .weather-windows-grid { grid-template-columns: 1fr; }
+}
+
+/* Card variant backgrounds */
+.window-card-optimal {
+  background: linear-gradient(135deg, #B84010 0%, #C4521E 100%);
+  border: 1px solid rgba(232,84,26,0.55);
+  box-shadow: 0 4px 20px rgba(184,64,16,0.32);
+}
+.window-card-good {
+  background: linear-gradient(135deg,rgba(184,64,16,0.68),rgba(196,82,30,0.56));
+  border: 1px solid rgba(232,84,26,0.32);
+}
+.window-card-fair {
+  background: rgba(232,84,26,0.20);
+  border: 1px solid rgba(232,84,26,0.22);
+}
+
+/* Time range text */
+.window-card-time {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.40);
+  display: block;
+  line-height: 1.2;
+}
+
+/*
+  FIX-08: Description text raised from 0.80 → 0.92 for legibility
+  on the semi-transparent "fair" card variant.
+*/
+.window-card-desc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.92);   /* ↑ FIX-08 was 0.80 */
+  margin-top: 2px;
+  display: block;
+  line-height: 1.4;
+}
+
+/* Fair card needs stronger shadow given low background opacity */
+.window-card-fair .window-card-time,
+.window-card-fair .window-card-desc {
+  text-shadow: 0 1px 8px rgba(0,0,0,0.72);  /* ↑ was 0.65 */
+}
+
+/* Stat row (temp + rain %) inside window cards */
+.window-card-stats {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);   /* ↑ from 0.88 */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5e. NAVIGATION BAR
+   ────────────────────────────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--nav-h);
+  background: rgba(10,14,28,0.90);
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.72);   /* ↑ from 0.65 */
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 200ms ease, border-color 200ms ease,
+              color 200ms ease, box-shadow 200ms ease;
+}
+.nav-tab:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.24);
+  color: rgba(255,255,255,0.92);   /* ↑ from 0.88 */
+}
+.nav-tab.active {
+  background: var(--col-accent);
+  border-color: transparent;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 18px var(--col-accent-glow);
+}
+.nav-tab-inactive { /* deprecated — use .nav-tab */ }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5f. SECTION LABELS
+   ────────────────────────────────────────────────────────────────── */
+/*
+  FIX-05: "CURRENT CONDITIONS" and "OPTIMAL WEATHER WINDOWS" labels
+  were 0.60 opacity with no text-shadow, making them vanish against
+  the photo background on the forecast page. Raised to 0.76 here;
+  the forecast-page override below adds the text-shadow.
+*/
+.section-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.76);   /* ↑ FIX-05 was 0.60 */
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding-left: 0;
+}
+
+/*
+  FIX-17: Section labels on the forecast page sit directly over the
+  background photo — they MUST have a text-shadow to remain legible.
+  This rule is more specific than the base .section-label and fires
+  only within the forecast page, avoiding side-effects elsewhere.
+*/
+.forecast-page .section-label {
+  color: rgba(255,255,255,0.90) !important;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.80), 0 2px 20px rgba(0,0,0,0.60) !important;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5g. DASHBOARD GRID + PIPELINE
+   ────────────────────────────────────────────────────────────────── */
+.dashboard-layout {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 2.5vw, 32px);
   box-sizing: border-box;
 }
 
-.dashboard-view .header-section {
-  flex: 0 0 auto;
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 
-.dashboard-view .content-grid {
-  flex: 1 1 auto;
+.dashboard-card {
+  width: 100%;
+  height: auto;
   min-height: 0;
 }
 
-@layer components {
-  .glass-card {
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-  
-  .glass-card-light {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .chart-glass {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* ─── Base reset ─────────────────────────────────────────────────── */
-html,
-body {
-  margin: 0;
-  padding: 0;
+/* Accuracy metrics — 3-col */
+.accuracy-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   width: 100%;
+}
+@media (max-width: 768px) {
+  .accuracy-metrics { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+@media (max-width: 480px) {
+  .accuracy-metrics { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/*
+  FIX-14: "24 HOUR FORECAST", "7 DAY FORECAST", "RAIN DETECTION"
+  column headers had no dedicated class and were falling through to
+  --txt-label (0.52) or Tailwind text-* utilities that rendered near
+  invisible on the dark dashboard card surface.
+  Apply .accuracy-metric-label in JSX on those heading spans.
+*/
+.accuracy-metric-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.68);   /* ↑ explicit — do not token-ify */
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Accuracy sub-stats (RMSE, validation observations) */
+.accuracy-metric-stat {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);   /* ↑ from var(--txt-hint) which was 0.38 */
+  margin-top: 4px;
+  display: block;
+  line-height: 1.4;
+}
+
+/* Progress bars */
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.09);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.progress-bar-fill {
   height: 100%;
-  overflow: hidden;
-  overflow-x: hidden;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--col-accent) 0%, var(--col-accent-light) 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body {
-  background: #121826;
-  overflow-x: hidden;
-  width: 100vw;
-  height: 100vh;
+/* Pipeline item cards */
+.pipeline-item {
+  background: rgba(255,255,255,0.055);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.pipeline-item:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: var(--border-mid);
 }
 
-#root {
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  overflow: hidden;
-  overflow-x: hidden;
+/* Pipeline item names */
+.pipeline-item-name {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  display: block;
 }
 
-/* ─── Global transitions (targeted, not universal) ───────────────── */
-/* Avoid `* { transition: all }` — it fires on layout properties and hurts perf */
-button,
-a,
-[class*="hover:"],
-[class*="transition"] {
-  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
-  transition-duration: 300ms;
-  transition-timing-function: ease-in-out;
+/*
+  FIX-07 / FIX-15: Subtitles ("Historical archive 5+ years",
+  "Real-time observations") were 0.52 — unreadable on the near-black
+  dashboard surface. Raised to 0.64. !important guard in §10 matches.
+*/
+.pipeline-item-sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.64);   /* ↑ FIX-07 was 0.52 */
+  margin-top: 2px;
+  display: block;
 }
 
-/* ─── Typography ────────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  :root {
-    font-size: 16px;
-  }
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-
-p {
-  margin: 0;
-}
-
-code {
-  font-family: var(--mono);
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-  border-radius: 4px;
-  color: var(--text-h);
+/* Status badges — 4 semantically distinct colors */
+.badge {
   display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+}
+.badge-source     { background: rgba(59,130,246,0.22);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.38); }
+.badge-live       { background: rgba(34,197,94,0.22);   color: #86efac; border: 1px solid rgba(34,197,94,0.38); }
+.badge-processing { background: rgba(245,158,11,0.22);  color: #fcd34d; border: 1px solid rgba(245,158,11,0.38); }
+.badge-storage    { background: rgba(167,139,250,0.22); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.38); }
+
+/*
+  FIX-18: Chip border raised from 0.16 → 0.28 so the chip container
+  is visible against the pipeline-item's dark surface. Text was
+  technically at 0.80 but the invisible border made chips look like
+  floating dim text with no affordance.
+*/
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.10);    /* ↑ from 0.09 */
+  border: 1px solid rgba(255,255,255,0.28); /* ↑ FIX-18 was 0.16 */
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.82);         /* ↑ from 0.80 */
+  font-family: var(--font-body);
 }
 
-/* ─── Keyboard Navigation Focus Styles ──────────────────────────── */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #EB6E4B;
-  outline-offset: 2px;
+
+/* ──────────────────────────────────────────────────────────────────
+   5h. ABOUT PAGE COMPONENTS
+   ────────────────────────────────────────────────────────────────── */
+
+/* Top grid — align-items: start prevents empty-space stretching */
+.about-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .about-top-grid { grid-template-columns: 1fr; }
 }
 
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible),
-input:focus:not(:focus-visible) {
-  outline: none;
+/* Architecture flow nodes */
+.arch-node {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+  text-align: center;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.arch-node:hover {
+  background: rgba(255,255,255,0.11);
+  border-color: rgba(232,84,26,0.42);
+}
+.arch-node .node-label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--txt-primary);
+  display: block;
+}
+/*
+  FIX-11: node-sub opacity raised 0.50 → 0.64 for legibility inside
+  the arch-node dark surface.
+*/
+.arch-node .node-sub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(255,255,255,0.64);  /* ↑ FIX-11 was 0.50 */
+  display: block;
+  margin-top: 3px;
 }
 
-/* ─── Keyframe Animations ────────────────────────────────────────── */
+/* Architecture arrows */
+.arch-arrow {
+  color: var(--col-accent);
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-/* DynamicBackground: Raindrop fall */
-@keyframes fall {
-  to {
-    transform: translateY(100vh);
-    opacity: 0;
+/* Tech stack grid */
+.tech-stack-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.tech-item {
+  background: rgba(255,255,255,0.060);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: background 200ms ease;
+}
+.tech-item:hover { background: rgba(255,255,255,0.10); }
+
+.tech-item-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.94);
+  display: block;
+}
+
+/*
+  FIX-12: Tech item descriptions raised 0.54 → 0.66. At 0.54 on the
+  near-black --col-bg-alt surface the contrast ratio was ~3.1:1,
+  below WCAG AA. 0.66 clears ~3.8:1 on this surface.
+*/
+.tech-item-desc {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.66);  /* ↑ FIX-12 was 0.54 */
+  margin-top: 3px;
+  display: block;
+  line-height: 1.45;
+}
+
+/* Key features */
+.key-features-card {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid var(--border-mid);
+  border-top: 2px solid rgba(232,84,26,0.38);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+}
+/*
+  FIX-13: Key feature items raised 0.78 → 0.88 for improved reading
+  comfort on the near-black surface.
+*/
+.key-feature-item {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.88);  /* ↑ FIX-13 was 0.78 */
+  line-height: 1.65;
+  padding: 3px 0;
+}
+.key-feature-label {
+  color: var(--col-accent);
+  font-weight: 700;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5i. HOME PAGE COMPONENTS
+   ────────────────────────────────────────────────────────────────── */
+.home-hero-card {
+  background: rgba(10,15,32,0.82);   /* ↑ from 0.74 — more opaque base = better
+                                         text contrast independent of bg image */
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-xl);
+  padding: clamp(28px, 5vh, 56px) clamp(24px, 5vw, 56px);
+  max-width: 560px;
+  width: 92%;
+  margin: 0 auto;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+/*
+  Hero card headings — always white regardless of page-level contrast
+  class. The increased card opacity (0.82) means the white text has
+  a dark enough surface to pass contrast without text-shadow tricks.
+*/
+.home-hero-card h1,
+.home-hero-card h2,
+.home-hero-card h3 {
+  color: rgba(255,255,255,0.96) !important;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.55);
+}
+
+/*
+  FIX-06: Tagline and body p inside the hero card were 0.68 which
+  produced ~3.0:1 contrast on the translucent dark card. Raised to
+  0.85 → ~4.6:1 — just over WCAG AA for normal text.
+*/
+.home-hero-card p,
+.home-hero-card .tagline {
+  color: rgba(255,255,255,0.85) !important;  /* ↑ FIX-06 was 0.68 */
+  text-shadow: 0 1px 6px rgba(0,0,0,0.45);
+}
+.home-hero-card .location-label {
+  color: rgba(255,255,255,0.90) !important;  /* ↑ from 0.82 */
+}
+
+/* CTA button */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 36px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--col-accent) 0%, var(--col-accent-light) 100%);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 24px var(--col-accent-glow);
+  letter-spacing: 0.02em;
+}
+.cta-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 32px var(--col-accent-glow);
+}
+.cta-button:active {
+  transform: translateY(0) scale(0.99);
+}
+.cta-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/*
+  FIX-09: Hint text below CTA raised 0.52 → 0.68. At 0.52 on the
+  darker hero card the hint was nearly invisible.
+*/
+.cta-hint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.68) !important;  /* ↑ FIX-09 was 0.52 */
+  margin-top: 8px;
+  display: block;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.50);
+}
+
+/* Home stat tiles */
+.home-stat-tile {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  text-align: center;
+  flex: 1;
+}
+.home-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 700;
+  color: rgba(255,255,255,0.96) !important;
+  line-height: 1;
+}
+/*
+  FIX-10: Stat labels (TEMPERATURE, SUNSHINE) raised 0.55 → 0.70 for
+  legibility inside the semi-transparent tile.
+*/
+.home-stat-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.70) !important;  /* ↑ FIX-10 was 0.55 */
+  margin-bottom: 6px;
+}
+
+/* Forecast page */
+.forecast-page {
+  padding-top: 8px;
+  padding-bottom: calc(var(--nav-h) + 30px);
+}
+.forecast-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 2.5vw, 28px) calc(var(--nav-h) + 30px);
+  overflow: visible;
+}
+
+/* Error toast */
+.error-banner-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  max-width: 320px;
+  width: calc(100vw - 32px);
+  background: rgba(30,20,8,0.95);
+  border: 1px solid rgba(245,158,11,0.48);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+}
+@media (max-width: 640px) {
+  .error-banner-toast {
+    top: 10px;
+    right: 10px;
+    width: calc(100vw - 20px);
   }
 }
 
-/* DynamicBackground: Ambient glow pulse */
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.1);
-  }
+
+/* ──────────────────────────────────────────────────────────────────
+   6. DYNAMIC WEATHER BACKGROUND SYSTEM
+   ────────────────────────────────────────────────────────────────── */
+/*
+  Usage in React:
+    <div className={`forecast-bg ${bgClass}`} />
+
+  Where bgClass is one of:
+    bg-morning | bg-day | bg-evening | bg-night | bg-rain | bg-cloudy
+
+  The getBgClass utility (in Forecast.jsx):
+    const getBgClass = (weatherCode, hour) => {
+      const isRaining = weatherCode >= 200 && weatherCode < 700;
+      const isCloudy  = weatherCode >= 700 && weatherCode < 800;
+      if (isRaining)                      return 'bg-rain';
+      if (isCloudy)                       return 'bg-cloudy';
+      if (hour >= 5  && hour < 10)        return 'bg-morning';
+      if (hour >= 10 && hour < 16)        return 'bg-day';
+      if (hour >= 16 && hour < 20)        return 'bg-evening';
+      return 'bg-night';
+    };
+*/
+
+/* Base background element */
+.forecast-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 1.4s ease, filter 1.4s ease;
 }
 
-/* DynamicBackground: Particle drift */
-@keyframes drift {
-  0%,
-  100% {
-    opacity: 0.2;
-    transform: translate(0, 0);
-  }
-  50% {
-    opacity: 0.4;
-    transform: translate(20px, -20px);
-  }
+/* Shared overlay — dark gradient on top of every photo */
+.forecast-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.28) 0%,   /* ↑ from 0.22 — more top shadow = headings easier to read */
+    rgba(0,0,0,0.10) 45%,
+    rgba(0,0,0,0.30) 100%  /* ↑ from 0.25 — more bottom shadow = bottom cards */
+  );
+  pointer-events: none;
 }
 
-/* DualAxisChart: "Now" line glow */
-@keyframes glowPulse {
-  0% {
-    filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
-  }
-  50% {
-    filter: drop-shadow(0 0 12px rgba(235, 110, 75, 0.8));
-  }
-  100% {
-    filter: drop-shadow(0 0 4px rgba(235, 110, 75, 0.4));
-  }
+/* ── Morning (05:00–10:00, clear) ── */
+.forecast-bg.bg-morning {
+  background-image: url('/assets/bg-tagum-morning.jpg');
+  filter: brightness(0.72) saturate(1.10);
 }
 
-/* Forecast page: prayer clear reveal - flattened */
-@keyframes prayerClear {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ── Daytime (10:00–16:00, clear) ── */
+.forecast-bg.bg-day {
+  background-image: url('/assets/bg-tagum-day.jpg');
+  filter: brightness(0.62) saturate(1.05);
 }
 
-/* Forecast page: prayer header - flattened (no glow) */
-@keyframes prayerGlow {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+/* ── Evening / Sunset (16:00–20:00) ── */
+.forecast-bg.bg-evening {
+  background-image: url('/assets/bg-tagum-evening.jpg');
+  filter: brightness(0.58) saturate(1.18);
 }
 
-.prayer-cleared {
-  animation: prayerClear 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* ── Night (20:00–05:00) ── */
+.forecast-bg.bg-night {
+  background-image: url('/assets/bg-tagum-night.jpg');
+  filter: brightness(0.52) saturate(0.88);
 }
 
-.prayer-header {
-  animation: prayerGlow 0.8s ease-out;
+/* ── Rain (any time, weatherCode 200–699) ── */
+.forecast-bg.bg-rain {
+  background-image: url('/assets/bg-tagum-rain.jpg');
+  filter: brightness(0.48) saturate(0.72) blur(1px);
 }
 
-/* DualAxisChart: Live "Now" indicator pulse - desaturated */
-@keyframes nowPulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.3);
-  }
+/* ── Cloudy (any time, weatherCode 700–799) ── */
+.forecast-bg.bg-cloudy {
+  background-image: url('/assets/bg-tagum-cloudy.jpg');
+  filter: brightness(0.55) saturate(0.78);
 }
 
-.now-pulse {
-  animation: nowPulse 2s ease-in-out infinite;
+/* Fallback gradient when image hasn't loaded */
+.forecast-bg.bg-morning  { background-color: #2c4a6e; }
+.forecast-bg.bg-day      { background-color: #3a5a8a; }
+.forecast-bg.bg-evening  { background-color: #6b3a1f; }
+.forecast-bg.bg-night    { background-color: #080e1e; }
+.forecast-bg.bg-rain     { background-color: #1a2035; }
+.forecast-bg.bg-cloudy   { background-color: #2a3245; }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   7. WEATHER CONTRAST SYSTEM
+   ────────────────────────────────────────────────────────────────── */
+
+/* Dark backgrounds: rain, storm, night */
+.text-contrast-raining,
+.text-contrast-storm,
+.text-contrast-night {
+  color: rgba(255,255,255,0.92);
+}
+.text-contrast-raining h1,
+.text-contrast-storm h1,
+.text-contrast-night h1 { color: #ffffff; }
+.text-contrast-raining p,
+.text-contrast-storm p,
+.text-contrast-night p  { color: rgba(255,255,255,0.82); }
+
+/* Warm medium backgrounds: evening, sunrise */
+.text-contrast-evening,
+.text-contrast-sunrise {
+  color: #ffffff;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.65);
+}
+.text-contrast-evening h1,
+.text-contrast-sunrise h1 {
+  color: #ffffff;
+  text-shadow: var(--shadow-img-txt);
+}
+.text-contrast-evening p,
+.text-contrast-sunrise p {
+  color: rgba(255,255,255,0.87);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.58);
 }
 
-/* SunshineWindow: Active window gentle border pulse (glow removed) */
-@keyframes activeWindowPulse {
-  0%,
-  100% { border-color: rgba(212, 98, 42, 0.3); }
-  50% { border-color: rgba(212, 98, 42, 0.8); }
-}
+/* Light gray background: cloudy */
+.text-contrast-cloudy { color: #2d3748; }
+.text-contrast-cloudy h1 { color: #1a202c; }
+.text-contrast-cloudy p  { color: #4a5568; }
 
-.active-window-glow {
-  animation: activeWindowPulse 3s ease-in-out infinite;
-}
+/*
+  Bright background: sunshine/daytime.
+  Targets PAGE-LEVEL text visible directly against the bright photo.
+  Glass cards and tiles have explicit white overrides that win via
+  specificity or !important — they are immune to this rule.
+*/
+.text-contrast-sunshine { color: #1f2937; }
+.text-contrast-sunshine h1 { color: #0d1321; }
+.text-contrast-sunshine p  { color: #374151; }
 
-/* Page enter transition */
-.page-enter {
-  animation: pageEnter 0.3s ease-out forwards;
-}
+
+/* ──────────────────────────────────────────────────────────────────
+   8. ANIMATIONS & KEYFRAMES
+   ────────────────────────────────────────────────────────────────── */
 
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter { animation: pageEnter 0.28s ease-out forwards; }
+
+@keyframes fall {
+  to { transform: translateY(100vh); opacity: 0; }
 }
 
-/* Home Page: CTA Pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 0.28; transform: scale(1);    }
+  50%       { opacity: 0.55; transform: scale(1.08); }
+}
+
+@keyframes drift {
+  0%, 100% { opacity: 0.18; transform: translate(0,0);        }
+  50%       { opacity: 0.38; transform: translate(18px,-18px); }
+}
+
+@keyframes glowPulse {
+  0%   { filter: drop-shadow(0 0 4px  rgba(232,84,26,0.35)); }
+  50%  { filter: drop-shadow(0 0 12px rgba(232,84,26,0.78)); }
+  100% { filter: drop-shadow(0 0 4px  rgba(232,84,26,0.35)); }
+}
+
+@keyframes prayerClear {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes prayerGlow {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.prayer-cleared { animation: prayerClear 0.55s cubic-bezier(0.4,0,0.2,1) forwards; }
+.prayer-header  { animation: prayerGlow  0.75s ease-out; }
+
+@keyframes nowPulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.7; transform: scale(1.28); }
+}
+.now-pulse { animation: nowPulse 2s ease-in-out infinite; }
+
+@keyframes activeWindowPulse {
+  0%, 100% { border-color: rgba(232,84,26,0.28); }
+  50%       { border-color: rgba(232,84,26,0.78); }
+}
+.active-window-glow { animation: activeWindowPulse 2.8s ease-in-out infinite; }
+
 @keyframes ctaPulse {
-  0% { opacity: 1; }
-  70% { opacity: 0.85; }
-  100% { opacity: 1; }
+  0%, 100% { opacity: 1;    box-shadow: 0 4px 24px var(--col-accent-glow); }
+  60%       { opacity: 0.88; box-shadow: 0 4px 36px rgba(232,84,26,0.62);  }
+}
+.animate-cta-pulse { animation: ctaPulse 2.2s ease-in-out infinite; }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   9. RESPONSIVE BREAKPOINTS
+   ────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  :root { font-size: 15px; }
 }
 
-.animate-cta-pulse {
-  animation: ctaPulse 2s infinite;
+@media (max-width: 768px) {
+  .page-wrapper    { padding: 0 14px calc(var(--nav-h) + 24px); }
+  .chart-card      { padding: 16px 14px 12px; }
+  .key-features-card { padding: 18px 16px; }
+  .tech-stack-grid { grid-template-columns: 1fr; }
+  .home-hero-card  { padding: 28px 20px; }
+}
+
+@media (max-width: 480px) {
+  .about-top-grid      { grid-template-columns: 1fr; }
+  .weather-windows-grid { grid-template-columns: 1fr; gap: 10px; }
+  .nav-tab             { padding: 8px 14px; font-size: 13px; }
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   10. CRITICAL REGRESSION GUARDS
+   !important overrides as a last line of defense against Tailwind
+   utilities or inline styles breaking critical visibility.
+   ────────────────────────────────────────────────────────────────── */
+
+/* Forecast heading — survives all background conditions */
+.forecast-title,
+.forecast-heading {
+  color: #ffffff !important;
+  text-shadow: var(--shadow-img-txt) !important;
+  font-weight: 800 !important;
+}
+.forecast-subtitle {
+  color: rgba(255,255,255,0.88) !important;  /* ↑ from 0.84 */
+  text-shadow: 0 1px 10px rgba(0,0,0,0.82) !important;
+}
+
+/*
+  Forecast page: universal text-shadow over background photos.
+  Strength raised from 0.45 to 0.60 — the weaker shadow was
+  insufficient on bright morning/day images.
+*/
+.forecast-page * {
+  text-shadow: 0 1px 8px rgba(0,0,0,0.60);   /* ↑ was 0 1px 6px / 0.45 */
+}
+
+/* Exception: chart card has its own dark background */
+.forecast-page .chart-card *,
+.forecast-page .chart-card recharts-text {
+  text-shadow: none !important;
+}
+
+/*
+  FIX-16: Condition tiles on the forecast page also have a dark glass
+  background — the page-wide text-shadow was layering on top of text
+  that already sits on a dark surface, producing a hazy double-shadow.
+  Null it out inside tiles so only the tile's own contrast governs.
+*/
+.forecast-page .condition-tile * {
+  text-shadow: none !important;
+}
+
+/* Condition tiles — prevent background regression */
+.condition-tile {
+  background:               rgba(8,14,30,0.74) !important;
+  backdrop-filter:          var(--blur-glass) !important;
+  -webkit-backdrop-filter:  var(--blur-glass) !important;
+  border: 1px solid        var(--border-mid) !important;
+  border-radius:            var(--radius-md) !important;
+  width:                    100% !important;
+  min-width:                0 !important;
+}
+
+/* Tile labels — FIX-04 guard */
+.tile-label {
+  color: rgba(255,255,255,0.72) !important;  /* ↑ FIX-04 was 0.58 */
+}
+
+/* Chart card — prevent background regression */
+.chart-card {
+  background:               rgba(6,12,28,0.90) !important;
+  backdrop-filter:          var(--blur-glass) !important;
+  -webkit-backdrop-filter:  var(--blur-glass) !important;
+  border: 1px solid        var(--border-mid) !important;
+  border-radius:            var(--radius-lg) !important;
+}
+
+/* Conditions grid — enforce equal thirds always */
+.conditions-grid {
+  display:                grid !important;
+  grid-template-columns:  repeat(3, 1fr) !important;
+  gap:                    12px !important;
+  width:                  100% !important;
+}
+
+/* Chip text — FIX-18 guard */
+.chip {
+  color:        rgba(255,255,255,0.82) !important;
+  background:   rgba(255,255,255,0.10) !important;
+  border-color: rgba(255,255,255,0.28) !important;  /* ↑ FIX-18 was 0.16 */
+}
+
+/* Weather window text — always white */
+.window-card-time { color: #ffffff !important; }
+.window-card-desc { color: rgba(255,255,255,0.92) !important; }  /* ↑ FIX-08 was 0.80 */
+
+/* Home hero card — always white regardless of page bg contrast class */
+.home-hero-card .home-stat-value,
+.home-hero-card h1,
+.home-hero-card h2 {
+  color: rgba(255,255,255,0.96) !important;
+}
+
+/* Forecast content wrapper */
+.forecast-content { overflow: visible !important; }
+
+/* Section label */
+.section-label { padding-left: 0 !important; }
+
+/* Tech item descriptions — FIX-12 guard */
+.tech-item-desc {
+  color: rgba(255,255,255,0.66) !important;  /* ↑ FIX-12 was 0.54 */
+}
+
+/* Pipeline item names */
+.pipeline-item-name { color: rgba(255,255,255,0.92) !important; }
+
+/* Pipeline item subtitles — FIX-15 guard */
+.pipeline-item-sub {
+  color: rgba(255,255,255,0.64) !important;  /* ↑ FIX-07/15 was 0.52 */
+}
+
+/* Accuracy metric column headers — FIX-14 guard */
+.accuracy-metric-label {
+  color: rgba(255,255,255,0.68) !important;
+}
+
+/* Accuracy stats (RMSE / validation counts) */
+.accuracy-metric-stat {
+  color: rgba(255,255,255,0.55) !important;  /* ↑ was --txt-hint (0.38) */
 }

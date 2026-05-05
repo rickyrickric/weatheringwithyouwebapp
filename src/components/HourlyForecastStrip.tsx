@@ -52,7 +52,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '10px',
                 fontWeight: 500,
-                color: '#999999',
+                color: 'rgba(255, 255, 255, 0.65)',
                 textAlign: 'center',
                 whiteSpace: 'nowrap',
               }}
@@ -69,7 +69,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({ hourlyData })
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '10px',
                 fontWeight: 600,
-                color: h.rainProbability >= 80 ? '#AEECEF' : '#999999',
+                color: h.rainProbability >= 80 ? '#AEECEF' : 'rgba(255, 255, 255, 0.65)',
               }}
             >
               {h.rainProbability}%

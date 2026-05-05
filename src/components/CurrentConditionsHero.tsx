@@ -61,7 +61,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
               <p className="text-3xl font-bold text-openweather-primary leading-none">
                 {temperature}°C
               </p>
-              <p className="text-xs text-openweather-textLight capitalize mt-1">
+              <p className="text-xs text-label-contrast capitalize mt-1">
                 {condition} in {location}
               </p>
             </div>
@@ -70,7 +70,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
 
         {/* Feels Like prominently displayed */}
         <div className="px-4 py-3 bg-openweather-primary/5">
-          <p className="text-[10px] text-openweather-textLight uppercase tracking-widest font-semibold mb-1">
+          <p className="text-[10px] text-label-contrast uppercase tracking-widest font-semibold mb-1">
             Feels Like
           </p>
           <p className="text-2xl font-bold text-openweather-text leading-none">
@@ -81,7 +81,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
         {/* Quick metrics footer */}
         <div className="px-4 py-3 grid gap-2 grid-auto-fit border-t border-gray-200">
           <div>
-            <p className="text-[10px] text-openweather-textLight uppercase font-semibold">
+            <p className="text-[10px] text-label-contrast uppercase font-semibold">
               Rain Probability
             </p>
             <p className="text-xl font-bold text-openweather-secondary leading-none">
@@ -89,7 +89,7 @@ const CurrentConditionsHero: React.FC<CurrentConditionsHeroProps> = ({
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-openweather-textLight uppercase font-semibold">
+            <p className="text-[10px] text-label-contrast uppercase font-semibold">
               Last Updated
             </p>
             <p className="text-xs font-mono text-openweather-text leading-none">

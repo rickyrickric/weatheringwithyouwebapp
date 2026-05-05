@@ -56,15 +56,14 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
 
   return (
     <div
-      className="w-full chart-glass p-4"
+      className="chart-card"
       style={{
         willChange: 'transform',
         backfaceVisibility: 'hidden',
-        backgroundColor: '#1a2035',
       }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm md:text-base font-bold text-gray-200">{title}</h3>
+        <h3 className="chart-title text-sm md:text-base font-bold text-gray-200">{title}</h3>
         <div className="text-xs text-gray-400 flex items-center gap-1.5">
           <span className="now-pulse inline-block w-2 h-2 rounded-full" style={{ backgroundColor: tempColor }} />
           Now: <span className="font-mono font-semibold text-gray-200">{nowLabel}</span>
@@ -76,8 +75,8 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
           <defs>
             {/* Neutral slate gradient for rain */}
             <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={rainColor} stopOpacity={0.45} />
-              <stop offset="100%" stopColor={rainColor} stopOpacity={0.2} />
+              <stop offset="0%" stopColor={rainColor} stopOpacity={0.55} />
+              <stop offset="100%" stopColor={rainColor} stopOpacity={0.3} />
             </linearGradient>
             {/* Removed SVG glow filters for flattened UI approach */}
           </defs>
@@ -108,13 +107,13 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 700,
-              fill: 'rgba(255,255,255,0.55)',
+              fill: 'rgba(255,255,255,0.7)',
               style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
-            style={{ fontSize: '12px', fontWeight: '700' }}
-            tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.55)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            style={{ fontSize: '13px', fontWeight: '700' }}
+            tick={{ fontSize: 13, fill: 'rgba(255,255,255,0.7)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
           />
           <YAxis
             yAxisId="right"
@@ -125,13 +124,13 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               angle: 90,
               position: 'insideRight',
               offset: 10,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 700,
-              fill: 'rgba(255,255,255,0.55)',
+              fill: 'rgba(255,255,255,0.7)',
               style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' }
             }}
-            style={{ fontSize: '12px', fontWeight: '700' }}
-            tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.55)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
+            style={{ fontSize: '13px', fontWeight: '700' }}
+            tick={{ fontSize: 13, fill: 'rgba(255,255,255,0.7)', style: { filter: 'drop-shadow(0px 1px 3px rgba(0,0,0,0.8))' } }}
             domain={[0, 130]}
           />
 
@@ -178,7 +177,7 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
             dataKey="rainProbability"
             fill="url(#rainGradient)"
             stroke={rainStroke}
-            strokeWidth={2}
+            strokeWidth={3}
             strokeOpacity={1}
             name="Rain (%)"
             isAnimationActive={!prefersReducedMotion}
