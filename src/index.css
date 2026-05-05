@@ -600,7 +600,7 @@ code {
   font-weight: 700;
   box-shadow: 0 4px 18px var(--col-accent-glow);
 }
-.nav-tab-inactive { /* deprecated — use .nav-tab */ }
+/* .nav-tab-inactive was deprecated — use .nav-tab */
 
 
 /* ──────────────────────────────────────────────────────────────────
@@ -918,7 +918,7 @@ code {
    5i. HOME PAGE COMPONENTS
    ────────────────────────────────────────────────────────────────── */
 .home-hero-card {
-  background: rgba(10,15,32,0.82);   /* ↑ from 0.74 — more opaque base = better
+  background: rgba(20, 29, 59, 0.82);   /* ↑ from 0.74 — more opaque base = better
                                          text contrast independent of bg image */
   backdrop-filter: var(--blur-strong);
   -webkit-backdrop-filter: var(--blur-strong);

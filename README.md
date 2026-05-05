@@ -11,6 +11,47 @@ Currently, two official plugins are available:
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
+## Backend (Express + TypeScript)
+
+The backend lives in the server folder and serves the weather API used by the UI.
+
+### Setup
+
+```bash
+cd server
+npm install
+```
+
+### Environment Variables
+
+Copy the template and fill in your OpenWeather credentials:
+
+```bash
+cd server
+copy .env.example .env
+```
+
+Required:
+
+- `OPENWEATHER_API_KEY`
+- Provide either `OPENWEATHER_CITY` or both `OPENWEATHER_LAT` and `OPENWEATHER_LON`
+
+Optional:
+
+- `PORT` (defaults to 3000)
+
+### Run (watch mode)
+
+```bash
+cd server
+npm run dev:watch
+```
+
+### Local URLs
+
+- Frontend dev server: http://localhost:5173
+- Backend API: http://localhost:3001
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

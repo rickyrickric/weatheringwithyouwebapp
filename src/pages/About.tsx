@@ -108,8 +108,8 @@ const About: React.FC = () => {
             </p>
             <div className="grid gap-2 grid-auto-fit text-xs">
               <div className="arch-node">
-                <p className="node-label">CSV / APIs</p>
-                <p className="node-sub">OpenWeather + Visual Crossing</p>
+                <p className="node-label">API Feed</p>
+                <p className="node-sub">OpenWeather</p>
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>

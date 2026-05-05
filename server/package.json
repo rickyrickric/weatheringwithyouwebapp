@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "dev:watch": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "@types/regression": "^2.0.6",
+    "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }

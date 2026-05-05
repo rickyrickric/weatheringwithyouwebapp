@@ -20,6 +20,7 @@ export interface CurrentWeather {
   pressure?: number;
   uvIndex?: number;
   dewPoint?: number;
+  weatherId?: number;
 }
 
 export interface OptimalWindow {

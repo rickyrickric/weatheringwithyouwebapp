@@ -95,32 +95,6 @@ const Dashboard: React.FC = () => {
 
               {/* QA Fix: Subdued the gradient borders to neutral glass styling */}
               <div className="space-y-3">
-                {/* Visual Crossing */}
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">📊 Visual Crossing</p>
-                      <p className="text-xs text-label-contrast">Historical archive (5+ years)</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-400/60 shadow-[0_0_8px_rgba(96,165,250,0.25)]">
-                      Source
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">📡 Updates: Daily</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">🧭 Window: 5+ yrs</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🗂️ Records: 180</span>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
-                    <ul className="mt-2 text-xs text-gray-400 space-y-1">
-                      <li>Daily observations: Temperature, precipitation, wind</li>
-                      <li>Update frequency: Daily (UTC 00:00)</li>
-                      <li>Records in memory: 180 (6-month rolling window)</li>
-                    </ul>
-                  </details>
-                </div>
-
                 {/* OpenWeather API */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
