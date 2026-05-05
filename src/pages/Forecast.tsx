@@ -6,6 +6,7 @@ import KPIGrid from '../components/KPIGrid';
 import SunshineWindow from '../components/SunshineWindow';
 import { ChartSkeleton, KPISkeleton } from '../components/Skeleton';
 import ErrorBanner from '../components/ErrorBanner';
+import { useBackgroundState } from '../hooks/useBackgroundState';
 import {
   OPTIMAL_WINDOWS,
   DEFAULT_CHART_DATA,
@@ -134,6 +135,9 @@ const Forecast: React.FC = () => {
     fetchForecastData();
   }, []);
 
+  // Get dynamic text color based on background state
+  const { textColorClass } = useBackgroundState(currentWeather.weatherId, lastUpdated.getHours());
+
   return (
     <div className="relative min-h-screen page-enter tab-container">
       <DynamicBackground
@@ -151,14 +155,15 @@ const Forecast: React.FC = () => {
           variant="toast"
           onRetry={fetchForecastData}
           onDismiss={() => setShowErrorToast(false)}
+          className="error-banner-toast"
         />
       )}
 
-      <div className="relative z-10 h-full overflow-hidden">
+      <div className={`relative z-10 h-full overflow-hidden forecast-page ${textColorClass}`}>
         {/* Header */}
         <div className="text-center py-1 px-4 prayer-header header-section">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-100">
+            <h1 className="page-title forecast-heading forecast-title text-gray-100">
               <span className="mr-2 text-lg md:text-xl">{getGreeting(forecastDate).emoji}</span>
               {getGreeting(forecastDate).text}, Tagum City
             </h1>
@@ -166,13 +171,13 @@ const Forecast: React.FC = () => {
               <DateAnchor date={forecastDate} />
             </div>
           </div>
-          <p className="text-gray-400 mt-1 text-[11px] md:text-sm">
+          <p className="forecast-subtitle text-tertiary-contrast mt-1 text-[11px] md:text-sm">
             24-hour forecast with 92% accuracy • 6-month climate baseline
           </p>
         </div>
 
         {/* Main container */}
-          <div className="relative page-container pb-[100px] pt-1 prayer-cleared h-full overflow-hidden max-h-[90vh] main-content">
+          <div className="relative page-container pb-[100px] pt-1 prayer-cleared flex-1 overflow-y-auto main-content forecast-content">
           
           {/* Feature: Rain Alert Banner */}
           {!isLoading && currentRain > 60 && !hasError && (
@@ -186,7 +191,7 @@ const Forecast: React.FC = () => {
 
           {/* Current Conditions */}
           <div className="space-y-3 mb-2">
-            <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
+            <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
               ⚡ Current Conditions
             </h3>
             {isLoading ? (
@@ -222,16 +227,16 @@ const Forecast: React.FC = () => {
           {/* Feature: Hourly Breakdown Row */}
           {!isLoading && !hasError && (
             <section className="space-y-2 mb-2 animate-[pageEnter_0.3s_ease-out]">
-              <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
+              <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
                 ⏱️ Hourly Breakdown
               </h3>
               <div className="flex overflow-x-auto pb-4 gap-3 snap-x scroll-smooth no-scrollbar">
                 {(chartData.length > 0 ? chartData : DEFAULT_CHART_DATA).map((point, idx) => (
                   <div key={idx} className="glass-card min-w-[80px] p-3 flex flex-col items-center justify-center snap-center hover:bg-white/10 transition-colors">
-                    <span className="text-xs text-gray-400 font-mono mb-2">{point.time}</span>
+                    <span className="text-xs text-label-contrast font-mono mb-2">{point.time}</span>
                     <span className="text-xl mb-2">{point.rainProbability > 50 ? '🌧️' : point.temperature > 28 ? '☀️' : '⛅'}</span>
                     <span className="text-sm font-bold text-gray-200">{Math.round(point.temperature)}°</span>
-                    <span className="text-[10px] text-slate-400">{point.rainProbability}%</span>
+                    <span className="text-[10px] text-label-contrast">{point.rainProbability}%</span>
                   </div>
                 ))}
               </div>
@@ -240,10 +245,10 @@ const Forecast: React.FC = () => {
 
           {/* Bottom row: Optimal Weather Windows */}
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-gray-200 uppercase tracking-widest ml-1">
+            <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
               ☀️ Optimal Weather Windows
             </h3>
-            <div className="grid gap-3 grid-auto-fit">
+            <div className="weather-windows-grid">
               {isLoading ? (
                 <>
                   <div className="glass-card h-28 animate-pulse bg-slate-700/50" />

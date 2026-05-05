@@ -43,6 +43,19 @@ export default {
         '.kpi-tile': {
           '@apply bg-white/95 rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-shadow': {},
         },
+        '.condition-tile': {
+          '@apply rounded-2xl border backdrop-blur transition-shadow duration-300': {
+            'background': 'rgba(10, 15, 30, 0.75)',
+            'border-color': 'rgba(255, 255, 255, 0.12)',
+            '&:hover': { 'box-shadow': '0 8px 32px rgba(0, 0, 0, 0.4)' },
+          },
+        },
+        '.chart-card': {
+          '@apply w-full rounded-2xl border backdrop-blur p-4': {
+            'background': 'rgba(8, 14, 35, 0.88)',
+            'border-color': 'rgba(255, 255, 255, 0.1)',
+          },
+        },
       });
     },
   ],

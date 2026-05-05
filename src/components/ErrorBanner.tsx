@@ -5,6 +5,7 @@ interface ErrorBannerProps {
   onRetry?: () => void;
   onDismiss?: () => void;
   variant?: 'inline' | 'toast';
+  className?: string;
 }
 
 const ErrorBanner: React.FC<ErrorBannerProps> = ({ 
@@ -12,6 +13,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
   onRetry,
   onDismiss,
   variant = 'inline',
+  className = '',
 }) => {
   const isToast = variant === 'toast';
 
@@ -21,7 +23,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
         isToast
           ? 'fixed top-4 right-4 z-50 w-[92vw] max-w-sm shadow-lg'
           : 'flex flex-col sm:flex-row items-center justify-between gap-4 mb-6'
-      }`}
+      } ${className}`}
       role="status"
     >
       <div className={`flex items-start gap-3 ${isToast ? 'pr-8' : ''}`}>
