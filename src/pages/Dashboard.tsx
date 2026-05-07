@@ -4,11 +4,6 @@ import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
 
 const Dashboard: React.FC = () => {
-<<<<<<< HEAD
-  // Get dynamic text color based on background state
-  const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
-
-=======
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Dashboard");
   // Get dynamic text color based on background state
@@ -34,7 +29,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
 
@@ -124,8 +118,6 @@ const Dashboard: React.FC = () => {
 
               {/* QA Fix: Subdued the gradient borders to neutral glass styling */}
               <div className="space-y-3">
-<<<<<<< HEAD
-=======
                 {/* Visual Crossing */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
@@ -152,7 +144,6 @@ const Dashboard: React.FC = () => {
                   </details>
                 </div>
 
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
                 {/* OpenWeather API */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">

@@ -1,28 +1,9 @@
-<<<<<<< HEAD
-import React, { useState, useEffect, useMemo } from 'react';
-import DualAxisChart from '../components/DualAxisChart';
-import DynamicBackground from '../components/DynamicBackground';
-import DateAnchor from '../components/DateAnchor';
-import KPIGrid from '../components/KPIGrid';
-import SunshineWindow from '../components/SunshineWindow';
-import { ChartSkeleton, KPISkeleton } from '../components/Skeleton';
-import ErrorBanner from '../components/ErrorBanner';
-import { useBackgroundState } from '../hooks/useBackgroundState';
-import {
-  OPTIMAL_WINDOWS,
-  DEFAULT_CHART_DATA,
-  MOCK_WEATHER,
-  getTimeOfDay,
-} from '../types/weather';
-import type { ChartDataPoint, CurrentWeather } from '../types/weather';
-=======
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
 import { getWeatherHeroImage } from "../utils/weatherHeroImage";
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
 
 const forecastData = [
   { time: "00:00", temp: 24, rain: 3 },
@@ -131,29 +112,7 @@ export default function WeatherDashboard() {
     ? currentWeather.condition.replace(/\b\w/g, (char) => char.toUpperCase())
     : weatherHeroImage.kind.replace(/\b\w/g, (char) => char.toUpperCase());
 
-  // Get dynamic text color based on background state
-  const { textColorClass } = useBackgroundState(currentWeather.weatherId, lastUpdated.getHours());
-
   return (
-<<<<<<< HEAD
-    <div className="relative min-h-screen page-enter tab-container">
-      <DynamicBackground
-        temperature={currentTemp}
-        rainProbability={currentRain}
-        timeOfDay={timeOfDay}
-        isOptimalWindow={isOptimalWindow}
-        weatherId={currentWeather.weatherId}
-        currentHour={lastUpdated.getHours()}
-      />
-
-      {/* Error toast: never let fallback data dominate the hero */}
-      {hasError && showErrorToast && (
-        <ErrorBanner
-          variant="toast"
-          onRetry={fetchForecastData}
-          onDismiss={() => setShowErrorToast(false)}
-          className="error-banner-toast"
-=======
     <div className="forecast-scroll-root forecast-page">
       {previousHeroImage && (
         <div
@@ -161,7 +120,6 @@ export default function WeatherDashboard() {
           className="forecast-weather-image forecast-weather-image-out"
           style={{ backgroundImage: `url(${previousHeroImage})` }}
           aria-hidden="true"
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
         />
       )}
       <div
@@ -172,15 +130,6 @@ export default function WeatherDashboard() {
       />
       <div className="forecast-weather-scrim" aria-hidden="true" />
 
-<<<<<<< HEAD
-      <div className={`relative z-10 h-full overflow-hidden forecast-page ${textColorClass}`}>
-        {/* Header */}
-        <div className="text-center py-1 px-4 prayer-header header-section">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <h1 className="page-title forecast-heading forecast-title text-gray-100">
-              <span className="mr-2 text-lg md:text-xl">{getGreeting(forecastDate).emoji}</span>
-              {getGreeting(forecastDate).text}, Tagum City
-=======
       {/* Background overlay */}
       <div style={{
         position: "fixed", inset: 0, zIndex: 1,
@@ -217,13 +166,8 @@ export default function WeatherDashboard() {
               wordBreak: "break-word",
             }}>
               {greetText}, <span style={{ color: "#f0c87a" }}>Tagum City</span>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
             </h1>
           </div>
-<<<<<<< HEAD
-          <p className="forecast-subtitle text-tertiary-contrast mt-1 text-[11px] md:text-sm">
-            24-hour forecast with 92% accuracy • 6-month climate baseline
-=======
 
           <div className="forecast-date-pill">
             <span style={{ fontSize: isMobile ? 11 : 13 }}>📅</span>
@@ -249,21 +193,9 @@ export default function WeatherDashboard() {
             maxWidth: "100%",
           }}>
             {isMobile ? "24h forecast" : "24-hour forecast with 92% accuracy · 6-month climate baseline"}
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
           </p>
         </header>
 
-<<<<<<< HEAD
-        {/* Main container */}
-          <div className="relative page-container pb-[100px] pt-1 prayer-cleared flex-1 overflow-y-auto main-content forecast-content">
-          
-          {/* Feature: Rain Alert Banner */}
-          {!isLoading && currentRain > 60 && !hasError && (
-            <div className="bg-orange-500/10 border border-orange-500/25 text-orange-200 p-3 rounded-xl flex items-center justify-between gap-4 mb-2">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🌧️</span>
-                <p className="text-sm"><strong>High Rain Alert:</strong> {currentRain}% chance of precipitation. Carry an umbrella.</p>
-=======
         <section className="forecast-conditions">
           <label className="section-label">
             <span>🔶</span> Current Conditions
@@ -301,35 +233,14 @@ export default function WeatherDashboard() {
               <div className="forecast-weather-card-meta">
                 <p>{conditionLabel}</p>
                 <span>Feels like {Math.round(currentWeather.feelsLike ?? currentWeather.temperature)}°</span>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
               </div>
             </div>
           </aside>
 
-<<<<<<< HEAD
-          {/* Current Conditions */}
-          <div className="space-y-3 mb-2">
-            <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
-              ⚡ Current Conditions
-            </h3>
-            {isLoading ? (
-              <KPISkeleton />
-            ) : (
-              <KPIGrid
-                windSpeed={currentWindSpeed}
-                humidity={currentHumidity}
-                visibility={visibility ?? 10}
-                pressure={pressure ?? 101325}
-                uvIndex={uvIndex ?? 6}
-                dewPoint={dewPoint ?? 20}
-              />
-            )}
-=======
           <section className="chart-card">
           <div className="chart-card-header" style={{ flexDirection: isMobile ? "column" : "row" }}>
             <span style={{ fontSize: isMobile ? 11 : 13, color: "#d4ccc0" }}>Temperature &amp; Rain Probability {isMobile ? "" : "· 24hr Forecast"}</span>
             <span className="chart-now-label" style={{ fontSize: isMobile ? 10 : 12 }}>Now: {timeStr}</span>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
           </div>
           <ResponsiveContainer width="100%" height={isMobile ? 140 : 180}>
             <LineChart data={forecastData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
@@ -372,59 +283,7 @@ export default function WeatherDashboard() {
               </div>
             ))}
           </div>
-<<<<<<< HEAD
-
-          {/* Feature: Hourly Breakdown Row */}
-          {!isLoading && !hasError && (
-            <section className="space-y-2 mb-2 animate-[pageEnter_0.3s_ease-out]">
-              <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
-                ⏱️ Hourly Breakdown
-              </h3>
-              <div className="flex overflow-x-auto pb-4 gap-3 snap-x scroll-smooth no-scrollbar">
-                {(chartData.length > 0 ? chartData : DEFAULT_CHART_DATA).map((point, idx) => (
-                  <div key={idx} className="glass-card min-w-[80px] p-3 flex flex-col items-center justify-center snap-center hover:bg-white/10 transition-colors">
-                    <span className="text-xs text-label-contrast font-mono mb-2">{point.time}</span>
-                    <span className="text-xl mb-2">{point.rainProbability > 50 ? '🌧️' : point.temperature > 28 ? '☀️' : '⛅'}</span>
-                    <span className="text-sm font-bold text-gray-200">{Math.round(point.temperature)}°</span>
-                    <span className="text-[10px] text-label-contrast">{point.rainProbability}%</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Bottom row: Optimal Weather Windows */}
-          <section className="space-y-2">
-            <h3 className="section-label text-base font-bold text-gray-200 uppercase tracking-widest">
-              ☀️ Optimal Weather Windows
-            </h3>
-            <div className="weather-windows-grid">
-              {isLoading ? (
-                <>
-                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
-                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
-                  <div className="glass-card h-28 animate-pulse bg-slate-700/50" />
-                </>
-              ) : (
-                sunshineWindows.map((window, idx) => (
-                  <div key={idx} className="animate-[pageEnter_0.4s_ease-out]" style={{ animationDelay: `${idx * 0.1}s` }}>
-                    <SunshineWindow
-                      {...window}
-                      isActive={activeWindowIndex === idx}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Subtle fade indicator for clipped content */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-gray-400">⌄</div>
-        </div>
-=======
         </section>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
       </div>
 
       <nav className="bottom-nav">

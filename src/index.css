@@ -173,112 +173,6 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-<<<<<<< HEAD
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-/* Styled scrollbars */
-::-webkit-scrollbar          { width: 4px; height: 4px; }
-::-webkit-scrollbar-track    { background: transparent; }
-::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.20); border-radius: var(--radius-pill); }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); }
-
-/* Targeted transitions — never use `* { transition: all }` */
-button, a,
-[class*="hover:"],
-[class*="transition"] {
-  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
-  transition-duration: 240ms;
-  transition-timing-function: ease-out;
-}
-
-/* Focus rings */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--col-accent);
-  outline-offset: 2px;
-}
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible),
-input:focus:not(:focus-visible) { outline: none; }
-
-
-/* ──────────────────────────────────────────────────────────────────
-   3. TYPOGRAPHY
-   ────────────────────────────────────────────────────────────────── */
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  color: var(--txt-primary);
-  margin: 0;
-  line-height: 1.15;
-}
-
-h1,
-.page-title {
-  font-size: clamp(26px, 3.6vw, 46px);
-  font-weight: 700;
-  letter-spacing: -0.6px;
-  color: var(--txt-primary);
-  position: relative;
-  z-index: 25;          /* always above sticky header gradient */
-}
-
-h2 {
-  font-size: clamp(18px, 2.4vw, 26px);
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-
-h3 { font-size: clamp(15px, 1.8vw, 20px); font-weight: 600; }
-
-p {
-  margin: 0;
-  color: var(--txt-secondary);
-  line-height: 1.65;
-}
-
-code {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.4;
-  padding: 3px 7px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 5px;
-  color: var(--txt-primary);
-  display: inline-flex;
-}
-
-
-/* ──────────────────────────────────────────────────────────────────
-   4. LAYOUT PRIMITIVES
-   ────────────────────────────────────────────────────────────────── */
-
-/* Universal page wrapper */
-.page-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 clamp(16px, 2.5vw, 32px);
-  padding-bottom: calc(var(--nav-h) + 28px);
-  box-sizing: border-box;
-}
-
-/* Viewport-locked tab container */
-.tab-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: calc(var(--nav-h) + 16px);
-  overflow: hidden;
-}
-
-=======
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -393,7 +287,6 @@ code {
   z-index: 0;
 }
 
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
 /* Dashboard full-viewport layout */
 .dashboard-view {
   display: flex;
@@ -717,11 +610,7 @@ code {
   font-weight: 700;
   box-shadow: 0 4px 18px var(--col-accent-glow);
 }
-<<<<<<< HEAD
-/* .nav-tab-inactive was deprecated — use .nav-tab */
-=======
 .nav-tab-inactive { /* deprecated — use .nav-tab */ }
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
 
 
 /* ──────────────────────────────────────────────────────────────────
@@ -1039,11 +928,7 @@ code {
    5i. HOME PAGE COMPONENTS
    ────────────────────────────────────────────────────────────────── */
 .home-hero-card {
-<<<<<<< HEAD
-  background: rgba(20, 29, 59, 0.82);   /* ↑ from 0.74 — more opaque base = better
-=======
   background: rgba(10,15,32,0.82);   /* ↑ from 0.74 — more opaque base = better
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
                                          text contrast independent of bg image */
   backdrop-filter: var(--blur-strong);
   -webkit-backdrop-filter: var(--blur-strong);
@@ -1159,24 +1044,15 @@ code {
 /* Forecast page */
 .forecast-page {
   padding-top: 8px;
-<<<<<<< HEAD
-  padding-bottom: calc(var(--nav-h) + 30px);
-=======
   padding-bottom: 0;
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
 }
 .forecast-content {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-<<<<<<< HEAD
-  padding: 0 clamp(16px, 2.5vw, 28px) calc(var(--nav-h) + 30px);
-  overflow: visible;
-=======
   padding: 0 clamp(16px, 2.5vw, 28px) calc(var(--nav-h) + 48px);
   overflow-x: hidden;
   overflow-y: visible;
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
 }
 
 /* Error toast */
@@ -1419,8 +1295,6 @@ code {
   .key-features-card { padding: 18px 16px; }
   .tech-stack-grid { grid-template-columns: 1fr; }
   .home-hero-card  { padding: 28px 20px; }
-<<<<<<< HEAD
-=======
 }
 
 @media (max-width: 480px) {
@@ -2047,135 +1921,4 @@ code {
     min-height: 112px;
     padding: 14px;
   }
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
-}
-
-@media (max-width: 480px) {
-  .about-top-grid      { grid-template-columns: 1fr; }
-  .weather-windows-grid { grid-template-columns: 1fr; gap: 10px; }
-  .nav-tab             { padding: 8px 14px; font-size: 13px; }
-}
-
-
-/* ──────────────────────────────────────────────────────────────────
-   10. CRITICAL REGRESSION GUARDS
-   !important overrides as a last line of defense against Tailwind
-   utilities or inline styles breaking critical visibility.
-   ────────────────────────────────────────────────────────────────── */
-
-/* Forecast heading — survives all background conditions */
-.forecast-title,
-.forecast-heading {
-  color: #ffffff !important;
-  text-shadow: var(--shadow-img-txt) !important;
-  font-weight: 800 !important;
-}
-.forecast-subtitle {
-  color: rgba(255,255,255,0.88) !important;  /* ↑ from 0.84 */
-  text-shadow: 0 1px 10px rgba(0,0,0,0.82) !important;
-}
-
-/*
-  Forecast page: universal text-shadow over background photos.
-  Strength raised from 0.45 to 0.60 — the weaker shadow was
-  insufficient on bright morning/day images.
-*/
-.forecast-page * {
-  text-shadow: 0 1px 8px rgba(0,0,0,0.60);   /* ↑ was 0 1px 6px / 0.45 */
-}
-
-/* Exception: chart card has its own dark background */
-.forecast-page .chart-card *,
-.forecast-page .chart-card recharts-text {
-  text-shadow: none !important;
-}
-
-/*
-  FIX-16: Condition tiles on the forecast page also have a dark glass
-  background — the page-wide text-shadow was layering on top of text
-  that already sits on a dark surface, producing a hazy double-shadow.
-  Null it out inside tiles so only the tile's own contrast governs.
-*/
-.forecast-page .condition-tile * {
-  text-shadow: none !important;
-}
-
-/* Condition tiles — prevent background regression */
-.condition-tile {
-  background:               rgba(8,14,30,0.74) !important;
-  backdrop-filter:          var(--blur-glass) !important;
-  -webkit-backdrop-filter:  var(--blur-glass) !important;
-  border: 1px solid        var(--border-mid) !important;
-  border-radius:            var(--radius-md) !important;
-  width:                    100% !important;
-  min-width:                0 !important;
-}
-
-/* Tile labels — FIX-04 guard */
-.tile-label {
-  color: rgba(255,255,255,0.72) !important;  /* ↑ FIX-04 was 0.58 */
-}
-
-/* Chart card — prevent background regression */
-.chart-card {
-  background:               rgba(6,12,28,0.90) !important;
-  backdrop-filter:          var(--blur-glass) !important;
-  -webkit-backdrop-filter:  var(--blur-glass) !important;
-  border: 1px solid        var(--border-mid) !important;
-  border-radius:            var(--radius-lg) !important;
-}
-
-/* Conditions grid — enforce equal thirds always */
-.conditions-grid {
-  display:                grid !important;
-  grid-template-columns:  repeat(3, 1fr) !important;
-  gap:                    12px !important;
-  width:                  100% !important;
-}
-
-/* Chip text — FIX-18 guard */
-.chip {
-  color:        rgba(255,255,255,0.82) !important;
-  background:   rgba(255,255,255,0.10) !important;
-  border-color: rgba(255,255,255,0.28) !important;  /* ↑ FIX-18 was 0.16 */
-}
-
-/* Weather window text — always white */
-.window-card-time { color: #ffffff !important; }
-.window-card-desc { color: rgba(255,255,255,0.92) !important; }  /* ↑ FIX-08 was 0.80 */
-
-/* Home hero card — always white regardless of page bg contrast class */
-.home-hero-card .home-stat-value,
-.home-hero-card h1,
-.home-hero-card h2 {
-  color: rgba(255,255,255,0.96) !important;
-}
-
-/* Forecast content wrapper */
-.forecast-content { overflow: visible !important; }
-
-/* Section label */
-.section-label { padding-left: 0 !important; }
-
-/* Tech item descriptions — FIX-12 guard */
-.tech-item-desc {
-  color: rgba(255,255,255,0.66) !important;  /* ↑ FIX-12 was 0.54 */
-}
-
-/* Pipeline item names */
-.pipeline-item-name { color: rgba(255,255,255,0.92) !important; }
-
-/* Pipeline item subtitles — FIX-15 guard */
-.pipeline-item-sub {
-  color: rgba(255,255,255,0.64) !important;  /* ↑ FIX-07/15 was 0.52 */
-}
-
-/* Accuracy metric column headers — FIX-14 guard */
-.accuracy-metric-label {
-  color: rgba(255,255,255,0.68) !important;
-}
-
-/* Accuracy stats (RMSE / validation counts) */
-.accuracy-metric-stat {
-  color: rgba(255,255,255,0.55) !important;  /* ↑ was --txt-hint (0.38) */
 }

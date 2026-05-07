@@ -4,11 +4,6 @@ import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
 
 const About: React.FC = () => {
-<<<<<<< HEAD
-  // Get dynamic text color based on background state
-  const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
-
-=======
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("About");
   // Get dynamic text color based on background state
@@ -34,7 +29,6 @@ const About: React.FC = () => {
     }
   };
 
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
 
@@ -137,13 +131,8 @@ const About: React.FC = () => {
             </p>
             <div className="grid gap-2 grid-auto-fit text-xs">
               <div className="arch-node">
-<<<<<<< HEAD
-                <p className="node-label">API Feed</p>
-                <p className="node-sub">OpenWeather</p>
-=======
                 <p className="node-label">CSV / APIs</p>
                 <p className="node-sub">OpenWeather + Visual Crossing</p>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>

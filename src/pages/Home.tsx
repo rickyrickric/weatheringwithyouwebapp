@@ -35,8 +35,6 @@ const Home: FC = () => {
     navigate("/forecast");
   }, [navigate]);
 
-<<<<<<< HEAD
-=======
   const handleNavigation = (label: string) => {
     setActiveTab(label);
     switch(label) {
@@ -57,7 +55,6 @@ const Home: FC = () => {
     }
   };
 
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
   // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(currentWeather.weatherId, currentHour);
 
@@ -98,17 +95,10 @@ const Home: FC = () => {
       >
         {/* Main Glassmorphism Dashboard Container */}
         <div
-<<<<<<< HEAD
-          className="flex flex-col items-center text-center bg-white/10 backdrop-blur-sm border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-[90%] max-w-[560px] mx-auto shadow-2xl overflow-y-auto"
-          style={{
-            padding: 'clamp(24px, 5vh, 60px) clamp(20px, 4vw, 48px)',
-            maxHeight: 'calc(100vh - 90px)',
-=======
           className="home-hero-card flex flex-col items-center text-center overflow-y-auto"
           style={{
             padding: 'clamp(20px, 3.6vh, 40px) clamp(18px, 3vw, 34px)',
             maxHeight: 'calc(100vh - 120px)',
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
           }}
         >
           {/* Prayer hero text - Flat solid white text */}
@@ -135,36 +125,20 @@ const Home: FC = () => {
           {/* Live micro-data teaser: Visual hierarchy — Temperature dominant, Sunshine supporting */}
           <div className="home-stat-panel flex items-center justify-center gap-8 mb-7 w-full max-w-md mx-auto">
             <div className="text-center flex-1">
-<<<<<<< HEAD
-              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Temperature</p>
-              <p className="text-[52px] leading-none font-bold text-white">
-                {Math.round(currentWeather.temperature)}
-                <span className="text-base align-super text-gray-300">°C</span>
-=======
               <p className="home-stat-label text-[10px] md:text-xs mb-3">Temperature</p>
               <p className="home-stat-value home-stat-value-large">
                 {Math.round(currentWeather.temperature)}
                 <span className="home-stat-unit text-base align-super">°C</span>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
               </p>
             </div>
             <div className="home-stat-divider" />
             <div className="text-center flex-1">
-<<<<<<< HEAD
-              <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Sunshine</p>
-              <p className="text-[36px] leading-none font-bold text-amber-300">
-                {sunshineProbability}
-                <span className="text-lg">%</span>
-              </p>
-              <p className="text-xs text-gray-400 mt-1">Probability</p>
-=======
               <p className="home-stat-label text-[10px] md:text-xs mb-3">Sunshine</p>
               <p className="home-stat-value home-stat-value-support">
                 {sunshineProbability}
                 <span className="home-stat-unit text-lg">%</span>
               </p>
               <p className="home-stat-sub text-xs mt-1">Probability</p>
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
             </div>
           </div>
 
@@ -186,16 +160,6 @@ const Home: FC = () => {
             </p>
           </div>
         </div>
-<<<<<<< HEAD
-      </div>
-
-      {/* Footer - Bottom of scrollable area */}
-      <div className="relative z-10 text-center py-6 px-4">
-        <p className="text-xs text-white font-medium tracking-wide">
-          Inspired by "Tenki no Ko" — where weather forecasting becomes connection
-        </p>
-=======
->>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
       </div>
 
       {/* Footer - Bottom of scrollable area */}
