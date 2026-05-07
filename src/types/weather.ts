@@ -30,6 +30,37 @@ export interface OptimalWindow {
   end: number;
 }
 
+export interface WeatherWindow {
+  label: string;
+  time: string;
+  activity: string;
+  icon: string;
+  temp: number;
+  rain: number;
+  badge: 'OPTIMAL' | 'GOOD' | 'FAIR';
+  badgeColor: string;
+  rating: number;
+  confidence: number;
+  start: number;
+  end: number;
+}
+
+export interface AccuracySummary {
+  value: number | null;
+  label: string;
+  sampleSize: number;
+  status: 'pending-dataset' | 'measured';
+}
+
+export interface ForecastResponse {
+  generatedAt: string;
+  source: 'openweather';
+  forecast: ChartDataPoint[];
+  optimalWindows: OptimalWindow[];
+  sunshineWindows: WeatherWindow[];
+  accuracy: AccuracySummary;
+}
+
 // Shared optimal time windows used by Forecast and other pages
 export const OPTIMAL_WINDOWS: OptimalWindow[] = [
   { start: 8, end: 11 },   // 08:00 – 11:00

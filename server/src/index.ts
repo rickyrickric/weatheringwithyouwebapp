@@ -5,6 +5,7 @@ import apiRoutes from './routes/api';
 
 // Load environment variables
 dotenv.config();
+dotenv.config({ path: 'src/.env', override: false });
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,7 +15,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', apiRoutes);
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+}, apiRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

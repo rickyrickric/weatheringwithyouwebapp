@@ -6,20 +6,55 @@ import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
 import backgroundHome from "../assets/background_home.png";
 
+const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
+
 const Home: FC = () => {
   const navigate = useNavigate();
+  const [now, setNow] = useState(new Date());
   const [isClearing, setIsClearing] = useState(false);
   const [activeTab, setActiveTab] = useState("Home");
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
 
-  const currentHour = new Date().getHours();
+  const currentHour = now.getHours();
   const timeOfDay = getTimeOfDay(currentHour);
 
   useEffect(() => {
-    fetch('/api/weather/current')
-      .then(res => res.json())
-      .then(data => setCurrentWeather(data))
-      .catch(err => console.error('Error fetching current weather:', err));
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let controller = new AbortController();
+
+    const fetchCurrentWeather = async () => {
+      controller.abort();
+      controller = new AbortController();
+
+      try {
+        const response = await fetch('/api/weather/current', {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Current weather request failed: ${response.status}`);
+        }
+
+        setCurrentWeather(await response.json() as CurrentWeather);
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching current weather:', error);
+        }
+      }
+    };
+
+    void fetchCurrentWeather();
+    const timer = window.setInterval(fetchCurrentWeather, CURRENT_WEATHER_REFRESH_MS);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
   }, []);
 
   // Calculate sunshine probability from optimal windows

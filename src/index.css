@@ -1825,6 +1825,101 @@ code {
   font-weight: 600 !important;
 }
 
+.hourly-forecast-card {
+  min-width: 0;
+  width: 100%;
+  padding: 16px 14px 18px;
+  background: rgba(255, 252, 247, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 22px;
+  box-shadow: 0 18px 54px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.62);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+.forecast-page .hourly-forecast-card,
+.forecast-page .hourly-forecast-card * {
+  text-shadow: none !important;
+}
+
+.hourly-forecast-title {
+  color: #050505;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.15;
+  margin: 0 0 14px;
+}
+
+.hourly-chart-frame {
+  height: 202px;
+  border: 1px solid rgba(26, 24, 22, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 252, 247, 0.38);
+  overflow: hidden;
+}
+
+.hourly-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(72px, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.hourly-tile {
+  min-height: 144px;
+  min-width: 72px;
+  display: grid;
+  grid-template-rows: 30px 26px 24px 32px;
+  align-items: center;
+  justify-items: center;
+  padding: 18px 8px 12px;
+  background: #fbf0e4;
+  border-radius: 10px;
+  color: #000000;
+}
+
+.hourly-time,
+.hourly-rain,
+.hourly-temp {
+  color: #000000;
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+.hourly-time {
+  align-self: start;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.hourly-cloud-icon {
+  width: 22px;
+  height: 16px;
+  filter:
+    drop-shadow(0 1px 1px rgba(15, 23, 42, 0.24))
+    drop-shadow(0 0 4px rgba(224, 123, 57, 0.20));
+}
+
+.hourly-rain {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.hourly-temp {
+  align-self: end;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+}
+
 .weather-windows-grid {
   gap: 12px !important;
 }
@@ -1911,6 +2006,38 @@ code {
 
   .forecast-weather-card {
     min-height: 170px;
+  }
+
+  .hourly-forecast-card {
+    border-radius: 20px;
+    padding: 14px 12px 16px;
+  }
+
+  .hourly-forecast-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .hourly-chart-frame {
+    height: 164px;
+  }
+
+  .hourly-strip {
+    grid-auto-columns: minmax(68px, 72px);
+  }
+
+  .hourly-tile {
+    min-height: 130px;
+    padding: 16px 7px 11px;
+  }
+
+  .hourly-time,
+  .hourly-rain {
+    font-size: 13px;
+  }
+
+  .hourly-temp {
+    font-size: 21px;
   }
 
   .weather-windows-grid {

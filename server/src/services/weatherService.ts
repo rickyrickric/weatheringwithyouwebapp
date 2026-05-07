@@ -4,7 +4,7 @@ import { ChartDataPoint, CurrentWeather } from '../types';
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 const requireEnv = (name: string) => {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
   if (!value) {
     throw new Error(`Missing required env var: ${name}`);
   }
@@ -56,7 +56,7 @@ const mapOpenWeatherCurrent = (data: any): CurrentWeather => {
     feelsLike: data.main?.feels_like,
     condition: data.weather?.[0]?.description,
     visibility: data.visibility ? Math.round(data.visibility / 1000) : undefined,
-    pressure: data.main?.pressure ? data.main.pressure * 100 : undefined,
+    pressure: data.main?.pressure,
     uvIndex: undefined,
     dewPoint: undefined,
     weatherId: data.weather?.[0]?.id,

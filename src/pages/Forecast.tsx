@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import HourlyForecastStrip from "../components/HourlyForecastStrip";
 import { MOCK_WEATHER } from "../types/weather";
-import type { CurrentWeather } from "../types/weather";
+import type { AccuracySummary, CurrentWeather, ForecastResponse } from "../types/weather";
 import { getWeatherHeroImage } from "../utils/weatherHeroImage";
+
+const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
+const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
 const forecastData = [
   { time: "00:00", temp: 24, rain: 3 },
@@ -26,12 +29,35 @@ const windows = [
   { label: "Afternoon", time: "15:00–17:00", activity: "Possible showers", icon: "🌦️", temp: 26, rain: 30, badge: "FAIR", badgeColor: "#7a6ab0" },
 ];
 
+const fallbackAccuracy: AccuracySummary = {
+  value: null,
+  label: "Pending historical dataset",
+  sampleSize: 0,
+  status: "pending-dataset",
+};
+
+const formatMetricValue = (
+  value: number | null | undefined,
+  options: { divisor?: number; fallback?: string } = {},
+) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return options.fallback ?? "NaN";
+  }
+
+  const normalizedValue = value / (options.divisor ?? 1);
+  return Math.round(normalizedValue).toString();
+};
+
 export default function WeatherDashboard() {
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
   const [activeTab, setActiveTab] = useState("Forecast");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
+  const [hasLiveCurrentWeather, setHasLiveCurrentWeather] = useState(false);
+  const [chartData, setChartData] = useState(forecastData);
+  const [weatherWindows, setWeatherWindows] = useState(windows);
+  const [accuracy, setAccuracy] = useState<AccuracySummary>(fallbackAccuracy);
   const [visibleHeroImage, setVisibleHeroImage] = useState(() =>
     getWeatherHeroImage(MOCK_WEATHER.condition, MOCK_WEATHER.weatherId).src,
   );
@@ -49,10 +75,85 @@ export default function WeatherDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/weather/current')
-      .then(res => res.json())
-      .then(data => setCurrentWeather(data))
-      .catch(err => console.error('Error fetching current weather:', err));
+    let controller = new AbortController();
+
+    const fetchCurrentWeather = async () => {
+      controller.abort();
+      controller = new AbortController();
+
+      try {
+        const response = await fetch('/api/weather/current', {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Current weather request failed: ${response.status}`);
+        }
+
+        setCurrentWeather(await response.json() as CurrentWeather);
+        setHasLiveCurrentWeather(true);
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching current weather:', error);
+        }
+      }
+    };
+
+    void fetchCurrentWeather();
+    const timer = window.setInterval(fetchCurrentWeather, CURRENT_WEATHER_REFRESH_MS);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let controller = new AbortController();
+
+    const fetchForecast = async () => {
+      controller.abort();
+      controller = new AbortController();
+
+      try {
+        const response = await fetch('/api/weather/forecast/24h', {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Forecast request failed: ${response.status}`);
+        }
+
+        const data = await response.json() as ForecastResponse;
+        if (data.forecast.length > 0) {
+          setChartData(data.forecast.map((point) => ({
+            time: point.time,
+            temp: point.temperature,
+            rain: point.rainProbability,
+          })));
+        }
+
+        if (data.sunshineWindows.length > 0) {
+          setWeatherWindows(data.sunshineWindows);
+        }
+
+        setAccuracy(data.accuracy);
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching forecast data:', error);
+        }
+      }
+    };
+
+    void fetchForecast();
+    const timer = window.setInterval(fetchForecast, FORECAST_REFRESH_MS);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -111,6 +212,48 @@ export default function WeatherDashboard() {
   const conditionLabel = currentWeather.condition
     ? currentWeather.condition.replace(/\b\w/g, (char) => char.toUpperCase())
     : weatherHeroImage.kind.replace(/\b\w/g, (char) => char.toUpperCase());
+  const accuracyLabel = accuracy.value === null
+    ? accuracy.label
+    : `${accuracy.value}% accuracy`;
+  const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
+  const conditionMetrics = [
+    {
+      icon: "💨",
+      label: "Wind Speed",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined),
+      unit: "km/h",
+    },
+    {
+      icon: "💧",
+      label: "Humidity",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.humidity : undefined),
+      unit: "%",
+    },
+    {
+      icon: "👁️",
+      label: "Visibility",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.visibility : undefined),
+      unit: "km",
+    },
+    {
+      icon: "🌡️",
+      label: "Pressure",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.pressure : undefined, { divisor: pressureDivisor }),
+      unit: "hPa",
+    },
+    {
+      icon: "☀️",
+      label: "UV Index",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.uvIndex : undefined),
+      unit: "UV",
+    },
+    {
+      icon: "❄️",
+      label: "Dew Point",
+      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.dewPoint : undefined),
+      unit: "°C",
+    },
+  ];
 
   return (
     <div className="forecast-scroll-root forecast-page">
@@ -192,7 +335,7 @@ export default function WeatherDashboard() {
             textAlign: "center",
             maxWidth: "100%",
           }}>
-            {isMobile ? "24h forecast" : "24-hour forecast with 92% accuracy · 6-month climate baseline"}
+            {isMobile ? "24h forecast" : `24-hour forecast · ${accuracyLabel}`}
           </p>
         </header>
 
@@ -201,14 +344,7 @@ export default function WeatherDashboard() {
             <span>🔶</span> Current Conditions
           </label>
           <div className="conditions-grid">
-            {[
-              { icon: "💨", label: "Wind Speed", val: "12", unit: "km/h" },
-              { icon: "💧", label: "Humidity", val: "72", unit: "%" },
-              { icon: "👁️", label: "Visibility", val: "10", unit: "km" },
-              { icon: "🌡️", label: "Pressure", val: "1013", unit: "hPa" },
-              { icon: "☀️", label: "UV Index", val: "6", unit: "UV" },
-              { icon: "❄️", label: "Dew Point", val: "20", unit: "°C" },
-            ].map((item) => (
+            {conditionMetrics.map((item) => (
               <div key={item.label} className="condition-tile">
                 <div className="condition-tile-icon" style={{ fontSize: isMobile ? 16 : 18 }}>{item.icon}</div>
                 <div className="condition-tile-label" style={{ fontSize: isMobile ? 9 : 10 }}>{item.label}</div>
@@ -237,24 +373,7 @@ export default function WeatherDashboard() {
             </div>
           </aside>
 
-          <section className="chart-card">
-          <div className="chart-card-header" style={{ flexDirection: isMobile ? "column" : "row" }}>
-            <span style={{ fontSize: isMobile ? 11 : 13, color: "#d4ccc0" }}>Temperature &amp; Rain Probability {isMobile ? "" : "· 24hr Forecast"}</span>
-            <span className="chart-now-label" style={{ fontSize: isMobile ? 10 : 12 }}>Now: {timeStr}</span>
-          </div>
-          <ResponsiveContainer width="100%" height={isMobile ? 140 : 180}>
-            <LineChart data={forecastData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="time" tick={{ fontSize: isMobile ? 8 : 10, fill: "rgba(200,190,175,0.5)" }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="temp" tick={{ fontSize: isMobile ? 8 : 10, fill: "rgba(200,190,175,0.5)" }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="rain" orientation="right" tick={{ fontSize: isMobile ? 8 : 10, fill: "rgba(200,190,175,0.5)" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "rgba(20,25,35,0.95)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: isMobile ? 10 : 12 }} />
-              <Line yAxisId="temp" type="monotone" dataKey="temp" stroke="#e07b39" strokeWidth={2} dot={false} name="Temperature (°C)" />
-              <Line yAxisId="rain" type="monotone" dataKey="rain" stroke="#5bb8d4" strokeWidth={2} dot={false} name="Rain (%)" />
-              <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 13, color: "rgba(255,255,255,0.86)", paddingTop: 12, fontWeight: 600 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </section>
+          <HourlyForecastStrip hourlyData={chartData} />
         </section>
 
         <section className="forecast-windows">
@@ -262,7 +381,7 @@ export default function WeatherDashboard() {
             <span>🔶</span> Optimal Weather Windows
           </label>
           <div className="weather-windows-grid">
-            {windows.map((w) => (
+            {weatherWindows.map((w) => (
               <div key={w.label} className="weather-window-card">
                 <div className="weather-window-header">
                   <div>
