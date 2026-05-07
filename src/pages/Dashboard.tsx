@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("Dashboard");
   // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
+
+  const handleNavigation = (label: string) => {
+    setActiveTab(label);
+    switch(label) {
+      case "Home":
+        navigate("/");
+        break;
+      case "Forecast":
+        navigate("/forecast");
+        break;
+      case "Dashboard":
+        navigate("/dashboard");
+        break;
+      case "About":
+        navigate("/about");
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
@@ -207,6 +230,42 @@ const Dashboard: React.FC = () => {
         <div className="text-center py-2 text-label-contrast text-xs">
           <p>Model validation: Live • System healthy ✓</p>
         </div>
+
+        {/* Bottom Navigation */}
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          background: "rgba(15,20,30,0.90)",
+          borderTop: "1px solid rgba(255,255,255,0.10)",
+          backdropFilter: "blur(16px)",
+          display: "flex", justifyContent: "center", gap: 8,
+          padding: "12px 0 16px",
+          zIndex: 100,
+        }}>
+          {[
+            { label: "Home", icon: "🏠" },
+            { label: "Forecast", icon: "☁️" },
+            { label: "Dashboard", icon: "📊" },
+            { label: "About", icon: "ℹ️" },
+          ].map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => handleNavigation(tab.label)}
+              style={{
+                background: activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.08)",
+                border: "1px solid " + (activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.12)"),
+                borderRadius: 24,
+                color: "#f5ede0",
+                padding: "8px 20px",
+                fontSize: 13,
+                cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.2s",
+              }}
+            >
+              <span>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );
