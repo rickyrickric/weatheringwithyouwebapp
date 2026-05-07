@@ -9,6 +9,7 @@ import backgroundHome from "../assets/background_home.png";
 const Home: FC = () => {
   const navigate = useNavigate();
   const [isClearing, setIsClearing] = useState(false);
+  const [activeTab, setActiveTab] = useState("Home");
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
 
   const currentHour = new Date().getHours();
@@ -34,6 +35,29 @@ const Home: FC = () => {
     navigate("/forecast");
   }, [navigate]);
 
+<<<<<<< HEAD
+=======
+  const handleNavigation = (label: string) => {
+    setActiveTab(label);
+    switch(label) {
+      case "Home":
+        navigate("/");
+        break;
+      case "Forecast":
+        navigate("/forecast");
+        break;
+      case "Dashboard":
+        navigate("/dashboard");
+        break;
+      case "About":
+        navigate("/about");
+        break;
+      default:
+        break;
+    }
+  };
+
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
   // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(currentWeather.weatherId, currentHour);
 
@@ -74,50 +98,73 @@ const Home: FC = () => {
       >
         {/* Main Glassmorphism Dashboard Container */}
         <div
+<<<<<<< HEAD
           className="flex flex-col items-center text-center bg-white/10 backdrop-blur-sm border-[1px] border-solid border-[rgba(255,255,255,0.1)] rounded-3xl w-[90%] max-w-[560px] mx-auto shadow-2xl overflow-y-auto"
           style={{
             padding: 'clamp(24px, 5vh, 60px) clamp(20px, 4vw, 48px)',
             maxHeight: 'calc(100vh - 90px)',
+=======
+          className="home-hero-card flex flex-col items-center text-center overflow-y-auto"
+          style={{
+            padding: 'clamp(20px, 3.6vh, 40px) clamp(18px, 3vw, 34px)',
+            maxHeight: 'calc(100vh - 120px)',
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
           }}
         >
           {/* Prayer hero text - Flat solid white text */}
-          <div className="space-y-5 mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-wide">
+          <div className="space-y-4 mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-wide">
               A Prayer for
               <br />
               the Palm City
             </h1>
-            <div className="flex items-center justify-center gap-2 text-gray-200 text-base md:text-lg font-normal">
+            <div className="location-label flex items-center justify-center gap-2 text-base md:text-lg font-normal">
               {/* Lightened pin icon */}
-              <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span>Current Location: <strong className="text-white font-semibold">Tagum City, Philippines</strong></span>
+              <span>Current Location: <strong className="font-semibold">Tagum City, Philippines</strong></span>
             </div>
             {/* Tagline: Single impactful line */}
-            <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base font-light">
+            <p className="tagline max-w-lg mx-auto text-sm md:text-base font-light">
               Where weather forecasting becomes an act of connection.
             </p>
           </div>
 
           {/* Live micro-data teaser: Visual hierarchy — Temperature dominant, Sunshine supporting */}
-          <div className="flex items-center justify-center gap-12 mb-10 w-full max-w-md mx-auto py-8 bg-white/5 rounded-2xl border border-white/5">
+          <div className="home-stat-panel flex items-center justify-center gap-8 mb-7 w-full max-w-md mx-auto">
             <div className="text-center flex-1">
+<<<<<<< HEAD
               <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Temperature</p>
               <p className="text-[52px] leading-none font-bold text-white">
                 {Math.round(currentWeather.temperature)}
                 <span className="text-base align-super text-gray-300">°C</span>
+=======
+              <p className="home-stat-label text-[10px] md:text-xs mb-3">Temperature</p>
+              <p className="home-stat-value home-stat-value-large">
+                {Math.round(currentWeather.temperature)}
+                <span className="home-stat-unit text-base align-super">°C</span>
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
               </p>
             </div>
-            <div className="w-px h-20 bg-white/10" />
+            <div className="home-stat-divider" />
             <div className="text-center flex-1">
+<<<<<<< HEAD
               <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] font-semibold mb-3">Sunshine</p>
               <p className="text-[36px] leading-none font-bold text-amber-300">
                 {sunshineProbability}
                 <span className="text-lg">%</span>
               </p>
               <p className="text-xs text-gray-400 mt-1">Probability</p>
+=======
+              <p className="home-stat-label text-[10px] md:text-xs mb-3">Sunshine</p>
+              <p className="home-stat-value home-stat-value-support">
+                {sunshineProbability}
+                <span className="home-stat-unit text-lg">%</span>
+              </p>
+              <p className="home-stat-sub text-xs mt-1">Probability</p>
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
             </div>
           </div>
 
@@ -126,19 +173,29 @@ const Home: FC = () => {
             <button
               onClick={handleClearSky}
               disabled={isClearing}
-              className={`px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 ${
+              className={`cta-button transition-all duration-300 ${
                 isClearing
-                  ? "bg-[#D4622A]/70 text-white cursor-wait scale-95 opacity-70"
-                  : "bg-[#D4622A]/80 hover:bg-[#D4622A]/90 text-white hover:scale-105 active:scale-95"
+                  ? "cursor-wait scale-95 opacity-70"
+                  : "hover:scale-105 active:scale-95"
               }`}
             >
               {isClearing ? "⛅ Clearing the clouds..." : "☀️ Clear the Sky"}
             </button>
-            <p className="text-xs text-gray-300 font-medium mt-2">
+            <p className="cta-hint text-xs font-medium">
               Find the next sunshine window →
             </p>
           </div>
         </div>
+<<<<<<< HEAD
+      </div>
+
+      {/* Footer - Bottom of scrollable area */}
+      <div className="relative z-10 text-center py-6 px-4">
+        <p className="text-xs text-white font-medium tracking-wide">
+          Inspired by "Tenki no Ko" — where weather forecasting becomes connection
+        </p>
+=======
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
       </div>
 
       {/* Footer - Bottom of scrollable area */}
@@ -147,6 +204,24 @@ const Home: FC = () => {
           Inspired by "Tenki no Ko" — where weather forecasting becomes connection
         </p>
       </div>
+
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav">
+        {[
+          { label: "Home", icon: "🏠" },
+          { label: "Forecast", icon: "☁️" },
+          { label: "Dashboard", icon: "📊" },
+          { label: "About", icon: "ℹ️" },
+        ].map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => handleNavigation(tab.label)}
+            className={`nav-tab ${activeTab === tab.label ? 'active' : ''}`}
+          >
+            <span>{tab.icon}</span> {tab.label}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

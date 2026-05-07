@@ -1,11 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
 
 const Dashboard: React.FC = () => {
+<<<<<<< HEAD
   // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
 
+=======
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("Dashboard");
+  // Get dynamic text color based on background state
+  const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
+
+  const handleNavigation = (label: string) => {
+    setActiveTab(label);
+    switch(label) {
+      case "Home":
+        navigate("/");
+        break;
+      case "Forecast":
+        navigate("/forecast");
+        break;
+      case "Dashboard":
+        navigate("/dashboard");
+        break;
+      case "About":
+        navigate("/about");
+        break;
+      default:
+        break;
+    }
+  };
+
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
 
@@ -95,6 +124,35 @@ const Dashboard: React.FC = () => {
 
               {/* QA Fix: Subdued the gradient borders to neutral glass styling */}
               <div className="space-y-3">
+<<<<<<< HEAD
+=======
+                {/* Visual Crossing */}
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">📊 Visual Crossing</p>
+                      <p className="text-xs text-label-contrast">Historical archive (5+ years)</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-400/60 shadow-[0_0_8px_rgba(96,165,250,0.25)]">
+                      Source
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">📡 Updates: Daily</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">🧭 Window: 5+ yrs</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🗂️ Records: 180</span>
+                  </div>
+                  <details className="mt-2">
+                    <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
+                    <ul className="mt-2 text-xs text-gray-400 space-y-1">
+                      <li>Daily observations: Temperature, precipitation, wind</li>
+                      <li>Update frequency: Daily (UTC 00:00)</li>
+                      <li>Records in memory: 180 (6-month rolling window)</li>
+                    </ul>
+                  </details>
+                </div>
+
+>>>>>>> dbb9c69fe3ea9eba8470a967838a1c3fa0e2553e
                 {/* OpenWeather API */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
@@ -181,6 +239,42 @@ const Dashboard: React.FC = () => {
         <div className="text-center py-2 text-label-contrast text-xs">
           <p>Model validation: Live • System healthy ✓</p>
         </div>
+
+        {/* Bottom Navigation */}
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          background: "rgba(15,20,30,0.90)",
+          borderTop: "1px solid rgba(255,255,255,0.10)",
+          backdropFilter: "blur(16px)",
+          display: "flex", justifyContent: "center", gap: 8,
+          padding: "12px 0 16px",
+          zIndex: 100,
+        }}>
+          {[
+            { label: "Home", icon: "🏠" },
+            { label: "Forecast", icon: "☁️" },
+            { label: "Dashboard", icon: "📊" },
+            { label: "About", icon: "ℹ️" },
+          ].map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => handleNavigation(tab.label)}
+              style={{
+                background: activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.08)",
+                border: "1px solid " + (activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.12)"),
+                borderRadius: 24,
+                color: "#f5ede0",
+                padding: "8px 20px",
+                fontSize: 13,
+                cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.2s",
+              }}
+            >
+              <span>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );
