@@ -8,6 +8,9 @@ The project is designed as a school web application, but it is structured like a
 
 - Shows current weather conditions for the configured location.
 - Displays a 24-hour hourly forecast with temperature trend and rain probability.
+- Supports deterministic daily weather outputs for backend analytics pipelines:
+  - Daily maximum temperature
+  - Daily rainfall amount (when available from source payload)
 - Computes practical sunshine windows for morning, midday, and afternoon planning.
 - Adapts the visual background to the active weather condition and time of day.
 - Includes a dashboard view for model and pipeline context.
@@ -40,6 +43,106 @@ Backend:
 - OpenWeather API
 - Regression smoothing for forecast points
 - Optional Supabase REST persistence
+
+## System Design (Web App + API)
+
+The system has two layers:
+
+- Frontend (React + Vite): renders weather views, charts, sunshine windows, and dashboard context.
+- Backend (Express API): fetches and transforms weather data, computes analytics outputs, and persists daily records.
+
+The frontend calls backend routes under `/api`, and the backend acts as a controlled weather-data gateway. This keeps API keys server-side and centralizes weather logic in one place.
+
+## Why OpenWeather Is Used
+
+OpenWeather is the source of live weather truth for this project.
+
+What it provides:
+
+- Current conditions (temperature, humidity, pressure, wind, condition metadata)
+- Forecast series (time-indexed points used for 24-hour prediction views)
+- A practical and stable API shape for city or coordinate lookups
+
+Why this matters:
+
+- The app is focused on Tagum City and needs real-time, reliable weather inputs.
+- OpenWeather supports both city query (`OPENWEATHER_CITY`) and coordinate query (`OPENWEATHER_LAT`, `OPENWEATHER_LON`).
+- Backend mapping keeps frontend contracts consistent even if upstream payload fields evolve.
+
+## Why Supabase Is Present
+
+Supabase is used as optional persistence for daily weather routines and forecast snapshots.
+
+What it stores:
+
+- Daily observation row per location/day (`daily_weather_observations`)
+- Daily forecast snapshot rows per location/day/time (`daily_weather_forecasts`)
+
+Why this matters:
+
+- Enables weather pattern tracking over time
+- Supports future model evaluation and accuracy reporting
+- Allows deterministic daily outputs to be audited historically
+- Keeps storage and security managed through PostgreSQL + RLS
+
+If Supabase variables are not configured, the app still runs with live API responses only.
+
+## End-to-End Data Flow
+
+1. Frontend requests weather endpoints from the backend (`/api/weather/*`).
+2. Backend service reads location config (Tagum City by default through env).
+3. Backend calls OpenWeather endpoints for current and forecast data.
+4. Backend maps provider payloads to typed internal contracts.
+5. Forecast points are smoothed using polynomial regression for cleaner trends.
+6. Sunshine windows and optimal windows are computed from forecast quality scoring.
+7. Response is returned to the frontend for rendering.
+8. In parallel (optional), daily observation/forecast snapshots are upserted into Supabase.
+
+## How Data Storage Works
+
+Storage behavior is idempotent per day to prevent duplicate rows:
+
+- Observations use conflict key: `location_id, observed_date`
+- Forecasts use conflict key: `location_id, forecast_date, target_time`
+
+This means repeated API calls on the same day update existing records instead of creating unlimited duplicates.
+
+Stored payload includes:
+
+- normalized numeric columns for querying
+- source metadata
+- raw JSON payload for traceability/debugging
+
+## Retention Model (Rolling 30 Days)
+
+Recommended database policy:
+
+- Keep only the latest 30 days of raw weather records
+- Run a daily cleanup job in Supabase (for example, via `pg_cron`)
+- Delete rows where timestamps are older than `now() - interval '30 days'`
+
+Why rolling retention:
+
+- Preserves a continuous recent window for analysis and short-term model checks
+- Prevents unbounded data growth
+- Keeps query performance stable for dashboard and analytics endpoints
+
+For long-term reporting, store aggregates (daily/weekly metrics) before cleanup.
+
+## Deterministic Daily Outputs
+
+Beyond hourly chart data, the system can expose deterministic daily values for model/analytics workflows:
+
+- Daily maximum temperature
+- Daily rainfall amount
+
+These outputs are useful for:
+
+- reporting and KPI cards
+- model comparison (predicted vs observed)
+- simplified decision-oriented summaries for users
+
+When rainfall amount is not present in the upstream payload for a given period, treat the value as unavailable rather than inferring from rain probability.
 
 ## Project Structure
 
@@ -179,6 +282,11 @@ Sunshine windows are scored from:
 
 The result is turned into practical labels such as `OPTIMAL`, `GOOD`, or `FAIR`, with suggested activities like outdoor exercise, outdoor planning, or rain backup.
 
+Deterministic daily outputs can be derived from this same forecast window:
+
+- daily max temperature: maximum predicted temperature in the 24-hour window
+- daily rainfall amount: sum of available rainfall amount fields in the same window
+
 ## Available Scripts
 
 Root scripts:
@@ -228,6 +336,14 @@ npm run build
 - OpenWeather's free forecast endpoint provides 3-hour forecast intervals, so hourly UI entries depend on available API points unless interpolation is added later.
 - UV index and dew point may show as `NaN` when the current data source does not provide them.
 - Supabase is optional; the app still runs without persistence configured.
+- Rainfall amount coverage depends on source payload availability and may be missing for some entries.
+
+## Future Improvements
+
+- Implement automated 30-day retention SQL + scheduler in Supabase migrations
+- Add a daily summary table for deterministic outputs and trend queries
+- Replace placeholder accuracy response with measured metrics from stored history
+- Add aggregate retention strategy (keep monthly summaries, rotate raw rows)
 
 ## Inspiration
 
