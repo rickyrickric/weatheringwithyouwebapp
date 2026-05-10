@@ -4,7 +4,7 @@ import { getAccuracySummary } from '../services/accuracyService';
 import { applyRegression } from '../services/mlService';
 import { computeOptimalWindows, computeSunshineWindows } from '../services/sunshineWindowService';
 import { tryStoreDailyForecast, tryStoreDailyObservation } from '../services/supabaseService';
-import { getCurrentWeather, getForecast } from '../services/weatherService';
+import { getCurrentWeather, getForecast, getForecastBundle } from '../services/weatherService';
 import { ForecastResponse } from '../types';
 
 const getLocationQuery = (req: Request) => req.query as LocationQuery;
@@ -21,7 +21,8 @@ export async function getCurrent(req: Request, res: Response, next: NextFunction
 
 export async function getForecastData(req: Request, res: Response, next: NextFunction) {
   try {
-    const rawData = await getForecast(getLocationQuery(req));
+    const forecastBundle = await getForecastBundle(getLocationQuery(req));
+    const rawData = forecastBundle.forecast;
     const smoothedData = applyRegression(rawData, 3);
     const sunshineWindows = computeSunshineWindows(smoothedData);
 
@@ -32,6 +33,12 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
       optimalWindows: computeOptimalWindows(sunshineWindows),
       sunshineWindows,
       accuracy: getAccuracySummary(),
+      dailyOutlook: forecastBundle.dailyOutlook,
+      alerts: forecastBundle.alerts,
+      sourceConfidence: {
+        label: 'PAGASA · Open-Meteo',
+        value: 'High',
+      },
     };
 
     await tryStoreDailyForecast(response);

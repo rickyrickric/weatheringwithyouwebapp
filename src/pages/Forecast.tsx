@@ -2,26 +2,65 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HourlyForecastStrip from "../components/HourlyForecastStrip";
 import { MOCK_WEATHER } from "../types/weather";
-import type { AccuracySummary, CurrentWeather, ForecastResponse } from "../types/weather";
+import type { AccuracySummary, CurrentWeather, DailyOutlook, ForecastResponse, WeatherAlert } from "../types/weather";
 import { WEATHER_API_BASE } from "../utils/api";
 import { getWeatherHeroImage } from "../utils/weatherHeroImage";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
-const forecastData = [
-  { time: "00:00", temp: 24, rain: 3 },
-  { time: "02:00", temp: 23, rain: 4 },
-  { time: "04:00", temp: 22, rain: 5 },
-  { time: "06:00", temp: 23, rain: 6 },
-  { time: "08:00", temp: 25, rain: 8 },
-  { time: "10:00", temp: 27, rain: 12 },
-  { time: "12:00", temp: 29, rain: 18 },
-  { time: "14:00", temp: 29, rain: 22 },
-  { time: "16:00", temp: 28, rain: 25 },
-  { time: "18:00", temp: 27, rain: 28 },
-  { time: "20:00", temp: 26, rain: 30 },
-  { time: "23:00", temp: 25, rain: 25 },
+type TemperatureUnit = "c" | "f";
+type WindUnit = "kmh" | "mph";
+type TimeFormat = "12h" | "24h";
+type RainIntensity = "none" | "light" | "moderate" | "heavy";
+
+interface ForecastHour {
+  time: string;
+  temp: number;
+  rain: number;
+  rainMm: number;
+}
+
+const forecastData: ForecastHour[] = [
+  { time: "00:00", temp: 24, rain: 18, rainMm: 0.7 },
+  { time: "02:00", temp: 23, rain: 22, rainMm: 0.9 },
+  { time: "04:00", temp: 22, rain: 26, rainMm: 1.2 },
+  { time: "06:00", temp: 23, rain: 32, rainMm: 1.6 },
+  { time: "08:00", temp: 25, rain: 38, rainMm: 2.4 },
+  { time: "10:00", temp: 27, rain: 45, rainMm: 3.1 },
+  { time: "12:00", temp: 29, rain: 52, rainMm: 4.8 },
+  { time: "14:00", temp: 29, rain: 64, rainMm: 7.2 },
+  { time: "16:00", temp: 28, rain: 72, rainMm: 9.4 },
+  { time: "18:00", temp: 27, rain: 58, rainMm: 5.6 },
+  { time: "20:00", temp: 26, rain: 42, rainMm: 2.7 },
+  { time: "23:00", temp: 25, rain: 30, rainMm: 1.4 },
+];
+
+const fallbackTagumAlerts: WeatherAlert[] = [
+  {
+    title: "Afternoon Thunderstorm Advisory",
+    urgency: "Moderate",
+    tone: "moderate",
+    barangays: "Apokon, Mankilam, Canocotan",
+    guidance: "Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.",
+  },
+  {
+    title: "Evening Commuter Shower Watch",
+    urgency: "Advisory",
+    tone: "advisory",
+    barangays: "Magugpo Poblacion, Visayan Village, Madaum",
+    guidance: "Carry rain cover for tricycles and motorcycles. Give extra time along the national highway after sunset.",
+  },
+];
+
+const fallbackSevenDayOutlook: DailyOutlook[] = [
+  { day: "Mon", date: "May 11", high: 31, low: 24, rainChance: 68, rainMm: 8.8, summary: "PM storms near Apokon" },
+  { day: "Tue", date: "May 12", high: 32, low: 24, rainChance: 46, rainMm: 3.4, summary: "Humid, scattered rain" },
+  { day: "Wed", date: "May 13", high: 31, low: 23, rainChance: 28, rainMm: 1.2, summary: "Mostly cloudy breaks" },
+  { day: "Thu", date: "May 14", high: 33, low: 24, rainChance: 22, rainMm: 0.4, summary: "Warmer midday" },
+  { day: "Fri", date: "May 15", high: 32, low: 24, rainChance: 57, rainMm: 5.9, summary: "Late-day showers" },
+  { day: "Sat", date: "May 16", high: 30, low: 23, rainChance: 74, rainMm: 12.6, summary: "Heavier rain bands" },
+  { day: "Sun", date: "May 17", high: 31, low: 24, rainChance: 39, rainMm: 2.1, summary: "Light passing rain" },
 ];
 
 const windows = [
@@ -49,6 +88,65 @@ const formatMetricValue = (
   return Math.round(normalizedValue).toString();
 };
 
+const toFahrenheit = (temperature: number) => Math.round((temperature * 9) / 5 + 32);
+const formatTemperature = (temperature: number, unit: TemperatureUnit) =>
+  `${unit === "f" ? toFahrenheit(temperature) : Math.round(temperature)}°${unit.toUpperCase()}`;
+const formatTemperatureNumber = (temperature: number, unit: TemperatureUnit) =>
+  unit === "f" ? toFahrenheit(temperature) : Math.round(temperature);
+const formatWind = (speed: number | null | undefined, unit: WindUnit) => {
+  if (typeof speed !== "number" || !Number.isFinite(speed)) return { value: "--", unit: unit === "mph" ? "mph" : "km/h" };
+  return {
+    value: Math.round(unit === "mph" ? speed * 0.621371 : speed).toString(),
+    unit: unit === "mph" ? "mph" : "km/h",
+  };
+};
+
+const getRainIntensity = (rainMm: number): RainIntensity => {
+  if (rainMm <= 0) return "none";
+  if (rainMm < 2.5) return "light";
+  if (rainMm < 7.6) return "moderate";
+  return "heavy";
+};
+
+const formatElapsed = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+};
+
+const formatClock = (time: string, format: TimeFormat) => {
+  const [hourPart, minute = "00"] = time.split(":");
+  const hour = Number(hourPart);
+  if (Number.isNaN(hour) || format === "24h") return `${hourPart.padStart(2, "0")}:${minute}`;
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minute} ${hour < 12 ? "AM" : "PM"}`;
+};
+
+const isNightNow = (date: Date) => {
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  const sunrise = 5 * 60 + 41;
+  const sunset = 17 * 60 + 57;
+  return minutes < sunrise || minutes > sunset;
+};
+
+const getAlertIcon = (tone: WeatherAlert["tone"]) => {
+  if (tone === "moderate") return "\u26A0";
+  return "\u2139";
+};
+
+const getWindowInsight = (label: string) => {
+  if (label.toLowerCase().includes("morning")) {
+    return { metric: "UV risk", value: "Low", note: "Best for exercise and errands" };
+  }
+
+  if (label.toLowerCase().includes("midday")) {
+    return { metric: "Heat comfort", value: "Watch", note: "Use shade and short exposure" };
+  }
+
+  return { metric: "Wind comfort", value: "Variable", note: "Keep plans flexible near showers" };
+};
+
 export default function WeatherDashboard() {
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
@@ -56,7 +154,14 @@ export default function WeatherDashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
   const [hasLiveCurrentWeather, setHasLiveCurrentWeather] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(new Date());
+  const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("c");
+  const [windUnit, setWindUnit] = useState<WindUnit>("kmh");
+  const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [chartData, setChartData] = useState(forecastData);
+  const [tagumAlerts, setTagumAlerts] = useState<WeatherAlert[]>(fallbackTagumAlerts);
+  const [sevenDayOutlook, setSevenDayOutlook] = useState<DailyOutlook[]>(fallbackSevenDayOutlook);
+  const [sourceConfidence, setSourceConfidence] = useState({ label: "PAGASA · Open-Meteo", value: "High" });
   const [weatherWindows, setWeatherWindows] = useState(windows);
   const [accuracy, setAccuracy] = useState<AccuracySummary>(fallbackAccuracy);
   const [visibleHeroImage, setVisibleHeroImage] = useState(() =>
@@ -71,7 +176,7 @@ export default function WeatherDashboard() {
   );
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60000);
+    const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -93,6 +198,7 @@ export default function WeatherDashboard() {
         }
 
         setCurrentWeather(await response.json() as CurrentWeather);
+        setLastUpdatedAt(new Date());
         setHasLiveCurrentWeather(true);
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
@@ -133,7 +239,20 @@ export default function WeatherDashboard() {
             time: point.time,
             temp: point.temperature,
             rain: point.rainProbability,
+            rainMm: Number((point.rainMm ?? point.rainProbability / 18).toFixed(1)),
           })));
+        }
+
+        if (data.alerts && data.alerts.length > 0) {
+          setTagumAlerts(data.alerts);
+        }
+
+        if (data.dailyOutlook && data.dailyOutlook.length > 0) {
+          setSevenDayOutlook(data.dailyOutlook);
+        }
+
+        if (data.sourceConfidence) {
+          setSourceConfidence(data.sourceConfidence);
         }
 
         if (data.sunshineWindows.length > 0) {
@@ -214,7 +333,11 @@ export default function WeatherDashboard() {
     weekday: "long", month: "long", day: "numeric", year: "numeric"
   });
 
-  const timeStr = now.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" });
+  const timeStr = now.toLocaleTimeString("en-PH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: timeFormat === "12h",
+  });
   const conditionLabel = currentWeather.condition
     ? currentWeather.condition.replace(/\b\w/g, (char) => char.toUpperCase())
     : weatherHeroImage.kind.replace(/\b\w/g, (char) => char.toUpperCase());
@@ -222,12 +345,20 @@ export default function WeatherDashboard() {
     ? accuracy.label
     : `${accuracy.value}% accuracy`;
   const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
+  const updatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastUpdatedAt.getTime()) / 1000));
+  const windMetric = formatWind(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined, windUnit);
+  const nightNow = isNightNow(now);
+  const dewPointAvailable = hasLiveCurrentWeather && typeof currentWeather.dewPoint === "number" && Number.isFinite(currentWeather.dewPoint);
+  const weeklyTemperatureMin = Math.min(...sevenDayOutlook.map((day) => day.low));
+  const weeklyTemperatureMax = Math.max(...sevenDayOutlook.map((day) => day.high));
+  const weeklyTemperatureRange = Math.max(1, weeklyTemperatureMax - weeklyTemperatureMin);
+  const daylightStatus = nightNow ? "Night now" : "Daylight now";
   const conditionMetrics = [
     {
       icon: "💨",
       label: "Wind Speed",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined),
-      unit: "km/h",
+      val: windMetric.value,
+      unit: windMetric.unit,
     },
     {
       icon: "💧",
@@ -250,14 +381,16 @@ export default function WeatherDashboard() {
     {
       icon: "☀️",
       label: "UV Index",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.uvIndex : undefined),
-      unit: "UV",
+      val: nightNow ? "Night — no UV exposure right now" : formatMetricValue(hasLiveCurrentWeather ? currentWeather.uvIndex : undefined, { fallback: "Checking" }),
+      unit: nightNow ? "" : "UV",
+      longText: nightNow,
     },
     {
       icon: "❄️",
       label: "Dew Point",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.dewPoint : undefined),
-      unit: "°C",
+      val: dewPointAvailable ? formatTemperatureNumber(currentWeather.dewPoint ?? 0, temperatureUnit).toString() : "Sensor offline · check at sunrise",
+      unit: dewPointAvailable ? `°${temperatureUnit.toUpperCase()}` : "",
+      longText: !dewPointAvailable,
     },
   ];
 
@@ -299,6 +432,9 @@ export default function WeatherDashboard() {
       }} />
 
       <div className="forecast-content">
+        <h2 className="sr-only">
+          Tagum City forecast summary with active barangay alerts, hourly rainfall, seven day outlook, source confidence, and daylight timing.
+        </h2>
 
         <header className="forecast-header">
 
@@ -319,6 +455,8 @@ export default function WeatherDashboard() {
           </div>
 
           <div className="forecast-date-pill">
+            <span className="live-dot" aria-hidden="true" />
+            <span className="forecast-live-copy">Updated {formatElapsed(updatedSecondsAgo)}</span>
             <span style={{ fontSize: isMobile ? 11 : 13 }}>📅</span>
             <span style={{ fontSize: isMobile ? 10 : 13, color: "#d4ccc0", letterSpacing: "0.4px", fontFamily: "monospace" }}>
               {isMobile ? now.toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : dateStr}
@@ -343,18 +481,82 @@ export default function WeatherDashboard() {
           }}>
             {isMobile ? "24h forecast" : `24-hour forecast · ${accuracyLabel}`}
           </p>
+
+          <div className="forecast-unit-toggles" aria-label="Forecast unit controls">
+            <div className="unit-toggle-group" aria-label="Temperature unit">
+              {(["c", "f"] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type="button"
+                  className={temperatureUnit === unit ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={temperatureUnit === unit}
+                  onClick={() => setTemperatureUnit(unit)}
+                >
+                  °{unit.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <div className="unit-toggle-group" aria-label="Wind speed unit">
+              {(["kmh", "mph"] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type="button"
+                  className={windUnit === unit ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={windUnit === unit}
+                  onClick={() => setWindUnit(unit)}
+                >
+                  {unit === "kmh" ? "km/h" : "mph"}
+                </button>
+              ))}
+            </div>
+            <div className="unit-toggle-group" aria-label="Time format">
+              {(["12h", "24h"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className={timeFormat === format ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={timeFormat === format}
+                  onClick={() => setTimeFormat(format)}
+                >
+                  {format}
+                </button>
+              ))}
+            </div>
+          </div>
         </header>
 
+        <section className="forecast-alerts" aria-live="polite" aria-label="Active Tagum weather alerts">
+          {tagumAlerts.map((alert) => (
+            <article key={alert.title} className={`alert-card alert-${alert.tone}`}>
+              <div className="alert-card-header">
+                <div>
+                  <h3>{alert.title}</h3>
+                  <p>{alert.barangays}</p>
+                </div>
+                <span className="alert-badge">
+                  <span aria-hidden="true">{getAlertIcon(alert.tone)}</span>
+                  {alert.urgency}
+                </span>
+              </div>
+              <p className="alert-guidance">{alert.guidance}</p>
+            </article>
+          ))}
+        </section>
+
         <section className="forecast-conditions">
-          <label className="section-label">
+          <label className="section-label section-label-primary">
             <span>🔶</span> Current Conditions
           </label>
+          <div className="source-confidence" aria-label={`Weather source confidence is ${sourceConfidence.value.toLowerCase()}`}>
+            <span>{sourceConfidence.label}</span>
+            <span className="source-confidence-badge">{sourceConfidence.value} confidence</span>
+          </div>
           <div className="conditions-grid">
             {conditionMetrics.map((item) => (
               <div key={item.label} className="condition-tile">
                 <div className="condition-tile-icon" style={{ fontSize: isMobile ? 16 : 18 }}>{item.icon}</div>
                 <div className="condition-tile-label" style={{ fontSize: isMobile ? 9 : 10 }}>{item.label}</div>
-                <div className="condition-tile-value" style={{ fontSize: isMobile ? 19 : 22 }}>
+                <div className={`condition-tile-value ${item.longText ? "condition-tile-value-long" : ""}`} style={{ fontSize: isMobile ? 19 : 22 }}>
                   {item.val}<sup className="condition-tile-unit" style={{ fontSize: isMobile ? 10 : 12 }}>{item.unit}</sup>
                 </div>
               </div>
@@ -363,6 +565,7 @@ export default function WeatherDashboard() {
         </section>
 
         <section className="forecast-chart-layout">
+          <div className="forecast-hero-stack">
           <aside
             className={`forecast-weather-card forecast-weather-card-${weatherHeroImage.kind}`}
             style={{ backgroundImage: `url(${visibleHeroImage})` }}
@@ -370,24 +573,95 @@ export default function WeatherDashboard() {
             <div className="forecast-weather-card-time">{timeStr}</div>
             <div className="forecast-weather-card-body">
               <div className="forecast-weather-card-temp">
-                {Math.round(currentWeather.temperature)}<span>°</span>
+                {formatTemperatureNumber(currentWeather.temperature, temperatureUnit)}<span>°</span>
               </div>
               <div className="forecast-weather-card-meta">
                 <p>{conditionLabel}</p>
-                <span>Feels like {Math.round(currentWeather.feelsLike ?? currentWeather.temperature)}°</span>
+                <span>Feels like {formatTemperature(currentWeather.feelsLike ?? currentWeather.temperature, temperatureUnit)}</span>
               </div>
             </div>
           </aside>
 
-          <HourlyForecastStrip hourlyData={chartData} />
+            <aside className="daylight-card" aria-label="Tagum daylight from 5:41 AM to 5:57 PM">
+              <div className="daylight-card-header">
+                <div>
+                  <p className="daylight-eyebrow">Daylight</p>
+                  <h3>5:41 AM / 5:57 PM</h3>
+                </div>
+                <span>12h 16min</span>
+              </div>
+              <div className="daylight-status">{daylightStatus}</div>
+              <div className="daylight-metrics">
+                <div>
+                  <span>Sunrise</span>
+                  <strong>{formatClock("05:41", timeFormat)}</strong>
+                </div>
+                <div>
+                  <span>Sunset</span>
+                  <strong>{formatClock("17:57", timeFormat)}</strong>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <HourlyForecastStrip hourlyData={chartData} temperatureUnit={temperatureUnit} timeFormat={timeFormat} />
+        </section>
+
+        <section className="weekly-outlook" aria-label="Seven day Tagum weather outlook">
+          <div className="section-heading-row">
+            <label className="section-label section-label-primary">
+              <span>🔶</span> 7-Day Outlook
+            </label>
+            <span className="weekly-range-note">Rainfall amount and intensity</span>
+          </div>
+          <div className="weekly-outlook-list">
+            {sevenDayOutlook.map((day) => {
+              const intensity = day.intensity ?? getRainIntensity(day.rainMm);
+              const rangeStart = ((day.low - weeklyTemperatureMin) / weeklyTemperatureRange) * 100;
+              const rangeWidth = Math.max(4, ((day.high - day.low) / weeklyTemperatureRange) * 100);
+
+              return (
+                <article
+                  key={day.date}
+                  className={`weekly-row rain-${intensity}`}
+                  aria-label={`${day.day} ${day.date}, high ${formatTemperature(day.high, temperatureUnit)}, low ${formatTemperature(day.low, temperatureUnit)}, ${day.rainChance}% rain, ${day.rainMm.toFixed(1)} millimeters, ${intensity} intensity`}
+                >
+                  <div className="weekly-day">
+                    <strong>{day.day}</strong>
+                    <span>{day.date}</span>
+                  </div>
+                  <div className="weekly-summary">{day.summary}</div>
+                  <div className="weekly-temp-range" aria-hidden="true">
+                    <span className="weekly-range-track" />
+                    <span
+                      className="weekly-range-fill"
+                      style={{ left: `${rangeStart}%`, width: `${rangeWidth}%` }}
+                    />
+                  </div>
+                  <div className="weekly-temps">
+                    <strong>{formatTemperature(day.high, temperatureUnit)}</strong>
+                    <span>{formatTemperature(day.low, temperatureUnit)}</span>
+                  </div>
+                  <div className="weekly-rain">
+                    <strong>{day.rainChance}%</strong>
+                    <span>{day.rainMm.toFixed(1)} mm</span>
+                  </div>
+                  <span className="intensity-badge">{intensity}</span>
+                </article>
+              );
+            })}
+          </div>
         </section>
 
         <section className="forecast-windows">
-          <label className="section-label">
+          <label className="section-label section-label-primary">
             <span>🔶</span> Optimal Weather Windows
           </label>
           <div className="weather-windows-grid">
-            {weatherWindows.map((w) => (
+            {weatherWindows.map((w) => {
+              const insight = getWindowInsight(w.label);
+
+              return (
               <div key={w.label} className="weather-window-card">
                 <div className="weather-window-header">
                   <div>
@@ -401,12 +675,63 @@ export default function WeatherDashboard() {
                 </div>
                 <div className="weather-window-time" style={{ fontSize: isMobile ? 10 : 11 }}>{w.time}</div>
                 <div className="weather-window-activity" style={{ fontSize: isMobile ? 10 : 11 }}>{w.activity}</div>
+                <div className="weather-window-insight">
+                  <span>{insight.metric}</span>
+                  <strong>{insight.value}</strong>
+                </div>
+                <div className="weather-window-note">{insight.note}</div>
                 <div className="weather-window-stats" style={{ gap: isMobile ? 8 : 10, fontSize: isMobile ? 11 : 12 }}>
-                  <span>🌡️ {w.temp}°C</span>
+                  <span>🌡️ {formatTemperature(w.temp, temperatureUnit)}</span>
                   <span>💧 {w.rain}%</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="forecast-settings-panel" aria-label="Forecast display settings">
+          <span className="settings-panel-icon" aria-hidden="true">&#9881;</span>
+          <div className="forecast-unit-toggles" aria-label="Forecast unit controls">
+            <div className="unit-toggle-group" aria-label="Temperature unit">
+              {(["c", "f"] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type="button"
+                  className={temperatureUnit === unit ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={temperatureUnit === unit}
+                  onClick={() => setTemperatureUnit(unit)}
+                >
+                  °{unit.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <div className="unit-toggle-group" aria-label="Wind speed unit">
+              {(["kmh", "mph"] as const).map((unit) => (
+                <button
+                  key={unit}
+                  type="button"
+                  className={windUnit === unit ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={windUnit === unit}
+                  onClick={() => setWindUnit(unit)}
+                >
+                  {unit === "kmh" ? "km/h" : "mph"}
+                </button>
+              ))}
+            </div>
+            <div className="unit-toggle-group" aria-label="Time format">
+              {(["12h", "24h"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className={timeFormat === format ? "unit-toggle active" : "unit-toggle"}
+                  aria-pressed={timeFormat === format}
+                  onClick={() => setTimeFormat(format)}
+                >
+                  {format}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       </div>

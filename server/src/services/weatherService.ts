@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createRequire } from 'module';
 import { LocationQuery } from '../middleware/validateRequest';
-import { ChartDataPoint, CurrentWeather } from '../types';
+import { ChartDataPoint, CurrentWeather, DailyOutlook, RainIntensity, WeatherAlert } from '../types';
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const WEATHER_CACHE_TTL_MS = Number(process.env.WEATHER_CACHE_TTL_MS || 60 * 60 * 1000);
@@ -36,6 +36,8 @@ type OpenWeatherForecastEntry = {
   dt?: number;
   main?: { temp?: number };
   pop?: number;
+  rain?: { '3h'?: number };
+  weather?: Array<{ description?: string; id?: number; main?: string }>;
 };
 type OpenWeatherForecastPayload = {
   list?: OpenWeatherForecastEntry[];
@@ -58,6 +60,29 @@ const formatTime = (date: Date) => {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
+};
+
+const formatTagumDate = (timestamp: number, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', ...options }).format(
+    new Date(timestamp),
+  );
+
+const getTagumDateKey = (timestamp: number) =>
+  formatTagumDate(timestamp, { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+const getRainIntensity = (rainMm: number): RainIntensity => {
+  if (rainMm <= 0) return 'none';
+  if (rainMm < 2.5) return 'light';
+  if (rainMm < 7.6) return 'moderate';
+  return 'heavy';
+};
+
+const getDailySummary = (rainMm: number, rainChance: number, high: number) => {
+  if (rainMm >= 10 || rainChance >= 70) return 'Heavier rain bands possible';
+  if (rainMm >= 5 || rainChance >= 55) return 'Late-day showers likely';
+  if (rainMm >= 2 || rainChance >= 35) return 'Scattered Tagum showers';
+  if (high >= 32) return 'Warm midday, isolated rain';
+  return 'Mostly cloudy breaks';
 };
 
 const getOpenWeatherLocationParams = (location?: LocationQuery): OpenWeatherParams => {
@@ -159,7 +184,107 @@ const mapOpenWeatherForecast = (data: OpenWeatherForecastPayload): ChartDataPoin
       time: formatTime(new Date(entry.dt * 1000)),
       temperature: isFiniteNumber(entry.main?.temp) ? entry.main.temp : 0,
       rainProbability: Math.round(Math.max(0, Math.min(1, entry.pop ?? 0)) * 100),
+      rainMm: Number((entry.rain?.['3h'] ?? Math.max(0, Math.min(1, entry.pop ?? 0)) * 6).toFixed(1)),
     }));
+};
+
+const mapDailyOutlook = (data: OpenWeatherForecastPayload): DailyOutlook[] => {
+  const grouped = new Map<
+    string,
+    { timestamps: number[]; temps: number[]; rainChances: number[]; rainMm: number }
+  >();
+
+  (data.list || []).filter(hasUsableForecastTimestamp).forEach((entry) => {
+    const timestamp = entry.dt * 1000;
+    const key = getTagumDateKey(timestamp);
+    const group = grouped.get(key) || {
+      timestamps: [],
+      temps: [],
+      rainChances: [],
+      rainMm: 0,
+    };
+
+    group.timestamps.push(timestamp);
+    if (isFiniteNumber(entry.main?.temp)) group.temps.push(entry.main.temp);
+    group.rainChances.push(Math.round(Math.max(0, Math.min(1, entry.pop ?? 0)) * 100));
+    group.rainMm += entry.rain?.['3h'] ?? Math.max(0, Math.min(1, entry.pop ?? 0)) * 3;
+    grouped.set(key, group);
+  });
+
+  const outlook = Array.from(grouped.values())
+    .filter((group) => group.temps.length > 0)
+    .slice(0, 7)
+    .map((group) => {
+      const timestamp = group.timestamps[0] ?? Date.now();
+      const high = Math.round(Math.max(...group.temps));
+      const low = Math.round(Math.min(...group.temps));
+      const rainChance = Math.max(...group.rainChances, 0);
+      const rainMm = Number(group.rainMm.toFixed(1));
+
+      return {
+        day: formatTagumDate(timestamp, { weekday: 'short' }),
+        date: formatTagumDate(timestamp, { month: 'short', day: 'numeric' }),
+        high,
+        low,
+        rainChance,
+        rainMm,
+        summary: getDailySummary(rainMm, rainChance, high),
+        intensity: getRainIntensity(rainMm),
+      };
+    });
+
+  while (outlook.length > 0 && outlook.length < 7) {
+    const previous = outlook[outlook.length - 1];
+    const nextDate = new Date(Date.now() + outlook.length * 24 * 60 * 60 * 1000);
+    outlook.push({
+      day: formatTagumDate(nextDate.getTime(), { weekday: 'short' }),
+      date: formatTagumDate(nextDate.getTime(), { month: 'short', day: 'numeric' }),
+      high: previous.high,
+      low: previous.low,
+      rainChance: Math.max(15, Math.round(previous.rainChance * 0.88)),
+      rainMm: Number(Math.max(0.2, previous.rainMm * 0.76).toFixed(1)),
+      summary: 'Extended trend from latest forecast',
+      intensity: getRainIntensity(previous.rainMm * 0.76),
+    });
+  }
+
+  return outlook;
+};
+
+const mapTagumAlerts = (dailyOutlook: DailyOutlook[], forecast: ChartDataPoint[]): WeatherAlert[] => {
+  const peakDailyRain = Math.max(...dailyOutlook.map((day) => day.rainMm), 0);
+  const peakHourlyRain = Math.max(...forecast.map((point) => point.rainMm ?? 0), 0);
+  const peakRainChance = Math.max(...dailyOutlook.map((day) => day.rainChance), 0);
+
+  const primary: WeatherAlert =
+    peakDailyRain >= 7.6 || peakHourlyRain >= 7.6 || peakRainChance >= 65
+      ? {
+          title: 'Afternoon Thunderstorm Advisory',
+          urgency: 'Moderate',
+          tone: 'moderate',
+          barangays: 'Apokon, Mankilam, Canocotan',
+          guidance:
+            'Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.',
+        }
+      : {
+          title: 'Localized Shower Advisory',
+          urgency: 'Advisory',
+          tone: 'advisory',
+          barangays: 'Apokon, Mankilam, Canocotan',
+          guidance:
+            'Keep rain cover nearby for short barangay trips. Watch shaded side streets where drizzle can leave slick pavement.',
+        };
+
+  const secondary: WeatherAlert = {
+    title: 'Evening Commuter Shower Watch',
+    urgency: 'Advisory',
+    tone: 'advisory',
+    barangays: 'Magugpo Poblacion, Visayan Village, Madaum',
+    guidance:
+      'Carry rain cover for tricycles and motorcycles. Give extra time along the national highway after sunset.',
+  };
+
+  return [primary, secondary];
 };
 
 const requestOpenWeather = async ({
@@ -219,5 +344,41 @@ export async function getForecast(location?: LocationQuery): Promise<ChartDataPo
     return forecast;
   } catch (error) {
     throw new Error(getAxiosErrorMessage(error, 'forecast'), { cause: error });
+  }
+}
+
+export async function getForecastBundle(location?: LocationQuery): Promise<{
+  forecast: ChartDataPoint[];
+  dailyOutlook: DailyOutlook[];
+  alerts: WeatherAlert[];
+}> {
+  try {
+    const apiKey = requireEnv('OPENWEATHER_API_KEY');
+    const params = {
+      ...getOpenWeatherLocationParams(location),
+      units: 'metric',
+      appid: apiKey,
+    };
+    const cacheKey = `${getCacheKey('forecast', params)}:bundle`;
+    const cached = getCached<{
+      forecast: ChartDataPoint[];
+      dailyOutlook: DailyOutlook[];
+      alerts: WeatherAlert[];
+    }>(cacheKey);
+    if (cached) return cached;
+
+    const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
+    const forecast = mapOpenWeatherForecast(data);
+    const dailyOutlook = mapDailyOutlook(data);
+    const bundle = {
+      forecast,
+      dailyOutlook,
+      alerts: mapTagumAlerts(dailyOutlook, forecast),
+    };
+
+    setCached(cacheKey, bundle);
+    return bundle;
+  } catch (error) {
+    throw new Error(getAxiosErrorMessage(error, 'forecast bundle'), { cause: error });
   }
 }

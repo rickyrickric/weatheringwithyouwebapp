@@ -2,6 +2,28 @@ export interface ChartDataPoint {
   time: string;
   temperature: number;
   rainProbability: number;
+  rainMm?: number;
+}
+
+export type RainIntensity = 'none' | 'light' | 'moderate' | 'heavy';
+
+export interface DailyOutlook {
+  day: string;
+  date: string;
+  high: number;
+  low: number;
+  rainChance: number;
+  rainMm: number;
+  summary: string;
+  intensity: RainIntensity;
+}
+
+export interface WeatherAlert {
+  title: string;
+  urgency: 'Moderate' | 'Advisory';
+  tone: 'moderate' | 'advisory';
+  barangays: string;
+  guidance: string;
 }
 
 export interface SunshineWindow {
@@ -59,4 +81,10 @@ export interface ForecastResponse {
   optimalWindows: OptimalWindow[];
   sunshineWindows: WeatherWindow[];
   accuracy: AccuracySummary;
+  dailyOutlook: DailyOutlook[];
+  alerts: WeatherAlert[];
+  sourceConfidence: {
+    label: string;
+    value: 'High' | 'Medium' | 'Low';
+  };
 }
