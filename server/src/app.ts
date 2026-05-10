@@ -71,6 +71,21 @@ export const createApp = () => {
   app.use('/api/v1', apiLimiter, apiRoutes);
   app.use('/api', apiLimiter, apiRoutes);
 
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'Weathering With You API',
+      status: 'ok',
+      frontend: process.env.FRONTEND_URL || 'http://localhost:5173',
+      endpoints: {
+        health: '/health',
+        docs: '/api/docs',
+        openapi: '/api/openapi.json',
+        currentWeather: '/api/v1/weather/current',
+        forecast24h: '/api/v1/weather/forecast/24h',
+      },
+    });
+  });
+
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', message: 'Atmospheric Intelligence API is running' });
   });

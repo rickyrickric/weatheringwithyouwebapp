@@ -7,6 +7,11 @@ interface SystemStatusProps {
 
 type TabType = 'health' | 'pipeline' | 'version';
 
+const stableMetric = (seed: number, min: number, range: number) => {
+  const normalized = Math.abs(Math.sin(seed) * 10000) % 1;
+  return Math.floor(normalized * range) + min;
+};
+
 const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => {
   const [activeTab, setActiveTab] = useState<TabType>('health');
 
@@ -15,11 +20,12 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
     const now = new Date();
     const lastSync = lastUpdated ? new Date(lastUpdated.getTime() - 5 * 60000) : new Date(); // 5 min ago
     const modelTrainDate = new Date(now.getTime() - 3 * 24 * 60 * 60000); // 3 days ago
+    const seed = lastUpdated?.getTime() ?? now.toDateString().length;
     
     return {
-      apiLatency: Math.floor(Math.random() * 80) + 60, // 60-140ms
-      cpuUsage: Math.floor(Math.random() * 35) + 15, // 15-50%
-      memoryUsage: Math.floor(Math.random() * 40) + 30, // 30-70%
+      apiLatency: stableMetric(seed, 60, 80), // 60-140ms
+      cpuUsage: stableMetric(seed + 1, 15, 35), // 15-50%
+      memoryUsage: stableMetric(seed + 2, 30, 40), // 30-70%
       openWeatherSync: lastUpdated || now,
       visualCrossingSync: lastSync,
       modelVersion: 'v2.4',

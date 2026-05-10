@@ -1,4 +1,5 @@
 import { ChartDataPoint, CurrentWeather, ForecastResponse } from '../types';
+import { logger } from '../utils/logger';
 
 const DEFAULT_OBSERVATIONS_TABLE = 'daily_weather_observations';
 const DEFAULT_FORECASTS_TABLE = 'daily_weather_forecasts';
@@ -107,7 +108,7 @@ export async function tryStoreDailyObservation(weather: CurrentWeather) {
   try {
     await storeDailyObservation(weather);
   } catch (error) {
-    console.error('Supabase observation persistence skipped:', error);
+    logger.warn({ err: error }, 'Supabase observation persistence skipped');
   }
 }
 
@@ -115,6 +116,6 @@ export async function tryStoreDailyForecast(response: ForecastResponse) {
   try {
     await storeDailyForecast(response);
   } catch (error) {
-    console.error('Supabase forecast persistence skipped:', error);
+    logger.warn({ err: error }, 'Supabase forecast persistence skipped');
   }
 }

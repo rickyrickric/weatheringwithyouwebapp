@@ -32,12 +32,12 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
     { startTime: '14:00', endTime: '16:00' },
   ],
 }) => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
   
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    
     const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
@@ -142,11 +142,11 @@ const DualAxisChart: React.FC<DualAxisChartProps> = ({
               color: '#f8fafc',
             }}
             cursor={{ stroke: 'rgba(156, 163, 175, 0.2)', strokeWidth: 2 }}
-            formatter={(value: any) => {
+            formatter={(value: unknown) => {
               if (typeof value === 'number') {
                 return value.toFixed(1);
               }
-              return value;
+              return String(value);
             }}
           />
 

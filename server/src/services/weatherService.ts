@@ -1,13 +1,25 @@
 import axios from 'axios';
-import CircuitBreaker from 'opossum';
+import { createRequire } from 'module';
 import { LocationQuery } from '../middleware/validateRequest';
 import { ChartDataPoint, CurrentWeather } from '../types';
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const WEATHER_CACHE_TTL_MS = Number(process.env.WEATHER_CACHE_TTL_MS || 60 * 60 * 1000);
+const nodeRequire = createRequire(__filename);
 
 type OpenWeatherEndpoint = 'weather' | 'forecast';
 type OpenWeatherParams = Record<string, string | number>;
+type CircuitBreakerOptions = {
+  timeout?: number;
+  errorThresholdPercentage?: number;
+  resetTimeout?: number;
+};
+type CircuitBreakerConstructor = new <TArgs extends unknown[], TResult>(
+  action: (...args: TArgs) => Promise<TResult>,
+  options?: CircuitBreakerOptions,
+) => {
+  fire(...args: TArgs): Promise<TResult>;
+};
 type OpenWeatherCurrentPayload = {
   main?: {
     temp?: number;
@@ -27,6 +39,9 @@ type OpenWeatherForecastEntry = {
 };
 type OpenWeatherForecastPayload = {
   list?: OpenWeatherForecastEntry[];
+};
+type OpenWeatherForecastEntryWithTimestamp = OpenWeatherForecastEntry & {
+  dt: number;
 };
 
 const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
@@ -104,6 +119,9 @@ const getAxiosErrorMessage = (error: unknown, endpoint: string) => {
   return `OpenWeather request failed (${endpoint}): ${String(error)}`;
 };
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
 const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather => {
   const windSpeedKmH = data.wind?.speed ? data.wind.speed * 3.6 : 0;
   const cloudCover = typeof data.clouds?.all === 'number' ? data.clouds.all : 0;
@@ -123,19 +141,24 @@ const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather 
   };
 };
 
+const hasUsableForecastTimestamp = (
+  entry: OpenWeatherForecastEntry,
+): entry is OpenWeatherForecastEntryWithTimestamp => isFiniteNumber(entry.dt);
+
 const mapOpenWeatherForecast = (data: OpenWeatherForecastPayload): ChartDataPoint[] => {
   const now = Date.now();
   const end = now + 24 * 60 * 60 * 1000;
 
   return (data.list || [])
+    .filter(hasUsableForecastTimestamp)
     .filter((entry) => {
-      const timestamp = (entry.dt || 0) * 1000;
+      const timestamp = entry.dt * 1000;
       return timestamp >= now && timestamp <= end;
     })
     .map((entry) => ({
       time: formatTime(new Date(entry.dt * 1000)),
-      temperature: entry.main?.temp ?? 0,
-      rainProbability: Math.round(((entry.pop ?? 0) as number) * 100),
+      temperature: isFiniteNumber(entry.main?.temp) ? entry.main.temp : 0,
+      rainProbability: Math.round(Math.max(0, Math.min(1, entry.pop ?? 0)) * 100),
     }));
 };
 
@@ -150,6 +173,7 @@ const requestOpenWeather = async ({
   return response.data;
 };
 
+const CircuitBreaker = nodeRequire('opossum') as CircuitBreakerConstructor;
 const weatherBreaker = new CircuitBreaker(requestOpenWeather, {
   timeout: Number(process.env.OPENWEATHER_TIMEOUT_MS || 8000),
   errorThresholdPercentage: Number(process.env.OPENWEATHER_CIRCUIT_ERROR_THRESHOLD || 50),

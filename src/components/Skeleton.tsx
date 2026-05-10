@@ -7,15 +7,11 @@ interface SkeletonProps {
 
 const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'rectangular' }) => {
   const baseClass = "bg-slate-700/50 animate-pulse";
-  
-  let variantClass = '';
-  if (variant === 'circular') {
-    variantClass = 'rounded-full';
-  } else if (variant === 'text') {
-    variantClass = 'rounded-md h-4';
-  } else {
-    variantClass = 'rounded-xl';
-  }
+  const variantClass = {
+    circular: 'rounded-full',
+    text: 'rounded-md h-4',
+    rectangular: 'rounded-xl',
+  }[variant];
 
   return (
     <div className={`${baseClass} ${variantClass} ${className}`} />

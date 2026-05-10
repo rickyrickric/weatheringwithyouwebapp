@@ -1,11 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 
+const optionalQueryNumber = (min: number, max: number) =>
+  z.preprocess(
+    (value) => (value === '' || value === undefined ? undefined : value),
+    z.coerce.number().min(min).max(max).optional(),
+  );
+
 export const locationQuerySchema = z
   .object({
     city: z.string().trim().min(2).max(120).optional(),
-    lat: z.coerce.number().min(-90).max(90).optional(),
-    lon: z.coerce.number().min(-180).max(180).optional(),
+    lat: optionalQueryNumber(-90, 90),
+    lon: optionalQueryNumber(-180, 180),
   })
   .superRefine((value, context) => {
     const hasCity = Boolean(value.city);

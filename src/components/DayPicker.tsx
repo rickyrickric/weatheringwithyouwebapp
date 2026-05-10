@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface DayData {
   date: Date;
@@ -19,17 +19,17 @@ interface DayPickerProps {
 const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }) => {
   const [selected, setSelected] = useState<number>(0);
 
-  // Sync local state with selectedDate prop from parent
-  React.useEffect(() => {
-    if (selectedDate) {
-      const index = days.findIndex(d => 
+  const selectedIndex = useMemo(() => {
+    if (!selectedDate) return selected;
+
+    const index = days.findIndex(d =>
         d.date.getDate() === selectedDate.getDate() &&
         d.date.getMonth() === selectedDate.getMonth() &&
         d.date.getFullYear() === selectedDate.getFullYear()
-      );
-      if (index >= 0) setSelected(index);
-    }
-  }, [selectedDate, days]);
+    );
+
+    return index >= 0 ? index : selected;
+  }, [days, selected, selectedDate]);
 
   const handleDayClick = (index: number, date: Date) => {
     setSelected(index);
@@ -53,7 +53,7 @@ const DayPicker: React.FC<DayPickerProps> = ({ days, onDaySelect, selectedDate }
       <div className="overflow-x-auto pb-2 scrollbar-hide max-h-64" style={{ scrollBehavior: 'smooth', scrollSnapType: 'x proximity' }} role="region" aria-label="7-day forecast day selector">
         <div className="flex gap-3 min-w-max px-4" role="list">
           {days.map((dayData, index) => {
-            const isSelected = selected === index || (selectedDate && isToday(dayData.date));
+            const isSelected = selectedIndex === index;
             const dayName = isToday(dayData.date) ? 'Today' : dayData.day.slice(0, 3);
 
             return (

@@ -10,6 +10,22 @@ describe('weather API validation', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 
+  it('does not coerce empty coordinates to zero', async () => {
+    const previousApiKey = process.env.OPENWEATHER_API_KEY;
+    delete process.env.OPENWEATHER_API_KEY;
+
+    const response = await request(createApp()).get('/api/v1/weather/current?lat=&lon=');
+
+    if (previousApiKey === undefined) {
+      delete process.env.OPENWEATHER_API_KEY;
+    } else {
+      process.env.OPENWEATHER_API_KEY = previousApiKey;
+    }
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe('UPSTREAM_UNAVAILABLE');
+  });
+
   it('serves OpenAPI documentation JSON', async () => {
     const response = await request(createApp()).get('/api/openapi.json');
 

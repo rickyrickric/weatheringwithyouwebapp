@@ -160,14 +160,19 @@ export default function WeatherDashboard() {
   useEffect(() => {
     if (weatherHeroImage.src === visibleHeroImage) return;
 
-    setPreviousHeroImage(visibleHeroImage);
-    setVisibleHeroImage(weatherHeroImage.src);
+    const transitionStart = window.setTimeout(() => {
+      setPreviousHeroImage(visibleHeroImage);
+      setVisibleHeroImage(weatherHeroImage.src);
+    }, 0);
 
-    const timeout = window.setTimeout(() => {
+    const transitionEnd = window.setTimeout(() => {
       setPreviousHeroImage(null);
     }, 650);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(transitionStart);
+      window.clearTimeout(transitionEnd);
+    };
   }, [visibleHeroImage, weatherHeroImage.src]);
 
   useEffect(() => {
