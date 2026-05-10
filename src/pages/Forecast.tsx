@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HourlyForecastStrip from "../components/HourlyForecastStrip";
 import { MOCK_WEATHER } from "../types/weather";
 import type { AccuracySummary, CurrentWeather, ForecastResponse } from "../types/weather";
+import { WEATHER_API_BASE } from "../utils/api";
 import { getWeatherHeroImage } from "../utils/weatherHeroImage";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
@@ -82,7 +83,7 @@ export default function WeatherDashboard() {
       controller = new AbortController();
 
       try {
-        const response = await fetch('/api/weather/current', {
+        const response = await fetch(`${WEATHER_API_BASE}/current`, {
           signal: controller.signal,
           cache: 'no-store',
         });
@@ -117,7 +118,7 @@ export default function WeatherDashboard() {
       controller = new AbortController();
 
       try {
-        const response = await fetch('/api/weather/forecast/24h', {
+        const response = await fetch(`${WEATHER_API_BASE}/forecast/24h`, {
           signal: controller.signal,
           cache: 'no-store',
         });

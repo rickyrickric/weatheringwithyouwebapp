@@ -4,6 +4,7 @@ import DynamicBackground from "../components/DynamicBackground";
 import { useBackgroundState } from "../hooks/useBackgroundState";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
+import { WEATHER_API_BASE } from "../utils/api";
 import backgroundHome from "../assets/background_home.png";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
@@ -31,7 +32,7 @@ const Home: FC = () => {
       controller = new AbortController();
 
       try {
-        const response = await fetch('/api/weather/current', {
+        const response = await fetch(`${WEATHER_API_BASE}/current`, {
           signal: controller.signal,
           cache: 'no-store',
         });

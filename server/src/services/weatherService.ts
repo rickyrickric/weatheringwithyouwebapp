@@ -1,7 +1,35 @@
 import axios from 'axios';
+import CircuitBreaker from 'opossum';
+import { LocationQuery } from '../middleware/validateRequest';
 import { ChartDataPoint, CurrentWeather } from '../types';
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const WEATHER_CACHE_TTL_MS = Number(process.env.WEATHER_CACHE_TTL_MS || 60 * 60 * 1000);
+
+type OpenWeatherEndpoint = 'weather' | 'forecast';
+type OpenWeatherParams = Record<string, string | number>;
+type OpenWeatherCurrentPayload = {
+  main?: {
+    temp?: number;
+    feels_like?: number;
+    humidity?: number;
+    pressure?: number;
+  };
+  wind?: { speed?: number };
+  clouds?: { all?: number };
+  weather?: Array<{ description?: string; id?: number }>;
+  visibility?: number;
+};
+type OpenWeatherForecastEntry = {
+  dt?: number;
+  main?: { temp?: number };
+  pop?: number;
+};
+type OpenWeatherForecastPayload = {
+  list?: OpenWeatherForecastEntry[];
+};
+
+const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
 
 const requireEnv = (name: string) => {
   const value = process.env[name]?.trim();
@@ -17,9 +45,17 @@ const formatTime = (date: Date) => {
   return `${hours}:${minutes}`;
 };
 
-const getOpenWeatherLocationParams = () => {
-  const lat = process.env.OPENWEATHER_LAT;
-  const lon = process.env.OPENWEATHER_LON;
+const getOpenWeatherLocationParams = (location?: LocationQuery): OpenWeatherParams => {
+  if (location?.city) {
+    return { q: location.city };
+  }
+
+  if (typeof location?.lat === 'number' && typeof location?.lon === 'number') {
+    return { lat: location.lat, lon: location.lon };
+  }
+
+  const lat = process.env.OPENWEATHER_LAT?.trim();
+  const lon = process.env.OPENWEATHER_LON?.trim();
   if (lat && lon) {
     return { lat, lon };
   }
@@ -33,6 +69,30 @@ const getOpenWeatherLocationParams = () => {
   return { q: city };
 };
 
+const getCacheKey = (endpoint: OpenWeatherEndpoint, params: OpenWeatherParams) =>
+  `${endpoint}:${Object.entries(params)
+    .filter(([key]) => key !== 'appid')
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&')}`;
+
+const getCached = <T>(key: string) => {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt < Date.now()) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.value as T;
+};
+
+const setCached = (key: string, value: unknown) => {
+  responseCache.set(key, {
+    value,
+    expiresAt: Date.now() + WEATHER_CACHE_TTL_MS,
+  });
+};
+
 const getAxiosErrorMessage = (error: unknown, endpoint: string) => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
@@ -44,7 +104,7 @@ const getAxiosErrorMessage = (error: unknown, endpoint: string) => {
   return `OpenWeather request failed (${endpoint}): ${String(error)}`;
 };
 
-const mapOpenWeatherCurrent = (data: any): CurrentWeather => {
+const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather => {
   const windSpeedKmH = data.wind?.speed ? data.wind.speed * 3.6 : 0;
   const cloudCover = typeof data.clouds?.all === 'number' ? data.clouds.all : 0;
 
@@ -63,56 +123,77 @@ const mapOpenWeatherCurrent = (data: any): CurrentWeather => {
   };
 };
 
-const mapOpenWeatherForecast = (data: any): ChartDataPoint[] => {
+const mapOpenWeatherForecast = (data: OpenWeatherForecastPayload): ChartDataPoint[] => {
   const now = Date.now();
   const end = now + 24 * 60 * 60 * 1000;
 
   return (data.list || [])
-    .filter((entry: any) => {
+    .filter((entry) => {
       const timestamp = (entry.dt || 0) * 1000;
       return timestamp >= now && timestamp <= end;
     })
-    .map((entry: any) => ({
+    .map((entry) => ({
       time: formatTime(new Date(entry.dt * 1000)),
       temperature: entry.main?.temp ?? 0,
       rainProbability: Math.round(((entry.pop ?? 0) as number) * 100),
     }));
 };
 
-// Real response for current weather
-export async function getCurrentWeather(): Promise<CurrentWeather> {
+const requestOpenWeather = async ({
+  endpoint,
+  params,
+}: {
+  endpoint: OpenWeatherEndpoint;
+  params: OpenWeatherParams;
+}): Promise<OpenWeatherCurrentPayload | OpenWeatherForecastPayload> => {
+  const response = await axios.get(`${OPENWEATHER_BASE_URL}/${endpoint}`, { params });
+  return response.data;
+};
+
+const weatherBreaker = new CircuitBreaker(requestOpenWeather, {
+  timeout: Number(process.env.OPENWEATHER_TIMEOUT_MS || 8000),
+  errorThresholdPercentage: Number(process.env.OPENWEATHER_CIRCUIT_ERROR_THRESHOLD || 50),
+  resetTimeout: Number(process.env.OPENWEATHER_CIRCUIT_RESET_MS || 30_000),
+});
+
+export async function getCurrentWeather(location?: LocationQuery): Promise<CurrentWeather> {
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
-    const locationParams = getOpenWeatherLocationParams();
-    const response = await axios.get(`${OPENWEATHER_BASE_URL}/weather`, {
-      params: {
-        ...locationParams,
-        units: 'metric',
-        appid: apiKey,
-      },
-    });
+    const params = {
+      ...getOpenWeatherLocationParams(location),
+      units: 'metric',
+      appid: apiKey,
+    };
+    const cacheKey = getCacheKey('weather', params);
+    const cached = getCached<CurrentWeather>(cacheKey);
+    if (cached) return cached;
 
-    return mapOpenWeatherCurrent(response.data);
+    const data = (await weatherBreaker.fire({ endpoint: 'weather', params })) as OpenWeatherCurrentPayload;
+    const weather = mapOpenWeatherCurrent(data);
+    setCached(cacheKey, weather);
+    return weather;
   } catch (error) {
-    throw new Error(getAxiosErrorMessage(error, 'current'));
+    throw new Error(getAxiosErrorMessage(error, 'current'), { cause: error });
   }
 }
 
-// Real response for 24-hour forecast
-export async function getForecast(): Promise<ChartDataPoint[]> {
+export async function getForecast(location?: LocationQuery): Promise<ChartDataPoint[]> {
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
-    const locationParams = getOpenWeatherLocationParams();
-    const response = await axios.get(`${OPENWEATHER_BASE_URL}/forecast`, {
-      params: {
-        ...locationParams,
-        units: 'metric',
-        appid: apiKey,
-      },
-    });
+    const params = {
+      ...getOpenWeatherLocationParams(location),
+      units: 'metric',
+      appid: apiKey,
+    };
+    const cacheKey = getCacheKey('forecast', params);
+    const cached = getCached<ChartDataPoint[]>(cacheKey);
+    if (cached) return cached;
 
-    return mapOpenWeatherForecast(response.data);
+    const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
+    const forecast = mapOpenWeatherForecast(data);
+    setCached(cacheKey, forecast);
+    return forecast;
   } catch (error) {
-    throw new Error(getAxiosErrorMessage(error, 'forecast'));
+    throw new Error(getAxiosErrorMessage(error, 'forecast'), { cause: error });
   }
 }

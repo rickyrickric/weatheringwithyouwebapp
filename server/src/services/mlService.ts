@@ -25,7 +25,7 @@ export function applyRegression(data: ChartDataPoint[], degree: number = 3): Cha
   const rainResult = regression.polynomial(rainData, { order: degree, precision: 3 });
 
   // Map back to ChartDataPoint
-  return data.map((d, index) => {
+  return data.map((d) => {
     const x = mapTimeToNumber(d.time);
     // Predict y given x
     const predictedTemp = tempResult.predict(x)[1];

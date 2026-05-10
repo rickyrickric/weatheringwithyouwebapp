@@ -9,7 +9,8 @@
     "dev:backend": "npm --prefix server run dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:server": "npm --prefix server test"
   },
   "dependencies": {
     "react": "^19.2.5",

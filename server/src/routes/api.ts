@@ -5,13 +5,49 @@ import {
   getForecastData,
   getSunshineWindows,
 } from '../controllers/weatherController';
+import { setCacheHeaders } from '../middleware/cacheHeaders';
+import { locationQuerySchema, validateQuery } from '../middleware/validateRequest';
 
 const router = Router();
 
-router.get('/weather/current', getCurrent);
-router.get('/weather/forecast', getForecastData);
-router.get('/weather/forecast/24h', getForecastData);
-router.get('/weather/sunshine-windows', getSunshineWindows);
-router.get('/weather/accuracy', getAccuracy);
+/**
+ * @openapi
+ * /weather/current:
+ *   get:
+ *     summary: Get current weather conditions.
+ *     parameters:
+ *       - $ref: '#/components/parameters/city'
+ *       - $ref: '#/components/parameters/lat'
+ *       - $ref: '#/components/parameters/lon'
+ *     responses:
+ *       200:
+ *         description: Current weather payload.
+ *       400:
+ *         description: Invalid location query.
+ */
+router.get('/weather/current', validateQuery(locationQuerySchema), setCacheHeaders(60 * 60), getCurrent);
+
+/**
+ * @openapi
+ * /weather/forecast:
+ *   get:
+ *     summary: Get a smoothed 24-hour forecast with sunshine windows.
+ *     parameters:
+ *       - $ref: '#/components/parameters/city'
+ *       - $ref: '#/components/parameters/lat'
+ *       - $ref: '#/components/parameters/lon'
+ *     responses:
+ *       200:
+ *         description: Forecast response.
+ */
+router.get('/weather/forecast', validateQuery(locationQuerySchema), setCacheHeaders(60 * 60), getForecastData);
+router.get('/weather/forecast/24h', validateQuery(locationQuerySchema), setCacheHeaders(60 * 60), getForecastData);
+router.get(
+  '/weather/sunshine-windows',
+  validateQuery(locationQuerySchema),
+  setCacheHeaders(60 * 60),
+  getSunshineWindows,
+);
+router.get('/weather/accuracy', setCacheHeaders(5 * 60), getAccuracy);
 
 export default router;

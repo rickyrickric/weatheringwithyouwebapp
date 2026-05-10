@@ -49,9 +49,9 @@ Backend:
 The system has two layers:
 
 - Frontend (React + Vite): renders weather views, charts, sunshine windows, and dashboard context.
-- Backend (Express API): fetches and transforms weather data, computes analytics outputs, and persists daily records.
+- Backend (Express API): fetches and transforms weather data, validates inputs, computes analytics outputs, protects upstream quotas, and persists daily records.
 
-The frontend calls backend routes under `/api`, and the backend acts as a controlled weather-data gateway. This keeps API keys server-side and centralizes weather logic in one place.
+The frontend calls versioned backend routes under `/api/v1`, and the backend acts as a controlled weather-data gateway. This keeps API keys server-side and centralizes weather logic in one place. Legacy `/api/weather/*` routes are still mounted as compatibility aliases.
 
 ## Why OpenWeather Is Used
 
@@ -89,14 +89,15 @@ If Supabase variables are not configured, the app still runs with live API respo
 
 ## End-to-End Data Flow
 
-1. Frontend requests weather endpoints from the backend (`/api/weather/*`).
+1. Frontend requests weather endpoints from the backend (`/api/v1/weather/*`).
 2. Backend service reads location config (Tagum City by default through env).
-3. Backend calls OpenWeather endpoints for current and forecast data.
-4. Backend maps provider payloads to typed internal contracts.
-5. Forecast points are smoothed using polynomial regression for cleaner trends.
-6. Sunshine windows and optimal windows are computed from forecast quality scoring.
-7. Response is returned to the frontend for rendering.
-8. In parallel (optional), daily observation/forecast snapshots are upserted into Supabase.
+3. Request query params are validated with Zod (`city` or `lat` + `lon`).
+4. Backend serves cached weather data when available, otherwise calls OpenWeather through a circuit breaker.
+5. Backend maps provider payloads to typed internal contracts.
+6. Forecast points are smoothed using polynomial regression for cleaner trends.
+7. Sunshine windows and optimal windows are computed from forecast quality scoring.
+8. Response is returned with HTTP cache headers for rendering and offline reuse.
+9. In parallel (optional), daily observation/forecast snapshots are upserted into Supabase.
 
 ## How Data Storage Works
 
@@ -113,13 +114,18 @@ Stored payload includes:
 - source metadata
 - raw JSON payload for traceability/debugging
 
+Schema changes now live in `server/migrations/`:
+
+- `001_weather_core.sql` creates the weather tables, RLS policies, uniqueness constraints, and query indexes.
+- `002_weather_retention.sql` creates archive tables and a retention function for records older than 30 days.
+
 ## Retention Model (Rolling 30 Days)
 
-Recommended database policy:
+Implemented database policy:
 
-- Keep only the latest 30 days of raw weather records
-- Run a daily cleanup job in Supabase (for example, via `pg_cron`)
-- Delete rows where timestamps are older than `now() - interval '30 days'`
+- Keep only the latest 30 days of hot weather records.
+- Move older raw rows into archive tables before deletion from hot tables.
+- Run `select public.archive_weather_records_older_than(interval '30 days');` from a daily Supabase scheduled job.
 
 Why rolling retention:
 
@@ -158,9 +164,12 @@ weatheringwithyouwebapp/
     src/
       controllers/    Express route handlers
       routes/         API route definitions
-      services/       OpenWeather, Supabase, smoothing, sunshine windows
+    services/       OpenWeather, Supabase, smoothing, sunshine windows
       types/          Backend response contracts
+    migrations/       SQL migrations for schema, indexes, and retention
     .env.example      Server environment template
+  docs/
+    regression-algorithm.md
   scripts/
     dev-all.cjs       Starts frontend and backend together
 ```
@@ -251,6 +260,14 @@ Optional:
 | Variable | Description | Default |
 | --- | --- | --- |
 | `PORT` | Express server port. | `3000` |
+| `LOG_LEVEL` | Pino structured logging level. | `debug` locally, `info` in production |
+| `CORS_ORIGINS` | Comma-separated browser origins allowed to call the API. | local Vite origins |
+| `RATE_LIMIT_WINDOW_MS` | API rate-limit window. | `60000` |
+| `RATE_LIMIT_MAX` | Max API requests per window per client. | `60` |
+| `WEATHER_CACHE_TTL_MS` | In-memory weather response cache TTL. | `3600000` |
+| `OPENWEATHER_TIMEOUT_MS` | External provider timeout for circuit breaker calls. | `8000` |
+| `OPENWEATHER_CIRCUIT_ERROR_THRESHOLD` | Circuit breaker error threshold percentage. | `50` |
+| `OPENWEATHER_CIRCUIT_RESET_MS` | Circuit breaker reset timeout. | `30000` |
 | `SUPABASE_URL` | Supabase project URL for optional persistence. | unset |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key. Never expose this in frontend code. | unset |
 | `WEATHER_LOCATION_ID` | Stable location identifier for saved weather rows. | `tagum-city-ph` |
@@ -259,20 +276,43 @@ Optional:
 
 ## API Routes
 
-All API routes are served under `/api`.
+Primary API routes are served under `/api/v1`. API documentation is available at `/api/docs`, and the OpenAPI JSON spec is available at `/api/openapi.json`.
+
+Weather endpoints accept either no location query, a `city` query, or both `lat` and `lon`:
+
+```text
+/api/v1/weather/current?city=Tagum%20City,PH
+/api/v1/weather/current?lat=7.4478&lon=125.8078
+```
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/api/weather/current` | Returns current OpenWeather conditions. |
-| `GET` | `/api/weather/forecast` | Returns smoothed forecast data and sunshine windows. |
-| `GET` | `/api/weather/forecast/24h` | Alias for the 24-hour forecast response used by the UI. |
-| `GET` | `/api/weather/sunshine-windows` | Computes recommended outdoor windows from forecast data. |
-| `GET` | `/api/weather/accuracy` | Returns the current accuracy summary/status. |
+| `GET` | `/api/v1/weather/current` | Returns current OpenWeather conditions. |
+| `GET` | `/api/v1/weather/forecast` | Returns smoothed forecast data and sunshine windows. |
+| `GET` | `/api/v1/weather/forecast/24h` | Alias for the 24-hour forecast response used by the UI. |
+| `GET` | `/api/v1/weather/sunshine-windows` | Computes recommended outdoor windows from forecast data. |
+| `GET` | `/api/v1/weather/accuracy` | Returns the current accuracy summary/status. |
+| `GET` | `/api/docs` | Swagger UI API documentation. |
+| `GET` | `/api/openapi.json` | Raw OpenAPI contract. |
 | `GET` | `/health` | Confirms the backend is running. |
+
+Error responses use a standard envelope:
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Invalid request input",
+    "requestId": "..."
+  }
+}
+```
 
 ## Forecast Logic
 
 The backend fetches OpenWeather forecast points, limits them to the next 24 hours, and applies a lightweight regression smoothing step before returning data to the client.
+
+The full algorithm note is in `docs/regression-algorithm.md`.
 
 Sunshine windows are scored from:
 
@@ -299,6 +339,7 @@ Root scripts:
 | `npm run build` | Type-checks and builds the frontend. |
 | `npm run lint` | Runs ESLint. |
 | `npm run preview` | Serves the production frontend build locally. |
+| `npm run test:server` | Runs backend Vitest tests. |
 
 Server scripts:
 
@@ -307,6 +348,7 @@ Server scripts:
 | `npm run dev` | Runs the backend with `ts-node`. |
 | `npm run dev:watch` | Runs the backend with `nodemon`. |
 | `npm run build` | Compiles server TypeScript. |
+| `npm test` | Runs backend unit and route tests. |
 | `npm start` | Runs the compiled server from `dist`. |
 
 ## Build
@@ -324,12 +366,24 @@ cd server
 npm run build
 ```
 
+Run backend tests:
+
+```bash
+npm run test:server
+```
+
 ## Security Notes
 
 - Keep real API keys in `server/.env`.
 - Never put secrets in `.env.example`.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` through `VITE_*` variables or frontend code.
+- API responses are protected with Helmet security headers, restricted CORS, request size limits, and weather-route rate limiting.
+- OpenWeather calls are cached for 60 minutes by default and guarded by a circuit breaker.
 - If a key was committed by mistake, rotate it immediately and remove it from Git history before pushing.
+
+## Offline Support
+
+Production builds register `public/service-worker.js`. It caches the app shell and uses a network-first strategy for `/api/v1/weather/*`, falling back to the last successful weather response when offline.
 
 ## Current Limitations
 
@@ -340,10 +394,13 @@ npm run build
 
 ## Future Improvements
 
-- Implement automated 30-day retention SQL + scheduler in Supabase migrations
+- Add Redis as a distributed cache if the API runs on multiple backend instances
+- Add WebSocket/SSE forecast pushes if live multi-user updates become necessary
+- Add Playwright E2E coverage for Home -> Forecast flows
+- Add Husky/lint-staged pre-commit hooks when root dev dependencies can be installed
 - Add a daily summary table for deterministic outputs and trend queries
 - Replace placeholder accuracy response with measured metrics from stored history
-- Add aggregate retention strategy (keep monthly summaries, rotate raw rows)
+- Add aggregate retention strategy for monthly summaries
 
 ## Inspiration
 

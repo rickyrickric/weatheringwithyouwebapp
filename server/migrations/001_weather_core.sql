@@ -37,21 +37,23 @@ create table if not exists public.daily_weather_forecasts (
   unique (location_id, forecast_date, target_time)
 );
 
-alter table public.daily_weather_observations enable row level security;
-alter table public.daily_weather_forecasts enable row level security;
-
-create policy "No public observation reads"
-on public.daily_weather_observations
-for select
-using (false);
-
-create policy "No public forecast reads"
-on public.daily_weather_forecasts
-for select
-using (false);
-
 create index if not exists idx_weather_observations_location_date
 on public.daily_weather_observations (location_id, observed_date desc);
 
 create index if not exists idx_weather_forecasts_location_date_time
 on public.daily_weather_forecasts (location_id, forecast_date desc, target_time);
+
+alter table public.daily_weather_observations enable row level security;
+alter table public.daily_weather_forecasts enable row level security;
+
+drop policy if exists "No public observation reads" on public.daily_weather_observations;
+create policy "No public observation reads"
+on public.daily_weather_observations
+for select
+using (false);
+
+drop policy if exists "No public forecast reads" on public.daily_weather_forecasts;
+create policy "No public forecast reads"
+on public.daily_weather_forecasts
+for select
+using (false);
