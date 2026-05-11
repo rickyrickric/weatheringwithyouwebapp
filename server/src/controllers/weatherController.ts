@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { LocationQuery } from '../middleware/validateRequest';
 import { getAccuracySummary } from '../services/accuracyService';
-import { applyRegression } from '../services/mlService';
+import { applyRegression, blendedRegression } from '../services/mlService';
 import { computeOptimalWindows, computeSunshineWindows } from '../services/sunshineWindowService';
-import { tryStoreDailyForecast, tryStoreDailyObservation } from '../services/supabaseService';
+import {
+  tryGetClimatology90d,
+  tryStoreDailyForecast,
+  tryStoreDailyObservation,
+} from '../services/supabaseService';
 import { getCurrentWeather, getForecast, getForecastBundle } from '../services/weatherService';
 import { ForecastResponse } from '../types';
 
@@ -23,13 +27,17 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
   try {
     const forecastBundle = await getForecastBundle(getLocationQuery(req));
     const rawData = forecastBundle.forecast;
-    const smoothedData = applyRegression(rawData, 3);
+    const climatology = await tryGetClimatology90d();
+    const regression = blendedRegression(rawData, climatology, { degree: 3 });
+    const smoothedData = regression.forecast;
     const sunshineWindows = computeSunshineWindows(smoothedData);
 
     const response: ForecastResponse = {
       generatedAt: new Date().toISOString(),
       source: 'openweather',
       forecast: smoothedData,
+      climatology: regression.blendInfo.climatologyUsed ? { hourly: climatology } : undefined,
+      blendInfo: regression.blendInfo,
       optimalWindows: computeOptimalWindows(sunshineWindows),
       sunshineWindows,
       accuracy: getAccuracySummary(),

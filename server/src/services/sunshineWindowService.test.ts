@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyRegression } from './mlService';
+import { applyRegression, blendedRegression } from './mlService';
 import { computeSunshineWindows } from './sunshineWindowService';
 
 const forecast = [
@@ -29,6 +29,28 @@ describe('forecast regression smoothing', () => {
 
     expect(smoothed).toHaveLength(forecast.length);
     expect(smoothed.every((point) => point.rainProbability >= 0 && point.rainProbability <= 100)).toBe(
+      true,
+    );
+  });
+
+  it('uses climatology residual blending when hourly priors are available', () => {
+    const climatology = Array.from({ length: 24 }, (_, hourOfDay) => ({
+      hourOfDay,
+      avgTemperature: hourOfDay < 12 ? 26 : 30,
+      stdTemperature: 1.4,
+      temperatureCount: 90,
+      avgRainProbability: hourOfDay < 12 ? 18 : 42,
+      stdRainProbability: 12,
+      rainProbabilityCount: 90,
+      avgRainMm: 1,
+    }));
+
+    const result = blendedRegression(forecast, climatology, { degree: 2 });
+
+    expect(result.forecast).toHaveLength(forecast.length);
+    expect(result.blendInfo.climatologyUsed).toBe(true);
+    expect(result.blendInfo.confidence).toBeGreaterThan(35);
+    expect(result.forecast.every((point) => point.rainProbability >= 0 && point.rainProbability <= 100)).toBe(
       true,
     );
   });

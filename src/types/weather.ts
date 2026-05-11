@@ -7,6 +7,25 @@ export interface ChartDataPoint {
   rainMm?: number;
 }
 
+export interface HourlyClimatologyPoint {
+  hourOfDay: number;
+  avgTemperature: number;
+  stdTemperature: number | null;
+  temperatureCount: number;
+  avgRainProbability: number;
+  stdRainProbability: number | null;
+  rainProbabilityCount: number;
+  avgRainMm?: number | null;
+}
+
+export interface ForecastBlendInfo {
+  method: 'polynomial' | 'climatology-residual-blend';
+  degree: number;
+  alpha: number;
+  climatologyUsed: boolean;
+  confidence: number;
+}
+
 export type RainIntensity = 'none' | 'light' | 'moderate' | 'heavy';
 
 export interface DailyOutlook {
@@ -78,6 +97,10 @@ export interface ForecastResponse {
   generatedAt: string;
   source: 'openweather';
   forecast: ChartDataPoint[];
+  climatology?: {
+    hourly: HourlyClimatologyPoint[];
+  };
+  blendInfo?: ForecastBlendInfo;
   optimalWindows: OptimalWindow[];
   sunshineWindows: WeatherWindow[];
   accuracy: AccuracySummary;

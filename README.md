@@ -77,6 +77,8 @@ What it stores:
 
 - Daily observation row per location/day (`daily_weather_observations`)
 - Daily forecast snapshot rows per location/day/time (`daily_weather_forecasts`)
+- Hourly observation rows for climatology (`weather_observations`)
+- Rolling 90-day hourly climatology materialized view (`hourly_climatology_90d`)
 
 Why this matters:
 
@@ -118,6 +120,26 @@ Schema changes now live in `server/migrations/`:
 
 - `001_weather_core.sql` creates the weather tables, RLS policies, uniqueness constraints, and query indexes.
 - `002_weather_retention.sql` creates archive tables and a retention function for records older than 30 days.
+- `003_hourly_climatology.sql` creates hourly observations, rolling 90-day climatology, and the refresh function.
+
+## Backfill Hourly Climatology
+
+Apply `server/migrations/003_hourly_climatology.sql` in the Supabase SQL editor first. The backend cannot create tables through the Supabase REST API.
+
+Then backfill April 12, 2026 through today:
+
+```bash
+cd server
+npm run backfill:hourly
+```
+
+Override dates when needed:
+
+```bash
+npm run backfill:hourly -- --start=2026-04-12 --end=2026-05-12
+```
+
+The script reads `OPENWEATHER_LAT`, `OPENWEATHER_LON`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` from `server/.env`, pulls historical hourly weather from Open-Meteo Archive, upserts rows into `weather_observations`, then calls `refresh_hourly_climatology_90d()`.
 
 ## Retention Model (Rolling 30 Days)
 
@@ -272,7 +294,12 @@ Optional:
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key. Never expose this in frontend code. | unset |
 | `WEATHER_LOCATION_ID` | Stable location identifier for saved weather rows. | `tagum-city-ph` |
 | `SUPABASE_OBSERVATIONS_TABLE` | Table for daily current-weather observations. | `daily_weather_observations` |
+| `SUPABASE_HOURLY_OBSERVATIONS_TABLE` | Table for hourly climatology observations. | `weather_observations` |
 | `SUPABASE_FORECASTS_TABLE` | Table for daily forecast snapshots. | `daily_weather_forecasts` |
+| `SUPABASE_CLIMATOLOGY_VIEW` | Materialized view used by regression blending. | `hourly_climatology_90d` |
+| `CLIMATOLOGY_CACHE_TTL_MS` | In-memory climatology cache TTL. | `900000` |
+| `BACKFILL_START_DATE` | Default hourly backfill start date. | `2026-04-12` |
+| `BACKFILL_END_DATE` | Optional hourly backfill end date. | current date |
 
 ## API Routes
 

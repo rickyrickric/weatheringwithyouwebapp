@@ -1,5 +1,5 @@
 import React from 'react';
-import { LabelList, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, LabelList, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface HourlyData {
   time: string;
@@ -28,6 +28,16 @@ interface NormalizedHourlyData {
   rainIntensity: RainIntensity;
 }
 
+interface InterpolationPoint {
+  time: string;
+  minuteOfDay: number;
+  sequenceMinute: number;
+  temperature: number;
+  rainProbability: number;
+  rainMm: number;
+  rainIntensity?: RainIntensity;
+}
+
 interface HourlyTooltipPayload {
   payload?: NormalizedHourlyData;
 }
@@ -45,6 +55,25 @@ const formatHour = (time: string, timeFormat: '12h' | '24h') => {
   return `${displayHour} ${period}`;
 };
 
+const parseMinuteOfDay = (time: string) => {
+  const [hourPart, minutePart = '0'] = time.split(':');
+  const hour = Number(hourPart);
+  const minute = Number(minutePart);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return 0;
+  return ((Math.trunc(hour) % 24) + 24) % 24 * 60 + Math.max(0, Math.min(59, Math.trunc(minute)));
+};
+
+const formatMinuteOfDay = (minuteOfDay: number) => {
+  const boundedMinute = ((Math.round(minuteOfDay) % 1440) + 1440) % 1440;
+  const hour = Math.floor(boundedMinute / 60);
+  const minute = boundedMinute % 60;
+
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+};
+
+const interpolateNumber = (left: number, right: number, ratio: number) => left + (right - left) * ratio;
+
 const getRainIntensity = (rainMm: number): RainIntensity => {
   if (rainMm <= 0) return 'none';
   if (rainMm < 2.5) return 'light';
@@ -54,29 +83,15 @@ const getRainIntensity = (rainMm: number): RainIntensity => {
 
 const getRainClass = (intensity: RainIntensity) => `rain-${intensity}`;
 
-const CloudIcon: React.FC<{ intensity: RainIntensity }> = ({ intensity }) => {
-  const opacity = intensity === 'none' ? 0.45 : intensity === 'light' ? 0.68 : intensity === 'moderate' ? 0.82 : 0.95;
+const getWeatherIcon = (rainProbability: number) => {
+  if (rainProbability >= 86) return '⛈';
+  if (rainProbability >= 66) return '🌧';
+  if (rainProbability >= 41) return '🌦';
+  return '☁';
+};
 
-  return (
-    <svg className="hourly-cloud-icon" viewBox="0 0 28 18" aria-hidden="true">
-      <path
-        d="M8.2 14.8h12.7c3 0 5.1-1.7 5.1-4.1 0-2.2-1.9-3.9-4.4-3.9h-.5C20.4 3.7 17.7 1.6 14.4 1.6c-3 0-5.5 1.8-6.5 4.4C4.6 6.2 2 8 2 10.5c0 2.6 2.5 4.3 6.2 4.3Z"
-        fill="#7d8da1"
-        opacity={opacity}
-        stroke="#475569"
-        strokeWidth="0.7"
-      />
-      {intensity === 'heavy' && (
-        <path d="M9 17h2M13 17h2M17 17h2" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" />
-      )}
-      {intensity === 'moderate' && (
-        <path d="M11 17h2M16 17h2" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" />
-      )}
-      {intensity === 'light' && (
-        <path d="M13 17h2" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" />
-      )}
-    </svg>
-  );
+const WeatherIcon: React.FC<{ rainProbability: number }> = ({ rainProbability }) => {
+  return <span className="hourly-weather-icon" aria-hidden="true">{getWeatherIcon(rainProbability)}</span>;
 };
 
 const HourlyTooltip: React.FC<{
@@ -106,6 +121,72 @@ const convertTemperature = (temperature: number, unit: 'c' | 'f') => (
   unit === 'f' ? Math.round((temperature * 9) / 5 + 32) : Math.round(temperature)
 );
 
+const expandToHourlyData = (
+  hourlyData: HourlyData[],
+  temperatureUnit: 'c' | 'f',
+  timeFormat: '12h' | '24h',
+): NormalizedHourlyData[] => {
+  let previousMinuteOfDay = 0;
+  let previousSequenceMinute = 0;
+
+  const sourcePoints: InterpolationPoint[] = hourlyData.map((hour, index) => {
+    const minuteOfDay = parseMinuteOfDay(hour.time);
+    const gapFromPrevious =
+      index === 0 ? 0 : (minuteOfDay - previousMinuteOfDay + 1440) % 1440 || 1440;
+    const sequenceMinute =
+      index === 0 ? minuteOfDay : previousSequenceMinute + gapFromPrevious;
+    const rainProbability = Math.round(hour.rainProbability ?? hour.rain ?? 0);
+    const rainMm = Number((hour.rainMm ?? rainProbability / 18).toFixed(1));
+    previousMinuteOfDay = minuteOfDay;
+    previousSequenceMinute = sequenceMinute;
+
+    return {
+      time: hour.time,
+      minuteOfDay,
+      sequenceMinute,
+      temperature: convertTemperature(hour.temperature ?? hour.temp ?? 0, temperatureUnit),
+      rainProbability,
+      rainMm,
+      rainIntensity: hour.rainIntensity,
+    };
+  });
+
+  const expanded: InterpolationPoint[] = [];
+
+  sourcePoints.forEach((point, index) => {
+    expanded.push(point);
+    const next = sourcePoints[index + 1];
+    if (!next) return;
+
+    const gap = next.sequenceMinute - point.sequenceMinute;
+    if (gap <= 60) return;
+
+    const hourlySteps = Math.floor(gap / 60);
+    for (let step = 1; step < hourlySteps; step += 1) {
+      const ratio = (step * 60) / gap;
+      const sequenceMinute = point.sequenceMinute + step * 60;
+
+      expanded.push({
+        time: formatMinuteOfDay(sequenceMinute),
+        minuteOfDay: sequenceMinute % 1440,
+        sequenceMinute,
+        temperature: Math.round(interpolateNumber(point.temperature, next.temperature, ratio)),
+        rainProbability: Math.round(interpolateNumber(point.rainProbability, next.rainProbability, ratio)),
+        rainMm: Number(interpolateNumber(point.rainMm, next.rainMm, ratio).toFixed(1)),
+      });
+    }
+  });
+
+  return expanded.map((hour) => ({
+    label: formatHour(hour.time, timeFormat),
+    time: hour.time,
+    temperature: hour.temperature,
+    rainProbability: hour.rainProbability,
+    rainMm: hour.rainMm,
+    rainIntensity: hour.rainIntensity ?? getRainIntensity(hour.rainMm),
+  }));
+};
+
 const formatChartTemperatureLabel = (value: unknown) => {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? `${Math.round(numericValue)}\u00B0` : '';
@@ -116,20 +197,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   temperatureUnit = 'c',
   timeFormat = '12h',
 }) => {
-  const normalizedData: NormalizedHourlyData[] = hourlyData.map((hour) => {
-    const temperature = convertTemperature(hour.temperature ?? hour.temp ?? 0, temperatureUnit);
-    const rainProbability = Math.round(hour.rainProbability ?? hour.rain ?? 0);
-    const rainMm = Number((hour.rainMm ?? rainProbability / 18).toFixed(1));
-
-    return {
-      ...hour,
-      label: formatHour(hour.time, timeFormat),
-      temperature,
-      rainProbability,
-      rainMm,
-      rainIntensity: hour.rainIntensity ?? getRainIntensity(rainMm),
-    };
-  });
+  const normalizedData = expandToHourlyData(hourlyData, temperatureUnit, timeFormat);
 
   const temperatures = normalizedData.map((hour) => hour.temperature);
   const minTemperature = temperatures.length ? Math.min(...temperatures) : 0;
@@ -137,29 +205,55 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   const hasRange = maxTemperature > minTemperature;
   const yMin = hasRange ? minTemperature - 2 : minTemperature - 1;
   const yMax = hasRange ? maxTemperature + 2 : maxTemperature + 1;
-  const midpointTemperature = Math.round((minTemperature + maxTemperature) / 2);
+  const averageTemperature = temperatures.length
+    ? Math.round(temperatures.reduce((sum, temperature) => sum + temperature, 0) / temperatures.length)
+    : 0;
+  const averageLabel = `Avg ${averageTemperature}\u00B0`;
+  const yAxisTicks = Array.from(
+    new Set(hasRange ? [minTemperature, averageTemperature, maxTemperature] : [minTemperature]),
+  ).sort((left, right) => left - right);
 
   return (
     <article className="hourly-forecast-card" role="region" aria-label="Hourly forecast">
-      <h2 className="hourly-forecast-title">Hourly forecast</h2>
+      <div className="hourly-chart-header">
+        <h2 className="hourly-forecast-title">Hourly forecast</h2>
+        <span className="hourly-average-legend">
+          <span aria-hidden="true" />
+          {averageLabel}
+        </span>
+      </div>
 
       <div className="hourly-chart-frame">
         <ResponsiveContainer width="100%" height={196} minWidth={0}>
-          <LineChart data={normalizedData} margin={{ top: 36, right: 28, left: 12, bottom: 16 }}>
+          <LineChart data={normalizedData} margin={{ top: 34, right: 30, left: 18, bottom: 14 }}>
+            <CartesianGrid
+              vertical={false}
+              stroke="rgba(124, 95, 74, 0.18)"
+              strokeDasharray="3 5"
+            />
             <XAxis dataKey="time" hide />
             <YAxis
               dataKey="temperature"
               tickLine={{ stroke: 'rgba(124, 95, 74, 0.42)' }}
               axisLine={{ stroke: 'rgba(124, 95, 74, 0.34)' }}
-              width={48}
+              width={54}
               tick={{ fontSize: 12, fill: '#5f4634', fontWeight: 800 }}
-              ticks={hasRange ? [minTemperature, maxTemperature] : [minTemperature]}
+              ticks={yAxisTicks}
               tickFormatter={formatChartTemperatureLabel}
               domain={[yMin, yMax]}
+              label={{
+                value: temperatureUnit === 'f' ? 'Temp (°F)' : 'Temp (°C)',
+                angle: -90,
+                position: 'insideLeft',
+                offset: 0,
+                fill: '#6f503a',
+                fontSize: 11,
+                fontWeight: 900,
+              }}
             />
             <ReferenceLine
-              y={midpointTemperature}
-              stroke="rgba(124, 95, 74, 0.30)"
+              y={averageTemperature}
+              stroke="rgba(124, 95, 74, 0.42)"
               strokeDasharray="4 4"
               ifOverflow="extendDomain"
             />
@@ -211,7 +305,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
             aria-label={`${hour.label}, ${hour.temperature} degrees, ${hour.rainProbability}% rain probability, ${hour.rainMm.toFixed(1)} millimeters, ${hour.rainIntensity} rain`}
           >
             <span className="hourly-time">{hour.label}</span>
-            <CloudIcon intensity={hour.rainIntensity} />
+            <WeatherIcon rainProbability={hour.rainProbability} />
             <span className="hourly-rain">{hour.rainProbability}%</span>
             <span className="hourly-mm">{hour.rainMm.toFixed(1)} mm</span>
             <span className="hourly-temp">{hour.temperature}&deg;</span>
@@ -223,4 +317,3 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
 };
 
 export default HourlyForecastStrip;
-

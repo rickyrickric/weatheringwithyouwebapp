@@ -5,6 +5,7 @@ import { ChartDataPoint, CurrentWeather, DailyOutlook, RainIntensity, WeatherAle
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const WEATHER_CACHE_TTL_MS = Number(process.env.WEATHER_CACHE_TTL_MS || 60 * 60 * 1000);
+const FORECAST_CACHE_VERSION = 'hourly-v2';
 const nodeRequire = createRequire(__filename);
 
 type OpenWeatherEndpoint = 'weather' | 'forecast';
@@ -44,6 +45,12 @@ type OpenWeatherForecastPayload = {
 };
 type OpenWeatherForecastEntryWithTimestamp = OpenWeatherForecastEntry & {
   dt: number;
+};
+type ForecastSourcePoint = {
+  timestamp: number;
+  temperature: number;
+  rainProbability: number;
+  rainMmPerHour: number;
 };
 
 const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
@@ -147,6 +154,20 @@ const getAxiosErrorMessage = (error: unknown, endpoint: string) => {
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
+const calculateDewPoint = (temperature: unknown, humidity: unknown) => {
+  if (!isFiniteNumber(temperature) || !isFiniteNumber(humidity) || humidity <= 0) {
+    return undefined;
+  }
+
+  const boundedHumidity = Math.min(100, Math.max(1, humidity));
+  const magnusA = 17.27;
+  const magnusB = 237.7;
+  const gamma =
+    Math.log(boundedHumidity / 100) + (magnusA * temperature) / (magnusB + temperature);
+
+  return Number(((magnusB * gamma) / (magnusA - gamma)).toFixed(1));
+};
+
 const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather => {
   const windSpeedKmH = data.wind?.speed ? data.wind.speed * 3.6 : 0;
   const cloudCover = typeof data.clouds?.all === 'number' ? data.clouds.all : 0;
@@ -155,13 +176,13 @@ const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather 
     temperature: data.main?.temp ?? 0,
     rainChance: cloudCover,
     humidity: data.main?.humidity ?? 0,
-    windSpeed: Math.round(windSpeedKmH),
+    windSpeed: Number(windSpeedKmH.toFixed(1)),
     feelsLike: data.main?.feels_like,
     condition: data.weather?.[0]?.description,
     visibility: data.visibility ? Math.round(data.visibility / 1000) : undefined,
     pressure: data.main?.pressure,
     uvIndex: undefined,
-    dewPoint: undefined,
+    dewPoint: calculateDewPoint(data.main?.temp, data.main?.humidity),
     weatherId: data.weather?.[0]?.id,
   };
 };
@@ -170,22 +191,72 @@ const hasUsableForecastTimestamp = (
   entry: OpenWeatherForecastEntry,
 ): entry is OpenWeatherForecastEntryWithTimestamp => isFiniteNumber(entry.dt);
 
+const interpolate = (left: number, right: number, ratio: number) => left + (right - left) * ratio;
+
+const mapForecastEntryToSourcePoint = (
+  entry: OpenWeatherForecastEntryWithTimestamp,
+): ForecastSourcePoint => {
+  const rainProbability = Math.round(Math.max(0, Math.min(1, entry.pop ?? 0)) * 100);
+  const rainMm3h = entry.rain?.['3h'] ?? Math.max(0, Math.min(1, entry.pop ?? 0)) * 3;
+
+  return {
+    timestamp: entry.dt * 1000,
+    temperature: isFiniteNumber(entry.main?.temp) ? entry.main.temp : 0,
+    rainProbability,
+    rainMmPerHour: rainMm3h / 3,
+  };
+};
+
+const interpolateForecastPoint = (
+  sourcePoints: ForecastSourcePoint[],
+  timestamp: number,
+): ChartDataPoint => {
+  const nextIndex = sourcePoints.findIndex((point) => point.timestamp >= timestamp);
+  const next = nextIndex >= 0 ? sourcePoints[nextIndex] : sourcePoints[sourcePoints.length - 1];
+  const previous = nextIndex > 0 ? sourcePoints[nextIndex - 1] : next;
+
+  if (!previous || !next || previous.timestamp === next.timestamp) {
+    return {
+      time: formatTime(new Date(timestamp)),
+      temperature: Number((next?.temperature ?? 0).toFixed(1)),
+      rainProbability: next?.rainProbability ?? 0,
+      rainMm: Number((next?.rainMmPerHour ?? 0).toFixed(1)),
+    };
+  }
+
+  const ratio = (timestamp - previous.timestamp) / (next.timestamp - previous.timestamp);
+
+  return {
+    time: formatTime(new Date(timestamp)),
+    temperature: Number(interpolate(previous.temperature, next.temperature, ratio).toFixed(1)),
+    rainProbability: Math.round(
+      Math.max(0, Math.min(100, interpolate(previous.rainProbability, next.rainProbability, ratio))),
+    ),
+    rainMm: Number(Math.max(0, interpolate(previous.rainMmPerHour, next.rainMmPerHour, ratio)).toFixed(1)),
+  };
+};
+
 const mapOpenWeatherForecast = (data: OpenWeatherForecastPayload): ChartDataPoint[] => {
   const now = Date.now();
   const end = now + 24 * 60 * 60 * 1000;
+  const firstHour = new Date(now);
+  firstHour.setMinutes(0, 0, 0);
+  if (firstHour.getTime() < now) {
+    firstHour.setHours(firstHour.getHours() + 1);
+  }
 
-  return (data.list || [])
+  const sourcePoints = (data.list || [])
     .filter(hasUsableForecastTimestamp)
-    .filter((entry) => {
-      const timestamp = entry.dt * 1000;
-      return timestamp >= now && timestamp <= end;
-    })
-    .map((entry) => ({
-      time: formatTime(new Date(entry.dt * 1000)),
-      temperature: isFiniteNumber(entry.main?.temp) ? entry.main.temp : 0,
-      rainProbability: Math.round(Math.max(0, Math.min(1, entry.pop ?? 0)) * 100),
-      rainMm: Number((entry.rain?.['3h'] ?? Math.max(0, Math.min(1, entry.pop ?? 0)) * 6).toFixed(1)),
-    }));
+    .map(mapForecastEntryToSourcePoint)
+    .filter((point) => point.timestamp >= now && point.timestamp <= end + 3 * 60 * 60 * 1000)
+    .sort((left, right) => left.timestamp - right.timestamp);
+
+  if (sourcePoints.length === 0) return [];
+
+  return Array.from({ length: 24 }, (_, hourOffset) => {
+    const timestamp = firstHour.getTime() + hourOffset * 60 * 60 * 1000;
+    return interpolateForecastPoint(sourcePoints, timestamp);
+  });
 };
 
 const mapDailyOutlook = (data: OpenWeatherForecastPayload): DailyOutlook[] => {
@@ -334,7 +405,7 @@ export async function getForecast(location?: LocationQuery): Promise<ChartDataPo
       units: 'metric',
       appid: apiKey,
     };
-    const cacheKey = getCacheKey('forecast', params);
+    const cacheKey = `${getCacheKey('forecast', params)}:${FORECAST_CACHE_VERSION}`;
     const cached = getCached<ChartDataPoint[]>(cacheKey);
     if (cached) return cached;
 
@@ -359,7 +430,7 @@ export async function getForecastBundle(location?: LocationQuery): Promise<{
       units: 'metric',
       appid: apiKey,
     };
-    const cacheKey = `${getCacheKey('forecast', params)}:bundle`;
+    const cacheKey = `${getCacheKey('forecast', params)}:bundle:${FORECAST_CACHE_VERSION}`;
     const cached = getCached<{
       forecast: ChartDataPoint[];
       dailyOutlook: DailyOutlook[];

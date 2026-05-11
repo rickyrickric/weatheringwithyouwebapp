@@ -21,20 +21,17 @@ interface ForecastHour {
   rainMm: number;
 }
 
-const forecastData: ForecastHour[] = [
-  { time: "00:00", temp: 24, rain: 18, rainMm: 0.7 },
-  { time: "02:00", temp: 23, rain: 22, rainMm: 0.9 },
-  { time: "04:00", temp: 22, rain: 26, rainMm: 1.2 },
-  { time: "06:00", temp: 23, rain: 32, rainMm: 1.6 },
-  { time: "08:00", temp: 25, rain: 38, rainMm: 2.4 },
-  { time: "10:00", temp: 27, rain: 45, rainMm: 3.1 },
-  { time: "12:00", temp: 29, rain: 52, rainMm: 4.8 },
-  { time: "14:00", temp: 29, rain: 64, rainMm: 7.2 },
-  { time: "16:00", temp: 28, rain: 72, rainMm: 9.4 },
-  { time: "18:00", temp: 27, rain: 58, rainMm: 5.6 },
-  { time: "20:00", temp: 26, rain: 42, rainMm: 2.7 },
-  { time: "23:00", temp: 25, rain: 30, rainMm: 1.4 },
-];
+const forecastData: ForecastHour[] = Array.from({ length: 24 }, (_, hour) => {
+  const afternoonStormCurve = Math.exp(-((hour - 15) ** 2) / 18);
+  const rain = Math.round(18 + afternoonStormCurve * 56 + Math.max(0, hour - 18) * 2);
+
+  return {
+    time: `${hour.toString().padStart(2, "0")}:00`,
+    temp: Math.round(24 + Math.sin(((hour - 7) / 24) * Math.PI * 2) * 4),
+    rain,
+    rainMm: Number(Math.max(0.2, rain / 28).toFixed(1)),
+  };
+});
 
 const fallbackTagumAlerts: WeatherAlert[] = [
   {
@@ -71,7 +68,7 @@ const windows = [
 
 const fallbackAccuracy: AccuracySummary = {
   value: null,
-  label: "Pending historical dataset",
+  label: "Forecast powered by 90-day climate data",
   sampleSize: 0,
   status: "pending-dataset",
 };
@@ -95,8 +92,14 @@ const formatTemperatureNumber = (temperature: number, unit: TemperatureUnit) =>
   unit === "f" ? toFahrenheit(temperature) : Math.round(temperature);
 const formatWind = (speed: number | null | undefined, unit: WindUnit) => {
   if (typeof speed !== "number" || !Number.isFinite(speed)) return { value: "--", unit: unit === "mph" ? "mph" : "km/h" };
+  if (speed > 0 && speed < 1) return { value: "<1", unit: unit === "mph" ? "mph" : "km/h" };
+
+  const convertedSpeed = unit === "mph" ? speed * 0.621371 : speed;
+  if (convertedSpeed > 0 && convertedSpeed < 1) return { value: "<1", unit: unit === "mph" ? "mph" : "km/h" };
+  if (convertedSpeed === 0) return { value: "Calm", unit: "" };
+
   return {
-    value: Math.round(unit === "mph" ? speed * 0.621371 : speed).toString(),
+    value: Math.round(convertedSpeed).toString(),
     unit: unit === "mph" ? "mph" : "km/h",
   };
 };
@@ -123,6 +126,12 @@ const formatClock = (time: string, format: TimeFormat) => {
   return `${displayHour}:${minute} ${hour < 12 ? "AM" : "PM"}`;
 };
 
+const formatTimeRange = (range: string, format: TimeFormat) => {
+  const [start, end] = range.split(/\s*[–-]\s*/);
+  if (!start || !end) return range;
+  return `${formatClock(start, format)}–${formatClock(end, format)}`;
+};
+
 const isNightNow = (date: Date) => {
   const minutes = date.getHours() * 60 + date.getMinutes();
   const sunrise = 5 * 60 + 41;
@@ -131,7 +140,7 @@ const isNightNow = (date: Date) => {
 };
 
 const getAlertIcon = (tone: WeatherAlert["tone"]) => {
-  if (tone === "moderate") return "\u26A0";
+  if (tone === "moderate") return "\u26A1";
   return "\u2139";
 };
 
@@ -154,6 +163,7 @@ export default function WeatherDashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
   const [hasLiveCurrentWeather, setHasLiveCurrentWeather] = useState(false);
+  const [lastKnownDewPoint, setLastKnownDewPoint] = useState<{ value: number; observedAt: Date } | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(new Date());
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("c");
   const [windUnit, setWindUnit] = useState<WindUnit>("kmh");
@@ -164,6 +174,7 @@ export default function WeatherDashboard() {
   const [sourceConfidence, setSourceConfidence] = useState({ label: "PAGASA · Open-Meteo", value: "High" });
   const [weatherWindows, setWeatherWindows] = useState(windows);
   const [accuracy, setAccuracy] = useState<AccuracySummary>(fallbackAccuracy);
+  const [isForecastLoading, setIsForecastLoading] = useState(true);
   const [visibleHeroImage, setVisibleHeroImage] = useState(() =>
     getWeatherHeroImage(MOCK_WEATHER.condition, MOCK_WEATHER.weatherId).src,
   );
@@ -197,9 +208,16 @@ export default function WeatherDashboard() {
           throw new Error(`Current weather request failed: ${response.status}`);
         }
 
-        setCurrentWeather(await response.json() as CurrentWeather);
-        setLastUpdatedAt(new Date());
+        const weather = await response.json() as CurrentWeather;
+        const observedAt = new Date();
+
+        setCurrentWeather(weather);
+        setLastUpdatedAt(observedAt);
         setHasLiveCurrentWeather(true);
+
+        if (typeof weather.dewPoint === "number" && Number.isFinite(weather.dewPoint)) {
+          setLastKnownDewPoint({ value: weather.dewPoint, observedAt });
+        }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Error fetching current weather:', error);
@@ -264,6 +282,8 @@ export default function WeatherDashboard() {
         if ((error as Error).name !== 'AbortError') {
           console.error('Error fetching forecast data:', error);
         }
+      } finally {
+        setIsForecastLoading(false);
       }
     };
 
@@ -341,18 +361,20 @@ export default function WeatherDashboard() {
   const conditionLabel = currentWeather.condition
     ? currentWeather.condition.replace(/\b\w/g, (char) => char.toUpperCase())
     : weatherHeroImage.kind.replace(/\b\w/g, (char) => char.toUpperCase());
-  const accuracyLabel = accuracy.value === null
-    ? accuracy.label
-    : `${accuracy.value}% accuracy`;
+  const accuracyLabel =
+    accuracy.status === "measured" && typeof accuracy.value === "number"
+      ? `${accuracy.value}% accuracy`
+      : "Forecast powered by 90-day climate data";
   const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
   const updatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastUpdatedAt.getTime()) / 1000));
   const windMetric = formatWind(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined, windUnit);
   const nightNow = isNightNow(now);
-  const dewPointAvailable = hasLiveCurrentWeather && typeof currentWeather.dewPoint === "number" && Number.isFinite(currentWeather.dewPoint);
-  const weeklyTemperatureMin = Math.min(...sevenDayOutlook.map((day) => day.low));
-  const weeklyTemperatureMax = Math.max(...sevenDayOutlook.map((day) => day.high));
-  const weeklyTemperatureRange = Math.max(1, weeklyTemperatureMax - weeklyTemperatureMin);
+  const dewPointAgeSeconds = lastKnownDewPoint
+    ? Math.max(0, Math.floor((now.getTime() - lastKnownDewPoint.observedAt.getTime()) / 1000))
+    : 0;
+  const weeklyRainScaleMax = Math.max(30, Math.ceil(Math.max(...sevenDayOutlook.map((day) => day.rainMm), 0) / 5) * 5);
   const daylightStatus = nightNow ? "Night now" : "Daylight now";
+  const daylightRangeLabel = `${formatClock("05:41", timeFormat)} / ${formatClock("17:57", timeFormat)}`;
   const conditionMetrics = [
     {
       icon: "💨",
@@ -385,13 +407,20 @@ export default function WeatherDashboard() {
       unit: nightNow ? "" : "UV",
       longText: nightNow,
     },
-    {
-      icon: "❄️",
-      label: "Dew Point",
-      val: dewPointAvailable ? formatTemperatureNumber(currentWeather.dewPoint ?? 0, temperatureUnit).toString() : "Sensor offline · check at sunrise",
-      unit: dewPointAvailable ? `°${temperatureUnit.toUpperCase()}` : "",
-      longText: !dewPointAvailable,
-    },
+    ...(lastKnownDewPoint
+      ? [{
+          icon: "❄️",
+          label: "Dew Point",
+          val: formatTemperatureNumber(lastKnownDewPoint.value, temperatureUnit).toString(),
+          unit: `°${temperatureUnit.toUpperCase()}`,
+          badge: formatElapsed(dewPointAgeSeconds),
+        }]
+      : [{
+          icon: "🌧️",
+          label: "Rain Chance",
+          val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.rainChance : undefined, { fallback: "Checking" }),
+          unit: "%",
+        }]),
   ];
 
   return (
@@ -479,11 +508,15 @@ export default function WeatherDashboard() {
             textAlign: "center",
             maxWidth: "100%",
           }}>
-            {isMobile ? "24h forecast" : `24-hour forecast · ${accuracyLabel}`}
+            {isForecastLoading ? (
+              <span className="forecast-subtitle-skeleton" aria-label="Loading forecast details" />
+            ) : (
+              isMobile ? "24h forecast" : `24-hour forecast · ${accuracyLabel}`
+            )}
           </p>
 
           <div className="forecast-unit-toggles" aria-label="Forecast unit controls">
-            <div className="unit-toggle-group" aria-label="Temperature unit">
+            <div className="unit-toggle-group unit-toggle-temperature" role="group" aria-label="Temperature unit">
               {(["c", "f"] as const).map((unit) => (
                 <button
                   key={unit}
@@ -496,7 +529,7 @@ export default function WeatherDashboard() {
                 </button>
               ))}
             </div>
-            <div className="unit-toggle-group" aria-label="Wind speed unit">
+            <div className="unit-toggle-group unit-toggle-wind" role="group" aria-label="Wind speed unit">
               {(["kmh", "mph"] as const).map((unit) => (
                 <button
                   key={unit}
@@ -509,7 +542,7 @@ export default function WeatherDashboard() {
                 </button>
               ))}
             </div>
-            <div className="unit-toggle-group" aria-label="Time format">
+            <div className="unit-toggle-group unit-toggle-time" role="group" aria-label="Time format">
               {(["12h", "24h"] as const).map((format) => (
                 <button
                   key={format}
@@ -550,6 +583,9 @@ export default function WeatherDashboard() {
           <div className="source-confidence" aria-label={`Weather source confidence is ${sourceConfidence.value.toLowerCase()}`}>
             <span>{sourceConfidence.label}</span>
             <span className="source-confidence-badge">{sourceConfidence.value} confidence</span>
+            <span className="source-confidence-info" tabIndex={0} aria-label="Data sourced from PAGASA official stations and Open-Meteo API. Confidence is based on ensemble model agreement.">
+              ⓘ
+            </span>
           </div>
           <div className="conditions-grid">
             {conditionMetrics.map((item) => (
@@ -559,6 +595,7 @@ export default function WeatherDashboard() {
                 <div className={`condition-tile-value ${item.longText ? "condition-tile-value-long" : ""}`} style={{ fontSize: isMobile ? 19 : 22 }}>
                   {item.val}<sup className="condition-tile-unit" style={{ fontSize: isMobile ? 10 : 12 }}>{item.unit}</sup>
                 </div>
+                {"badge" in item && item.badge && <span className="condition-tile-badge">{item.badge}</span>}
               </div>
             ))}
           </div>
@@ -582,11 +619,11 @@ export default function WeatherDashboard() {
             </div>
           </aside>
 
-            <aside className="daylight-card" aria-label="Tagum daylight from 5:41 AM to 5:57 PM">
+            <aside className="daylight-card" aria-label={`Tagum daylight from ${formatClock("05:41", timeFormat)} to ${formatClock("17:57", timeFormat)}`}>
               <div className="daylight-card-header">
                 <div>
                   <p className="daylight-eyebrow">Daylight</p>
-                  <h3>5:41 AM / 5:57 PM</h3>
+                  <h3>{daylightRangeLabel}</h3>
                 </div>
                 <span>12h 16min</span>
               </div>
@@ -612,13 +649,19 @@ export default function WeatherDashboard() {
             <label className="section-label section-label-primary">
               <span>🔶</span> 7-Day Outlook
             </label>
-            <span className="weekly-range-note">Rainfall amount and intensity</span>
+            <div className="weekly-heading-meta">
+              <span className="ml-enhanced-badge">ML-enhanced</span>
+              <span className="weekly-range-note">Rainfall amount and intensity</span>
+            </div>
+          </div>
+          <div className="weekly-rain-axis" aria-hidden="true">
+            <span>0 mm</span>
+            <span>{weeklyRainScaleMax} mm</span>
           </div>
           <div className="weekly-outlook-list">
             {sevenDayOutlook.map((day) => {
               const intensity = day.intensity ?? getRainIntensity(day.rainMm);
-              const rangeStart = ((day.low - weeklyTemperatureMin) / weeklyTemperatureRange) * 100;
-              const rangeWidth = Math.max(4, ((day.high - day.low) / weeklyTemperatureRange) * 100);
+              const rainWidth = Math.max(3, Math.min(100, (day.rainMm / weeklyRainScaleMax) * 100));
 
               return (
                 <article
@@ -635,7 +678,7 @@ export default function WeatherDashboard() {
                     <span className="weekly-range-track" />
                     <span
                       className="weekly-range-fill"
-                      style={{ left: `${rangeStart}%`, width: `${rangeWidth}%` }}
+                      style={{ width: `${rainWidth}%` }}
                     />
                   </div>
                   <div className="weekly-temps">
@@ -673,7 +716,7 @@ export default function WeatherDashboard() {
                     fontSize: isMobile ? 8 : 9,
                   }}>{w.badge}</div>
                 </div>
-                <div className="weather-window-time" style={{ fontSize: isMobile ? 10 : 11 }}>{w.time}</div>
+                <div className="weather-window-time" style={{ fontSize: isMobile ? 10 : 11 }}>{formatTimeRange(w.time, timeFormat)}</div>
                 <div className="weather-window-activity" style={{ fontSize: isMobile ? 10 : 11 }}>{w.activity}</div>
                 <div className="weather-window-insight">
                   <span>{insight.metric}</span>
@@ -693,7 +736,7 @@ export default function WeatherDashboard() {
         <section className="forecast-settings-panel" aria-label="Forecast display settings">
           <span className="settings-panel-icon" aria-hidden="true">&#9881;</span>
           <div className="forecast-unit-toggles" aria-label="Forecast unit controls">
-            <div className="unit-toggle-group" aria-label="Temperature unit">
+            <div className="unit-toggle-group unit-toggle-temperature" role="group" aria-label="Temperature unit">
               {(["c", "f"] as const).map((unit) => (
                 <button
                   key={unit}
@@ -706,7 +749,7 @@ export default function WeatherDashboard() {
                 </button>
               ))}
             </div>
-            <div className="unit-toggle-group" aria-label="Wind speed unit">
+            <div className="unit-toggle-group unit-toggle-wind" role="group" aria-label="Wind speed unit">
               {(["kmh", "mph"] as const).map((unit) => (
                 <button
                   key={unit}
@@ -719,7 +762,7 @@ export default function WeatherDashboard() {
                 </button>
               ))}
             </div>
-            <div className="unit-toggle-group" aria-label="Time format">
+            <div className="unit-toggle-group unit-toggle-time" role="group" aria-label="Time format">
               {(["12h", "24h"] as const).map((format) => (
                 <button
                   key={format}
