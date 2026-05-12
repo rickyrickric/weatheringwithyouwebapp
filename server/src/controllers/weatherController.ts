@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { LocationQuery } from '../middleware/validateRequest';
-import { getAccuracySummary } from '../services/accuracyService';
+import { FORECAST_SOURCE_LABEL, getAccuracySummary } from '../services/accuracyService';
 import { applyRegression, blendedRegression } from '../services/mlService';
 import { computeOptimalWindows, computeSunshineWindows } from '../services/sunshineWindowService';
 import {
@@ -44,7 +44,7 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
       dailyOutlook: forecastBundle.dailyOutlook,
       alerts: forecastBundle.alerts,
       sourceConfidence: {
-        label: 'PAGASA · Open-Meteo',
+        label: FORECAST_SOURCE_LABEL,
         value: 'High',
       },
     };

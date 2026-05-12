@@ -35,7 +35,7 @@ const forecastData: ForecastHour[] = Array.from({ length: 24 }, (_, hour) => {
 
 const fallbackTagumAlerts: WeatherAlert[] = [
   {
-    title: "Afternoon Thunderstorm Advisory",
+    title: "Afternoon Thunderstorm Working Advisory",
     urgency: "Moderate",
     tone: "moderate",
     barangays: "Apokon, Mankilam, Canocotan",
@@ -68,7 +68,7 @@ const windows = [
 
 const fallbackAccuracy: AccuracySummary = {
   value: null,
-  label: "Forecast powered by 90-day climate data",
+  label: "Forecast powered by OpenWeather and PAGASA",
   sampleSize: 0,
   status: "pending-dataset",
 };
@@ -139,6 +139,35 @@ const isNightNow = (date: Date) => {
   return minutes < sunrise || minutes > sunset;
 };
 
+const getUvMetric = (
+  now: Date,
+  hasLiveCurrentWeather: boolean,
+  uvIndex: number | undefined,
+) => {
+  if (isNightNow(now)) {
+    return {
+      val: "Night - no UV exposure right now",
+      unit: "",
+      longText: true,
+    };
+  }
+
+  if (hasLiveCurrentWeather && typeof uvIndex === "number" && Number.isFinite(uvIndex)) {
+    return {
+      val: Math.round(uvIndex).toString(),
+      unit: "UV",
+      longText: false,
+    };
+  }
+
+  const isMorning = now.getHours() < 12;
+  return {
+    val: isMorning ? "Morning UV unavailable" : "UV unavailable",
+    unit: "",
+    longText: true,
+  };
+};
+
 const getAlertIcon = (tone: WeatherAlert["tone"]) => {
   if (tone === "moderate") return "\u26A1";
   return "\u2139";
@@ -171,7 +200,7 @@ export default function WeatherDashboard() {
   const [chartData, setChartData] = useState(forecastData);
   const [tagumAlerts, setTagumAlerts] = useState<WeatherAlert[]>(fallbackTagumAlerts);
   const [sevenDayOutlook, setSevenDayOutlook] = useState<DailyOutlook[]>(fallbackSevenDayOutlook);
-  const [sourceConfidence, setSourceConfidence] = useState({ label: "PAGASA · Open-Meteo", value: "High" });
+  const [sourceConfidence, setSourceConfidence] = useState({ label: "Forecast powered by OpenWeather and PAGASA", value: "High" });
   const [weatherWindows, setWeatherWindows] = useState(windows);
   const [accuracy, setAccuracy] = useState<AccuracySummary>(fallbackAccuracy);
   const [isForecastLoading, setIsForecastLoading] = useState(true);
@@ -364,7 +393,7 @@ export default function WeatherDashboard() {
   const accuracyLabel =
     accuracy.status === "measured" && typeof accuracy.value === "number"
       ? `${accuracy.value}% accuracy`
-      : "Forecast powered by 90-day climate data";
+      : accuracy.label;
   const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
   const updatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastUpdatedAt.getTime()) / 1000));
   const windMetric = formatWind(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined, windUnit);
@@ -375,6 +404,7 @@ export default function WeatherDashboard() {
   const weeklyRainScaleMax = Math.max(30, Math.ceil(Math.max(...sevenDayOutlook.map((day) => day.rainMm), 0) / 5) * 5);
   const daylightStatus = nightNow ? "Night now" : "Daylight now";
   const daylightRangeLabel = `${formatClock("05:41", timeFormat)} / ${formatClock("17:57", timeFormat)}`;
+  const uvMetric = getUvMetric(now, hasLiveCurrentWeather, currentWeather.uvIndex);
   const conditionMetrics = [
     {
       icon: "💨",
@@ -403,9 +433,9 @@ export default function WeatherDashboard() {
     {
       icon: "☀️",
       label: "UV Index",
-      val: nightNow ? "Night — no UV exposure right now" : formatMetricValue(hasLiveCurrentWeather ? currentWeather.uvIndex : undefined, { fallback: "Checking" }),
-      unit: nightNow ? "" : "UV",
-      longText: nightNow,
+      val: uvMetric.val,
+      unit: uvMetric.unit,
+      longText: uvMetric.longText,
     },
     ...(lastKnownDewPoint
       ? [{
@@ -583,7 +613,7 @@ export default function WeatherDashboard() {
           <div className="source-confidence" aria-label={`Weather source confidence is ${sourceConfidence.value.toLowerCase()}`}>
             <span>{sourceConfidence.label}</span>
             <span className="source-confidence-badge">{sourceConfidence.value} confidence</span>
-            <span className="source-confidence-info" tabIndex={0} aria-label="Data sourced from PAGASA official stations and Open-Meteo API. Confidence is based on ensemble model agreement.">
+            <span className="source-confidence-info" tabIndex={0} aria-label="Forecast source combines OpenWeather forecast data with PAGASA advisory context. Confidence reflects current data availability.">
               ⓘ
             </span>
           </div>
@@ -650,7 +680,7 @@ export default function WeatherDashboard() {
               <span>🔶</span> 7-Day Outlook
             </label>
             <div className="weekly-heading-meta">
-              <span className="ml-enhanced-badge">ML-enhanced</span>
+              <span className="ml-enhanced-badge">OpenWeather trend</span>
               <span className="weekly-range-note">Rainfall amount and intensity</span>
             </div>
           </div>

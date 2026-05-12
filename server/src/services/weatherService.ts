@@ -330,7 +330,7 @@ const mapTagumAlerts = (dailyOutlook: DailyOutlook[], forecast: ChartDataPoint[]
   const primary: WeatherAlert =
     peakDailyRain >= 7.6 || peakHourlyRain >= 7.6 || peakRainChance >= 65
       ? {
-          title: 'Afternoon Thunderstorm Advisory',
+          title: 'Afternoon Thunderstorm Working Advisory',
           urgency: 'Moderate',
           tone: 'moderate',
           barangays: 'Apokon, Mankilam, Canocotan',
@@ -338,7 +338,7 @@ const mapTagumAlerts = (dailyOutlook: DailyOutlook[], forecast: ChartDataPoint[]
             'Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.',
         }
       : {
-          title: 'Localized Shower Advisory',
+          title: 'Localized Shower Watch',
           urgency: 'Advisory',
           tone: 'advisory',
           barangays: 'Apokon, Mankilam, Canocotan',
