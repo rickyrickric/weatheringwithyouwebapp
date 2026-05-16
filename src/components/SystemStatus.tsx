@@ -57,7 +57,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
             className="text-gray-500 hover:text-gray-300 text-xl font-light transition-colors"
             title="Close"
           >
-            ×
+            <i className="bi bi-x-lg" aria-label="Close"></i>
           </button>
         </div>
 
@@ -73,9 +73,9 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
                   : 'border-transparent text-gray-500 hover:text-gray-300'
               }`}
             >
-              {tab === 'health' && '💚 Health'}
-              {tab === 'pipeline' && '🔄 Pipeline'}
-              {tab === 'version' && '📦 Metadata'}
+              {tab === 'health' && <><i className="bi bi-heart-pulse-fill mr-1" aria-hidden="true"></i>Health</>}
+              {tab === 'pipeline' && <><i className="bi bi-arrow-repeat mr-1" aria-hidden="true"></i>Pipeline</>}
+              {tab === 'version' && <><i className="bi bi-box-fill mr-1" aria-hidden="true"></i>Metadata</>}
             </button>
           ))}
         </div>
@@ -147,7 +147,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* OpenWeather API */}
               <div className="bg-white/5 rounded-lg p-3 space-y-2">
-                <p className="text-gray-300 font-semibold text-sm">🌐 OpenWeather API</p>
+                <p className="text-gray-300 font-semibold text-sm"><i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API</p>
                 <p className="text-gray-400 text-xs">Live hourly updates</p>
                 <p className="text-gray-300 text-xs">
                   Last sync: <span className="text-orange-200 font-mono">{formatTimeDiff(metrics.openWeatherSync)}</span>
@@ -156,7 +156,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* Visual Crossing Historical */}
               <div className="bg-white/5 rounded-lg p-3 space-y-2">
-                <p className="text-gray-300 font-semibold text-sm">📊 Visual Crossing</p>
+                <p className="text-gray-300 font-semibold text-sm"><i className="bi bi-bar-chart-fill mr-1" aria-hidden="true"></i> Visual Crossing</p>
                 <p className="text-gray-400 text-xs">6-month historical baseline</p>
                 <p className="text-gray-300 text-xs">
                   Last sync: <span className="text-orange-200 font-mono">{formatTimeDiff(metrics.visualCrossingSync)}</span>
@@ -165,7 +165,7 @@ const SystemStatus: React.FC<SystemStatusProps> = ({ onClose, lastUpdated }) => 
 
               {/* Supabase Climate Memory */}
               <div className="bg-white/5 rounded-lg p-3 space-y-2">
-                <p className="text-gray-300 font-semibold text-sm">💾 Supabase</p>
+                <p className="text-gray-300 font-semibold text-sm"><i className="bi bi-database-fill mr-1" aria-hidden="true"></i> Supabase</p>
                 <p className="text-gray-400 text-xs">Climate memory database</p>
                 <p className="text-gray-300 text-xs">
                   Status: <span className="text-orange-200">Connected</span>

@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
             {/* Model Accuracy */}
             <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                📈 Prediction Accuracy
+                <i className="bi bi-graph-up-arrow mr-2" aria-hidden="true"></i>Prediction Accuracy
               </h3>
               <p className="text-xs text-secondary-contrast mb-3">
                 Live validation against OpenWeather data and 6-month climate history.
@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
             {/* Data Pipeline */}
             <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                🔄 Data Pipeline
+                <i className="bi bi-arrow-repeat mr-2" aria-hidden="true"></i>Data Pipeline
               </h3>
               <p className="text-secondary-contrast mb-3 text-xs">
                 Live data ingestion and processing architecture for Tagum City weather intelligence.
@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">📊 Visual Crossing</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-bar-chart-fill mr-1" aria-hidden="true"></i> Visual Crossing</p>
                       <p className="text-xs text-label-contrast">Historical archive (5+ years)</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-400/60 shadow-[0_0_8px_rgba(96,165,250,0.25)]">
@@ -130,9 +130,9 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">📡 Updates: Daily</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">🧭 Window: 5+ yrs</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🗂️ Records: 180</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-broadcast mr-1" aria-hidden="true"></i>Updates: Daily</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-calendar-range mr-1" aria-hidden="true"></i>Window: 5+ yrs</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-folder-fill mr-1" aria-hidden="true"></i>Records: 180</span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -148,7 +148,7 @@ const Dashboard: React.FC = () => {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">🌐 OpenWeather API</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API</p>
                       <p className="text-xs text-label-contrast">Real-time observations</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_8px_rgba(52,211,153,0.25)]">
@@ -156,9 +156,9 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">⏱️ Updates: Every 1h</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">⚡ Latency: &lt;2s</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🌧️ Feeds: Temp, rain, clouds</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-clock-fill mr-1" aria-hidden="true"></i>Updates: Every 1h</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i>Latency: &lt;2s</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-cloud-rain-fill mr-1" aria-hidden="true"></i>Feeds: Temp, rain, clouds</span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -174,7 +174,7 @@ const Dashboard: React.FC = () => {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">⚡ FastAPI Backend</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i> FastAPI Backend</p>
                       <p className="text-xs text-label-contrast">Async ML inference</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-600/20 text-amber-300 border border-amber-400/60 shadow-[0_0_8px_rgba(217,119,6,0.25)]">
@@ -182,9 +182,9 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">⚙️ Cache: 5 min</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🚀 Latency: &lt;100ms</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🧵 Concurrency: 50</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-gear-fill mr-1" aria-hidden="true"></i>Cache: 5 min</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-rocket-fill mr-1" aria-hidden="true"></i>Latency: &lt;100ms</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-cpu-fill mr-1" aria-hidden="true"></i>Concurrency: 50</span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -200,7 +200,7 @@ const Dashboard: React.FC = () => {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">🗄️ Supabase PostgreSQL</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-server mr-1" aria-hidden="true"></i> Supabase PostgreSQL</p>
                       <p className="text-xs text-label-contrast">Climate memory &amp; logs</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-600/20 text-violet-300 border border-violet-400/60 shadow-[0_0_8px_rgba(139,92,246,0.25)]">
@@ -208,9 +208,9 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">🗂️ Tables: 3</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">📆 Retention: 6 mo</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">💾 Size: 2.5 MB</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-table mr-1" aria-hidden="true"></i>Tables: 3</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-calendar-fill mr-1" aria-hidden="true"></i>Retention: 6 mo</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-database-fill mr-1" aria-hidden="true"></i>Size: 2.5 MB</span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-tertiary-contrast cursor-pointer">Details</summary>
@@ -242,10 +242,10 @@ const Dashboard: React.FC = () => {
           zIndex: 100,
         }}>
           {[
-            { label: "Home", icon: "🏠" },
-            { label: "Forecast", icon: "☁️" },
-            { label: "Dashboard", icon: "📊" },
-            { label: "About", icon: "ℹ️" },
+          { label: "Home", icon: "bi-house-fill" },
+            { label: "Forecast", icon: "bi-cloud-sun-fill" },
+            { label: "Dashboard", icon: "bi-graph-up" },
+            { label: "About", icon: "bi-info-circle-fill" },
           ].map((tab) => (
             <button
               key={tab.label}
@@ -262,7 +262,7 @@ const Dashboard: React.FC = () => {
                 transition: "all 0.2s",
               }}
             >
-              <span>{tab.icon}</span> {tab.label}
+              <i className={`bi ${tab.icon}`} aria-hidden="true"></i> {tab.label}
             </button>
           ))}
         </nav>

@@ -145,11 +145,7 @@ const Home: FC = () => {
               the Palm City
             </h1>
             <div className="location-label flex items-center justify-center gap-2 text-base md:text-lg font-normal">
-              {/* Lightened pin icon */}
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <i className="bi bi-geo-alt-fill w-5 h-5" aria-hidden="true"></i>
               <span>Current Location: <strong className="font-semibold">Tagum City, Philippines</strong></span>
             </div>
             {/* Tagline: Single impactful line */}
@@ -189,7 +185,11 @@ const Home: FC = () => {
                   : "hover:scale-105 active:scale-95"
               }`}
             >
-              {isClearing ? "⛅ Clearing the clouds..." : "☀️ Clear the Sky"}
+              {isClearing ? (
+                <><i className="bi bi-cloud-sun" aria-hidden="true"></i> Clearing the clouds...</>
+              ) : (
+                <><i className="bi bi-sun-fill" aria-hidden="true"></i> Clear the Sky</>
+              )}
             </button>
             <p className="cta-hint text-xs font-medium">
               Find the next sunshine window →
@@ -208,17 +208,17 @@ const Home: FC = () => {
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
         {[
-          { label: "Home", icon: "🏠" },
-          { label: "Forecast", icon: "☁️" },
-          { label: "Dashboard", icon: "📊" },
-          { label: "About", icon: "ℹ️" },
+          { label: "Home", icon: "bi-house-fill" },
+          { label: "Forecast", icon: "bi-cloud-sun-fill" },
+          { label: "Dashboard", icon: "bi-graph-up" },
+          { label: "About", icon: "bi-info-circle-fill" },
         ].map((tab) => (
           <button
             key={tab.label}
             onClick={() => handleNavigation(tab.label)}
             className={`nav-tab ${activeTab === tab.label ? 'active' : ''}`}
           >
-            <span>{tab.icon}</span> {tab.label}
+            <i className={`bi ${tab.icon}`} aria-hidden="true"></i> {tab.label}
           </button>
         ))}
       </nav>

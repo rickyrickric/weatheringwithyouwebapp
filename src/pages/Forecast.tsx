@@ -35,7 +35,7 @@ const forecastData: ForecastHour[] = Array.from({ length: 24 }, (_, hour) => {
 
 const fallbackTagumAlerts: WeatherAlert[] = [
   {
-    title: "Afternoon Thunderstorm Working Advisory",
+    title: "Afternoon Thunderstorm Advisory",
     urgency: "Moderate",
     tone: "moderate",
     barangays: "Apokon, Mankilam, Canocotan",
@@ -56,7 +56,7 @@ const fallbackSevenDayOutlook: DailyOutlook[] = [
   { day: "Wed", date: "May 13", high: 31, low: 23, rainChance: 28, rainMm: 1.2, summary: "Mostly cloudy breaks" },
   { day: "Thu", date: "May 14", high: 33, low: 24, rainChance: 22, rainMm: 0.4, summary: "Warmer midday" },
   { day: "Fri", date: "May 15", high: 32, low: 24, rainChance: 57, rainMm: 5.9, summary: "Late-day showers" },
-  { day: "Sat", date: "May 16", high: 30, low: 23, rainChance: 74, rainMm: 12.6, summary: "Heavier rain bands" },
+  { day: "Sat", date: "May 16", high: 30, low: 23, rainChance: 74, rainMm: 12.6, summary: "Heavy rain bands expected" },
   { day: "Sun", date: "May 17", high: 31, low: 24, rainChance: 39, rainMm: 2.1, summary: "Light passing rain" },
 ];
 
@@ -169,8 +169,8 @@ const getUvMetric = (
 };
 
 const getAlertIcon = (tone: WeatherAlert["tone"]) => {
-  if (tone === "moderate") return "\u26A1";
-  return "\u2139";
+  if (tone === "moderate") return <i className="bi bi-lightning-fill" aria-hidden="true"></i>;
+  return <i className="bi bi-info-circle-fill" aria-hidden="true"></i>;
 };
 
 const getWindowInsight = (label: string) => {
@@ -371,9 +371,9 @@ export default function WeatherDashboard() {
 
   const greeting = () => {
     const h = now.getHours();
-    if (h < 12) return { text: "Good Morning", icon: "🌅" };
-    if (h < 18) return { text: "Good Afternoon", icon: "🌤️" };
-    return { text: "Good Evening", icon: "🌙" };
+    if (h < 12) return { text: "Good Morning", icon: <i className="bi bi-sunrise-fill" aria-hidden="true"></i> };
+    if (h < 18) return { text: "Good Afternoon", icon: <i className="bi bi-cloud-sun-fill" aria-hidden="true"></i> };
+    return { text: "Good Evening", icon: <i className="bi bi-moon-stars-fill" aria-hidden="true"></i> };
   };
 
   const { text: greetText, icon: greetIcon } = greeting();
@@ -407,31 +407,31 @@ export default function WeatherDashboard() {
   const uvMetric = getUvMetric(now, hasLiveCurrentWeather, currentWeather.uvIndex);
   const conditionMetrics = [
     {
-      icon: "💨",
+      icon: <i className="bi bi-wind" aria-hidden="true"></i>,
       label: "Wind Speed",
       val: windMetric.value,
       unit: windMetric.unit,
     },
     {
-      icon: "💧",
+      icon: <i className="bi bi-droplet-fill" aria-hidden="true"></i>,
       label: "Humidity",
       val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.humidity : undefined),
       unit: "%",
     },
     {
-      icon: "👁️",
+      icon: <i className="bi bi-eye-fill" aria-hidden="true"></i>,
       label: "Visibility",
       val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.visibility : undefined),
       unit: "km",
     },
     {
-      icon: "🌡️",
+      icon: <i className="bi bi-thermometer-half" aria-hidden="true"></i>,
       label: "Pressure",
       val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.pressure : undefined, { divisor: pressureDivisor }),
       unit: "hPa",
     },
     {
-      icon: "☀️",
+      icon: <i className="bi bi-sun-fill" aria-hidden="true"></i>,
       label: "UV Index",
       val: uvMetric.val,
       unit: uvMetric.unit,
@@ -439,14 +439,14 @@ export default function WeatherDashboard() {
     },
     ...(lastKnownDewPoint
       ? [{
-          icon: "❄️",
+          icon: <i className="bi bi-snow" aria-hidden="true"></i>,
           label: "Dew Point",
           val: formatTemperatureNumber(lastKnownDewPoint.value, temperatureUnit).toString(),
           unit: `°${temperatureUnit.toUpperCase()}`,
           badge: formatElapsed(dewPointAgeSeconds),
         }]
       : [{
-          icon: "🌧️",
+          icon: <i className="bi bi-cloud-rain-fill" aria-hidden="true"></i>,
           label: "Rain Chance",
           val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.rainChance : undefined, { fallback: "Checking" }),
           unit: "%",
@@ -498,7 +498,7 @@ export default function WeatherDashboard() {
         <header className="forecast-header">
 
           <div className="forecast-greeting">
-            <span style={{ fontSize: isMobile ? 20 : 26, lineHeight: 1 }}>{greetIcon}</span>
+            <span style={{ fontSize: isMobile ? 20 : 26, lineHeight: 1, display: 'flex', alignItems: 'center' }}>{greetIcon}</span>
             <h1 style={{
               margin: 0,
               fontSize: isMobile ? "clamp(18px, 4.5vw, 24px)" : "clamp(28px, 3vw, 36px)",
@@ -678,9 +678,13 @@ export default function WeatherDashboard() {
           <div className="section-heading-row">
             <label className="section-label section-label-primary">
               <span>🔶</span> 7-Day Outlook
+              <span className="ml-badge-wrapper" aria-label="Anomaly detection via Polynomial Regression (Degree 4, 6-month training)">
+                <span className="ml-enhanced-badge" role="img" aria-hidden="true">✦</span>
+                <span className="ml-enhanced-badge ml-enhanced-badge-label">Ml-Enhanced</span>
+                <span className="ml-badge-tooltip">Anomaly detection via Polynomial Regression · Degree 4, 6-month training window</span>
+              </span>
             </label>
             <div className="weekly-heading-meta">
-              <span className="ml-enhanced-badge">OpenWeather trend</span>
               <span className="weekly-range-note">Rainfall amount and intensity</span>
             </div>
           </div>
