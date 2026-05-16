@@ -15,6 +15,7 @@ The project is designed as a school web application, but it is structured like a
 - Adapts the visual background to the active weather condition and time of day.
 - Includes a dashboard view for model and pipeline context.
 - Supports optional Supabase storage for daily observations and forecast snapshots.
+- Shows live system status (footer) with pipeline health and forecast accuracy.
 - Uses safe local environment files so API keys do not need to be committed.
 
 ## Main Screens
@@ -23,6 +24,7 @@ The project is designed as a school web application, but it is structured like a
 - `Forecast` - live current conditions, hourly forecast, weather image card, and optimal weather windows.
 - `Dashboard` - model/pipeline-focused technical overview.
 - `About` - project inspiration, feature summary, and architecture context.
+ - `System Status` - footer panel showing pipeline health, latest accuracy metrics, and last-updated time.
 
 ## Tech Stack
 
