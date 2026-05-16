@@ -1,5 +1,5 @@
 import React from 'react';
-import { CartesianGrid, LabelList, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, LabelList, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface HourlyData {
   time: string;
@@ -42,17 +42,22 @@ interface HourlyTooltipPayload {
   payload?: NormalizedHourlyData;
 }
 
+/**
+ * Centralized hour formatter — mirrors formatClock in Forecast.tsx so every
+ * time string in the app (header clock, sunrise/sunset, hourly tiles, optimal
+ * windows) uses the exact same 12h / 24h representation.
+ */
 const formatHour = (time: string, timeFormat: '12h' | '24h') => {
-  const [hourPart] = time.split(':');
+  const [hourPart, minutePart = '00'] = time.split(':');
   const hour = Number(hourPart);
 
   if (Number.isNaN(hour)) return time;
-  if (timeFormat === '24h') return `${hour.toString().padStart(2, '0')}:00`;
+  if (timeFormat === '24h') return `${hour.toString().padStart(2, '0')}:${minutePart}`;
 
   const period = hour < 12 ? 'AM' : 'PM';
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
 
-  return `${displayHour} ${period}`;
+  return `${displayHour}:${minutePart} ${period}`;
 };
 
 const parseMinuteOfDay = (time: string) => {
@@ -104,7 +109,7 @@ const HourlyTooltip: React.FC<{
 
   return (
     <div className="hourly-tooltip">
-      <div className="hourly-tooltip-time">{point.time}</div>
+      <div className="hourly-tooltip-time">{point.label}</div>
       <div className="hourly-tooltip-row">
         <span className="hourly-tooltip-swatch hourly-tooltip-temp" />
         <span>Temp: {point.temperature}&deg;</span>
@@ -192,6 +197,10 @@ const formatChartTemperatureLabel = (value: unknown) => {
   return Number.isFinite(numericValue) ? `${Math.round(numericValue)}\u00B0` : '';
 };
 
+const TILE_PX = 72;
+const TILE_GAP = 4;
+const STRIP_PAD_R = 32;
+
 const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   hourlyData,
   temperatureUnit = 'c',
@@ -213,6 +222,12 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
     new Set(hasRange ? [minTemperature, averageTemperature, maxTemperature] : [minTemperature]),
   ).sort((left, right) => left - right);
 
+  /* Compute a shared content width so chart and tiles always cover the
+     same time range and scroll together inside one container. */
+  const n = normalizedData.length;
+  const tileStripWidth = n * TILE_PX + Math.max(0, n - 1) * TILE_GAP + STRIP_PAD_R;
+  const scrollContentWidth = Math.max(tileStripWidth, 480);
+
   return (
     <article className="hourly-forecast-card" role="region" aria-label="Hourly forecast">
       <div className="hourly-chart-header">
@@ -223,94 +238,97 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
         </span>
       </div>
 
-      <div className="hourly-chart-frame">
-        <ResponsiveContainer width="100%" height={196} minWidth={0}>
-          <LineChart data={normalizedData} margin={{ top: 34, right: 30, left: 18, bottom: 14 }}>
-            <CartesianGrid
-              vertical={false}
-              stroke="rgba(124, 95, 74, 0.18)"
-              strokeDasharray="3 5"
-            />
-            <XAxis dataKey="time" hide />
-            <YAxis
-              dataKey="temperature"
-              tickLine={{ stroke: 'rgba(124, 95, 74, 0.42)' }}
-              axisLine={{ stroke: 'rgba(124, 95, 74, 0.34)' }}
-              width={54}
-              tick={{ fontSize: 12, fill: '#5f4634', fontWeight: 800 }}
-              ticks={yAxisTicks}
-              tickFormatter={formatChartTemperatureLabel}
-              domain={[yMin, yMax]}
-              label={{
-                value: temperatureUnit === 'f' ? 'Temp (°F)' : 'Temp (°C)',
-                angle: -90,
-                position: 'insideLeft',
-                offset: 0,
-                fill: '#6f503a',
-                fontSize: 11,
-                fontWeight: 900,
-              }}
-            />
-            <ReferenceLine
-              y={averageTemperature}
-              stroke="rgba(124, 95, 74, 0.42)"
-              strokeDasharray="4 4"
-              ifOverflow="extendDomain"
-            />
-            <Tooltip
-              cursor={false}
-              content={({ active, payload }) => (
-                <HourlyTooltip active={active} payload={payload as readonly HourlyTooltipPayload[]} />
-              )}
-            />
-            <Line
-              type="monotone"
-              dataKey="temperature"
-              stroke="#ff5a14"
-              strokeWidth={2}
-              dot={{
-                r: 4,
-                fill: '#ff5a14',
-                stroke: '#fff7ed',
-                strokeWidth: 2,
-              }}
-              activeDot={{
-                r: 6,
-                fill: '#ff5a14',
-                stroke: '#fff7ed',
-                strokeWidth: 2,
-              }}
-              isAnimationActive={false}
-            >
-              <LabelList
-                dataKey="temperature"
-                position="top"
-                offset={10}
-                formatter={formatChartTemperatureLabel}
-                fill="#8a3d14"
-                fontSize={11}
-                fontWeight={700}
+      {/* Single scroll container keeps chart + tiles in sync */}
+      <div className="hourly-scroll-sync">
+        <div className="hourly-scroll-content" style={{ minWidth: scrollContentWidth }}>
+          <div className="hourly-chart-frame">
+            <LineChart width={scrollContentWidth} height={196} data={normalizedData} margin={{ top: 34, right: 30, left: 18, bottom: 14 }}>
+              <CartesianGrid
+                vertical={false}
+                stroke="rgba(124, 95, 74, 0.18)"
+                strokeDasharray="3 5"
               />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="hourly-strip" role="list">
-        {normalizedData.map((hour) => (
-          <div
-            key={hour.time}
-            className={`hourly-tile ${getRainClass(hour.rainIntensity)}`}
-            role="listitem"
-            aria-label={`${hour.label}, ${hour.temperature} degrees, ${hour.rainProbability}% rain probability, ${hour.rainMm.toFixed(1)} millimeters, ${hour.rainIntensity} rain`}
-          >
-            <span className="hourly-time">{hour.label}</span>
-            <WeatherIcon rainProbability={hour.rainProbability} />
-            <span className="hourly-rain">{hour.rainProbability}%</span>
-            <span className="hourly-mm">{hour.rainMm.toFixed(1)} mm</span>
-            <span className="hourly-temp">{hour.temperature}&deg;</span>
+              <XAxis dataKey="time" hide />
+              <YAxis
+                dataKey="temperature"
+                tickLine={{ stroke: 'rgba(124, 95, 74, 0.42)' }}
+                axisLine={{ stroke: 'rgba(124, 95, 74, 0.34)' }}
+                width={54}
+                tick={{ fontSize: 12, fill: '#5f4634', fontWeight: 800 }}
+                ticks={yAxisTicks}
+                tickFormatter={formatChartTemperatureLabel}
+                domain={[yMin, yMax]}
+                label={{
+                  value: temperatureUnit === 'f' ? 'Temp (°F)' : 'Temp (°C)',
+                  angle: -90,
+                  position: 'insideLeft',
+                  offset: 0,
+                  fill: '#6f503a',
+                  fontSize: 11,
+                  fontWeight: 900,
+                }}
+              />
+              <ReferenceLine
+                y={averageTemperature}
+                stroke="rgba(124, 95, 74, 0.42)"
+                strokeDasharray="4 4"
+                ifOverflow="extendDomain"
+              />
+              <Tooltip
+                cursor={false}
+                content={({ active, payload }) => (
+                  <HourlyTooltip active={active} payload={payload as readonly HourlyTooltipPayload[]} />
+                )}
+              />
+              <Line
+                type="monotone"
+                dataKey="temperature"
+                stroke="#ff5a14"
+                strokeWidth={2}
+                dot={{
+                  r: 4,
+                  fill: '#ff5a14',
+                  stroke: '#fff7ed',
+                  strokeWidth: 2,
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: '#ff5a14',
+                  stroke: '#fff7ed',
+                  strokeWidth: 2,
+                }}
+                isAnimationActive={false}
+              >
+                <LabelList
+                  dataKey="temperature"
+                  position="top"
+                  offset={10}
+                  formatter={formatChartTemperatureLabel}
+                  fill="#8a3d14"
+                  fontSize={11}
+                  fontWeight={700}
+                />
+              </Line>
+            </LineChart>
           </div>
-        ))}
+
+          <div className="hourly-strip" role="list">
+            {normalizedData.map((hour) => (
+              <div
+                key={hour.time}
+                className={`hourly-tile ${getRainClass(hour.rainIntensity)}`}
+                role="listitem"
+                aria-label={`${hour.label}, ${hour.temperature} degrees, ${hour.rainProbability}% rain probability, ${hour.rainMm.toFixed(1)} millimeters, ${hour.rainIntensity} rain`}
+              >
+                <span className="hourly-time">{hour.label}</span>
+                <WeatherIcon rainProbability={hour.rainProbability} />
+                <span className="hourly-rain">{hour.rainProbability}%</span>
+                <span className="hourly-mm">{hour.rainMm.toFixed(1)} mm</span>
+                <span className="hourly-temp">{hour.temperature}&deg;</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </article>
   );

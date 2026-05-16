@@ -1932,6 +1932,33 @@ code {
   display: block;
 }
 
+/* ── Scroll-sync wrapper: chart + tiles share one scroll context ── */
+.hourly-scroll-sync {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-color: rgba(140,132,124,0.72) transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hourly-scroll-sync::-webkit-scrollbar {
+  height: 8px;
+}
+
+.hourly-scroll-sync::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hourly-scroll-sync::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(140,132,124,0.72);
+}
+
+.hourly-scroll-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .hourly-tooltip {
   min-width: 146px;
   border-radius: 5px;
@@ -1972,31 +1999,14 @@ code {
   color: #b9f4ef;
 }
 
+/* Tiles — no longer scrolls independently; parent .hourly-scroll-sync owns scroll */
 .hourly-strip {
   display: flex;
   gap: 4px;
   min-width: 0;
   margin-top: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   padding: 0 32px 8px 0;
-  scroll-padding-inline: 4px 32px;
-  scroll-snap-type: x mandatory;
-  scrollbar-color: rgba(140,132,124,0.72) transparent;
-  scrollbar-width: thin;
-}
-
-.hourly-strip::-webkit-scrollbar {
-  height: 8px;
-}
-
-.hourly-strip::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.hourly-strip::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(140,132,124,0.72);
 }
 
 .hourly-tile {
@@ -2016,7 +2026,14 @@ code {
   scroll-snap-align: start;
 }
 
-.hourly-time,
+.hourly-time {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .hourly-rain {
   color: #111827;
   font-size: 14px;
@@ -2488,6 +2505,16 @@ code {
   flex-wrap: wrap;
 }
 
+/* ── ML-enhanced badge with hover tooltip ── */
+.ml-badge-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  cursor: default;
+}
+
 .ml-enhanced-badge {
   border: 1px solid rgba(56,189,248,0.34);
   border-radius: 999px;
@@ -2497,9 +2524,59 @@ code {
   font-weight: 900;
   letter-spacing: 0.10em;
   line-height: 1;
-  padding: 6px 8px;
+  padding: 5px 7px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.ml-enhanced-badge:first-child {
+  font-size: 13px;
+  padding: 4px 5px;
+  letter-spacing: 0;
+  animation: mlSparkle 2.4s ease-in-out infinite;
+}
+
+.ml-enhanced-badge-label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.ml-badge-tooltip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: 320px;
+  border: 1px solid rgba(56,189,248,0.28);
+  border-radius: 8px;
+  background: rgba(6,24,44,0.96);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.48);
+  color: #bae6fd;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.45;
+  padding: 10px 14px;
+  text-transform: none;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  transform: translateX(-50%) translateY(4px);
+  z-index: 20;
+}
+
+.ml-badge-wrapper:hover .ml-badge-tooltip,
+.ml-badge-wrapper:focus-within .ml-badge-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes mlSparkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .daylight-card h3 {

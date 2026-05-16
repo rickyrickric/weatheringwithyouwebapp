@@ -27,7 +27,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
       role="status"
     >
       <div className={`flex items-start gap-3 ${isToast ? 'pr-8' : ''}`}>
-        <span className="text-xl">⚠️</span>
+        <i className="bi bi-exclamation-triangle-fill text-xl" aria-hidden="true"></i>
         <p className="text-sm">{message}</p>
       </div>
       <div className={`flex items-center gap-2 ${isToast ? 'mt-3' : ''}`}>

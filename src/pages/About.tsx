@@ -46,7 +46,7 @@ const About: React.FC = () => {
           <div className="about-top-grid">
             <GlassCard>
               <h2 className="text-lg font-bold text-gray-100 mb-3">
-                🎬 Inspiration: "Tenki no Ko" (Weathering with You)
+                <i className="bi bi-film mr-2" aria-hidden="true"></i>Inspiration: "Tenki no Ko" (Weathering with You)
               </h2>
               <div className="space-y-3 text-gray-400 text-sm">
                 <p className="leading-relaxed text-xs">
@@ -68,12 +68,12 @@ const About: React.FC = () => {
 
             <GlassCard>
               <h2 className="text-lg font-bold text-gray-100 mb-3">
-                ⚙️ Technology Stack
+                <i className="bi bi-gear-fill mr-2" aria-hidden="true"></i>Technology Stack
               </h2>
               <div className="grid gap-3 grid-auto-fit">
                 <div className="space-y-2">
                   <h3 className="text-xs font-semibold text-gray-100 flex items-center gap-1">
-                    🎨 Frontend
+                    <i className="bi bi-palette-fill" aria-hidden="true"></i> Frontend
                   </h3>
                     <div className="grid grid-cols-2 gap-2 text-xs text-secondary-contrast">
                     <div className="p-2 bg-white/5 rounded border-l-4 border-emerald-400/70 border border-white/10">
@@ -97,7 +97,7 @@ const About: React.FC = () => {
 
                 <div className="space-y-2">
                   <h3 className="text-xs font-semibold text-gray-100 flex items-center gap-1">
-                    ⚡ Backend & ML
+                    <i className="bi bi-lightning-fill" aria-hidden="true"></i> Backend & ML
                   </h3>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
                     <div className="p-2 bg-white/5 rounded border-l-4 border-amber-400/70 border border-white/10">
@@ -124,7 +124,7 @@ const About: React.FC = () => {
 
           <GlassCard>
             <h2 className="text-lg font-bold text-gray-100 mb-3">
-              🏗️ Architecture Overview
+              <i className="bi bi-diagram-3-fill mr-2" aria-hidden="true"></i>Architecture Overview
             </h2>
             <p className="text-xs text-secondary-contrast mb-3">
               End-to-end weather intelligence pipeline for Tagum City.
@@ -167,7 +167,7 @@ const About: React.FC = () => {
 
           <GlassCard className="key-features-card">
             <h2 className="text-lg font-bold text-gray-100 mb-3">
-              ✨ Key Features
+              <i className="bi bi-stars mr-2" aria-hidden="true"></i>Key Features
             </h2>
             <div className="grid gap-2 grid-auto-fit">
               <ul className="space-y-2 text-xs">
@@ -226,10 +226,10 @@ const About: React.FC = () => {
           zIndex: 100,
         }}>
           {[
-            { label: "Home", icon: "🏠" },
-            { label: "Forecast", icon: "☁️" },
-            { label: "Dashboard", icon: "📊" },
-            { label: "About", icon: "ℹ️" },
+            { label: "Home", icon: "bi-house-fill" },
+            { label: "Forecast", icon: "bi-cloud-sun-fill" },
+            { label: "Dashboard", icon: "bi-graph-up" },
+            { label: "About", icon: "bi-info-circle-fill" },
           ].map((tab) => (
             <button
               key={tab.label}
@@ -246,7 +246,7 @@ const About: React.FC = () => {
                 transition: "all 0.2s",
               }}
             >
-              <span>{tab.icon}</span> {tab.label}
+              <i className={`bi ${tab.icon}`} aria-hidden="true"></i> {tab.label}
             </button>
           ))}
         </nav>

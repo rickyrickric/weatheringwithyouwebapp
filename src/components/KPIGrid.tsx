@@ -22,7 +22,7 @@ const StatTile: React.FC<StatTileProps> = ({ icon, label, value, unit }) => (
     aria-label={`${label}: ${value}${unit ? " " + unit : ""}`}
   >
     <div className="flex items-center gap-2 text-label-contrast text-[10px] font-semibold uppercase tracking-widest text-shadow-image">
-      <span className="tile-icon text-lg group-hover:scale-110 transition-transform">{icon}</span>
+      <i className={`bi ${icon} text-lg group-hover:scale-110 transition-transform`} aria-hidden="true"></i>
       <span>{label}</span>
     </div>
     <div className="font-serif text-3xl font-bold text-white leading-none text-shadow-image">
@@ -47,37 +47,37 @@ const KPIGrid: React.FC<KPIGridProps> = ({
   return (
     <div className="conditions-grid grid grid-cols-2 md:grid-cols-3 gap-2">
       <StatTile
-        icon="💨"
+        icon="bi-wind"
         label="Wind"
         value={windSpeed}
         unit="km/h"
       />
       <StatTile
-        icon="💧"
+        icon="bi-droplet-fill"
         label="Humidity"
         value={humidity}
         unit="%"
       />
       <StatTile
-        icon="👁️"
+        icon="bi-eye-fill"
         label="Visibility"
         value={visibility}
         unit="km"
       />
       <StatTile
-        icon="🌡️"
+        icon="bi-thermometer-half"
         label="Pressure"
         value={(pressure / 100).toFixed(0)}
         unit="hPa"
       />
       <StatTile
-        icon="☀️"
+        icon="bi-sun-fill"
         label="UV Index"
         value={uvIndex}
         unit="UV"
       />
       <StatTile
-        icon="❄️"
+        icon="bi-snow"
         label="Dew Point"
         value={dewPoint}
         unit="°C"

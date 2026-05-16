@@ -6,10 +6,10 @@ const TabNavigation: React.FC = () => {
   const navigate = useNavigate();
 
   const tabs = [
-    { path: '/', label: 'Home', icon: '🏠' },
-    { path: '/forecast', label: 'Forecast', icon: '⛅' },
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/about', label: 'About', icon: 'ℹ️' },
+    { path: '/', label: 'Home', icon: 'bi-house-fill' },
+    { path: '/forecast', label: 'Forecast', icon: 'bi-cloud-sun-fill' },
+    { path: '/dashboard', label: 'Dashboard', icon: 'bi-graph-up' },
+    { path: '/about', label: 'About', icon: 'bi-info-circle-fill' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -32,7 +32,7 @@ const TabNavigation: React.FC = () => {
                 }
               `}
             >
-              <span className="text-lg">{tab.icon}</span>
+              <i className={`bi ${tab.icon} text-lg`} aria-hidden="true"></i>
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
