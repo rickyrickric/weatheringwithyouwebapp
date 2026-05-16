@@ -85,9 +85,10 @@ const getRainIntensity = (rainMm: number): RainIntensity => {
 };
 
 const getDailySummary = (rainMm: number, rainChance: number, high: number) => {
-  if (rainMm >= 10 || rainChance >= 70) return 'Heavier rain bands possible';
-  if (rainMm >= 5 || rainChance >= 55) return 'Late-day showers likely';
-  if (rainMm >= 2 || rainChance >= 35) return 'Scattered Tagum showers';
+  if (rainMm >= 8) return 'Heavy rain bands expected';
+  if (rainMm > 2) return 'Scattered showers likely';
+  if (rainMm > 0 && rainChance >= 80) return 'Mostly cloudy, light drizzle';
+  if (rainMm > 0 || rainChance >= 30) return 'Isolated showers possible';
   if (high >= 32) return 'Warm midday, isolated rain';
   return 'Mostly cloudy breaks';
 };
@@ -330,7 +331,7 @@ const mapTagumAlerts = (dailyOutlook: DailyOutlook[], forecast: ChartDataPoint[]
   const primary: WeatherAlert =
     peakDailyRain >= 7.6 || peakHourlyRain >= 7.6 || peakRainChance >= 65
       ? {
-          title: 'Afternoon Thunderstorm Working Advisory',
+          title: 'Afternoon Thunderstorm Advisory',
           urgency: 'Moderate',
           tone: 'moderate',
           barangays: 'Apokon, Mankilam, Canocotan',

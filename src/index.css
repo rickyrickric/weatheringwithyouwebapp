@@ -790,10 +790,11 @@ code {
   align-items: center;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   font-family: var(--font-body);
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .badge-source     { background: rgba(59,130,246,0.22);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.38); }
 .badge-live       { background: rgba(34,197,94,0.22);   color: #86efac; border: 1px solid rgba(34,197,94,0.38); }
@@ -1100,96 +1101,9 @@ code {
 
 
 /* ──────────────────────────────────────────────────────────────────
-   6. DYNAMIC WEATHER BACKGROUND SYSTEM
+   6. DYNAMIC WEATHER BACKGROUND SYSTEM (Removed - Obsolete)
    ────────────────────────────────────────────────────────────────── */
-/*
-  Usage in React:
-    <div className={`forecast-bg ${bgClass}`} />
 
-  Where bgClass is one of:
-    bg-morning | bg-day | bg-evening | bg-night | bg-rain | bg-cloudy
-
-  The getBgClass utility (in Forecast.jsx):
-    const getBgClass = (weatherCode, hour) => {
-      const isRaining = weatherCode >= 200 && weatherCode < 700;
-      const isCloudy  = weatherCode >= 700 && weatherCode < 800;
-      if (isRaining)                      return 'bg-rain';
-      if (isCloudy)                       return 'bg-cloudy';
-      if (hour >= 5  && hour < 10)        return 'bg-morning';
-      if (hour >= 10 && hour < 16)        return 'bg-day';
-      if (hour >= 16 && hour < 20)        return 'bg-evening';
-      return 'bg-night';
-    };
-*/
-
-/* Base background element */
-.forecast-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: opacity 1.4s ease, filter 1.4s ease;
-}
-
-/* Shared overlay — dark gradient on top of every photo */
-.forecast-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.28) 0%,   /* ↑ from 0.22 — more top shadow = headings easier to read */
-    rgba(0,0,0,0.10) 45%,
-    rgba(0,0,0,0.30) 100%  /* ↑ from 0.25 — more bottom shadow = bottom cards */
-  );
-  pointer-events: none;
-}
-
-/* ── Morning (05:00–10:00, clear) ── */
-.forecast-bg.bg-morning {
-  background-image: url('/assets/bg-tagum-morning.jpg');
-  filter: brightness(0.72) saturate(1.10);
-}
-
-/* ── Daytime (10:00–16:00, clear) ── */
-.forecast-bg.bg-day {
-  background-image: url('/assets/bg-tagum-day.jpg');
-  filter: brightness(0.62) saturate(1.05);
-}
-
-/* ── Evening / Sunset (16:00–20:00) ── */
-.forecast-bg.bg-evening {
-  background-image: url('/assets/bg-tagum-evening.jpg');
-  filter: brightness(0.58) saturate(1.18);
-}
-
-/* ── Night (20:00–05:00) ── */
-.forecast-bg.bg-night {
-  background-image: url('/assets/bg-tagum-night.jpg');
-  filter: brightness(0.52) saturate(0.88);
-}
-
-/* ── Rain (any time, weatherCode 200–699) ── */
-.forecast-bg.bg-rain {
-  background-image: url('/assets/bg-tagum-rain.jpg');
-  filter: brightness(0.48) saturate(0.72) blur(1px);
-}
-
-/* ── Cloudy (any time, weatherCode 700–799) ── */
-.forecast-bg.bg-cloudy {
-  background-image: url('/assets/bg-tagum-cloudy.jpg');
-  filter: brightness(0.55) saturate(0.78);
-}
-
-/* Fallback gradient when image hasn't loaded */
-.forecast-bg.bg-morning  { background-color: #2c4a6e; }
-.forecast-bg.bg-day      { background-color: #3a5a8a; }
-.forecast-bg.bg-evening  { background-color: #6b3a1f; }
-.forecast-bg.bg-night    { background-color: #080e1e; }
-.forecast-bg.bg-rain     { background-color: #1a2035; }
-.forecast-bg.bg-cloudy   { background-color: #2a3245; }
 
 
 /* ──────────────────────────────────────────────────────────────────
@@ -1765,10 +1679,11 @@ code {
   background: rgba(240,200,122,0.14);
   color: rgba(255,244,214,0.92);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1;
   padding: 5px 7px;
+  text-transform: uppercase;
 }
 
 .forecast-chart-layout {
@@ -2143,11 +2058,13 @@ code {
   flex: 0 0 auto;
   border-radius: 6px;
   color: #ffffff;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.10em;
   line-height: 1;
   margin-top: 1px;
   padding: 5px 8px;
+  text-transform: capitalize;
 }
 
 .weather-window-time,
@@ -2361,12 +2278,12 @@ code {
   gap: 5px;
   border-radius: 6px;
   color: #ffffff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.10em;
   line-height: 1;
   padding: 6px 8px;
-  text-transform: uppercase;
+  text-transform: capitalize;
   white-space: nowrap;
 }
 
@@ -2447,11 +2364,11 @@ code {
   border-radius: 999px;
   background: rgba(22,101,52,0.34);
   color: #bbf7d0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1;
   padding: 6px 9px;
-  text-transform: uppercase;
+  text-transform: capitalize;
   white-space: nowrap;
 }
 
@@ -2520,12 +2437,12 @@ code {
   border-radius: 999px;
   background: rgba(8,47,73,0.46);
   color: #bae6fd;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.10em;
   line-height: 1;
   padding: 5px 7px;
-  text-transform: uppercase;
+  text-transform: capitalize;
   white-space: nowrap;
 }
 
@@ -2537,7 +2454,7 @@ code {
 }
 
 .ml-enhanced-badge-label {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.08em;
 }
 

@@ -75,7 +75,7 @@ describe('forecast payload copy', () => {
     expect(response.body.accuracy.label).toBe(FORECAST_SOURCE_LABEL);
     expect(response.body.sourceConfidence.label).toBe(FORECAST_SOURCE_LABEL);
     expect(response.body.alerts[0]).toMatchObject({
-      title: 'Afternoon Thunderstorm Working Advisory',
+      title: 'Afternoon Thunderstorm Advisory',
       urgency: 'Moderate',
       tone: 'moderate',
     });

@@ -9,7 +9,7 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "vitest.config.ts"],
+  "include": ["src/**/*"],
   "ts-node": {
     "files": true
   }
