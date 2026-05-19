@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import HourlyForecastStrip from "../components/HourlyForecastStrip";
 import { MOCK_WEATHER } from "../types/weather";
 import type { AccuracySummary, CurrentWeather, DailyOutlook, ForecastResponse, WeatherAlert } from "../types/weather";
@@ -186,9 +185,7 @@ const getWindowInsight = (label: string) => {
 };
 
 export default function WeatherDashboard() {
-  const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
-  const [activeTab, setActiveTab] = useState("Forecast");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
   const [hasLiveCurrentWeather, setHasLiveCurrentWeather] = useState(false);
@@ -348,26 +345,6 @@ export default function WeatherDashboard() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const handleNavigation = (label: string) => {
-    setActiveTab(label);
-    switch(label) {
-      case "Home":
-        navigate("/");
-        break;
-      case "Forecast":
-        navigate("/forecast");
-        break;
-      case "Dashboard":
-        navigate("/dashboard");
-        break;
-      case "About":
-        navigate("/about");
-        break;
-      default:
-        break;
-    }
-  };
 
   const greeting = () => {
     const h = now.getHours();
@@ -676,19 +653,25 @@ export default function WeatherDashboard() {
 
         <section className="weekly-outlook" aria-label="Seven day Tagum weather outlook">
           <div className="section-heading-row">
-            <label className="section-label section-label-primary">
+            <h2 className="section-label section-label-primary">
               <span>🔶</span> 7-Day Outlook
-              <span className="ml-badge-wrapper" aria-label="Anomaly detection via Polynomial Regression (Degree 4, 6-month training)">
-                <span className="ml-enhanced-badge" role="img" aria-hidden="true">✦</span>
-                <span className="ml-enhanced-badge ml-enhanced-badge-label">Ml-Enhanced</span>
-                <span className="ml-badge-tooltip">Anomaly detection via Polynomial Regression · Degree 4, 6-month training window</span>
-              </span>
-            </label>
+            </h2>
             <div className="weekly-heading-meta">
               <span className="weekly-range-note">Rainfall amount and intensity</span>
             </div>
           </div>
-          <div className="weekly-rain-axis" aria-hidden="true">
+          <div
+            className="weekly-column-headers weekly-grid-columns"
+            aria-hidden="true"
+          >
+            <span>Day</span>
+            <span>Outlook</span>
+            <span>Rainfall</span>
+            <span>Hi / Lo</span>
+            <span>Rain</span>
+            <span>Level</span>
+          </div>
+          <div className="weekly-rain-axis weekly-grid-columns" aria-hidden="true">
             <span>0 mm</span>
             <span>{weeklyRainScaleMax} mm</span>
           </div>
@@ -700,7 +683,7 @@ export default function WeatherDashboard() {
               return (
                 <article
                   key={day.date}
-                  className={`weekly-row rain-${intensity}`}
+                  className={`weekly-row weekly-grid-columns rain-${intensity}`}
                   aria-label={`${day.day} ${day.date}, high ${formatTemperature(day.high, temperatureUnit)}, low ${formatTemperature(day.low, temperatureUnit)}, ${day.rainChance}% rain, ${day.rainMm.toFixed(1)} millimeters, ${intensity} intensity`}
                 >
                   <div className="weekly-day">
@@ -812,23 +795,6 @@ export default function WeatherDashboard() {
           </div>
         </section>
       </div>
-
-      <nav className="bottom-nav">
-        {[
-          { label: "Home", icon: "🏠" },
-          { label: "Forecast", icon: "☁️" },
-          { label: "Dashboard", icon: "📊" },
-          { label: "About", icon: "ℹ️" },
-        ].map((tab) => (
-          <button
-            key={tab.label}
-            onClick={() => handleNavigation(tab.label)}
-            className={`nav-tab ${activeTab === tab.label ? 'active' : ''}`}
-          >
-            <span>{tab.icon}</span> {isMobile ? "" : tab.label}
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }

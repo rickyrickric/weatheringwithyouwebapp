@@ -13,7 +13,6 @@ const Home: FC = () => {
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
   const [isClearing, setIsClearing] = useState(false);
-  const [activeTab, setActiveTab] = useState("Home");
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
 
   const currentHour = now.getHours();
@@ -71,31 +70,11 @@ const Home: FC = () => {
     navigate("/forecast");
   }, [navigate]);
 
-  const handleNavigation = (label: string) => {
-    setActiveTab(label);
-    switch(label) {
-      case "Home":
-        navigate("/");
-        break;
-      case "Forecast":
-        navigate("/forecast");
-        break;
-      case "Dashboard":
-        navigate("/dashboard");
-        break;
-      case "About":
-        navigate("/about");
-        break;
-      default:
-        break;
-    }
-  };
-
   // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(currentWeather.weatherId, currentHour);
 
   return (
-    <div className="relative w-full min-h-screen overflow-y-auto page-enter bg-[#121826] pb-[100px] flex flex-col items-center">
+    <div className="relative w-full min-h-screen overflow-y-auto page-enter bg-[#121826] flex flex-col items-center" style={{ paddingBottom: 'calc(var(--nav-h) + 28px)' }}>
       {/* Restored background image with soft blur and dimming */}
       <div
         className="absolute inset-0 z-0 bg-center bg-cover"
@@ -205,23 +184,6 @@ const Home: FC = () => {
         </p>
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        {[
-          { label: "Home", icon: "bi-house-fill" },
-          { label: "Forecast", icon: "bi-cloud-sun-fill" },
-          { label: "Dashboard", icon: "bi-graph-up" },
-          { label: "About", icon: "bi-info-circle-fill" },
-        ].map((tab) => (
-          <button
-            key={tab.label}
-            onClick={() => handleNavigation(tab.label)}
-            className={`nav-tab ${activeTab === tab.label ? 'active' : ''}`}
-          >
-            <i className={`bi ${tab.icon}`} aria-hidden="true"></i> {tab.label}
-          </button>
-        ))}
-      </nav>
     </div>
   );
 };

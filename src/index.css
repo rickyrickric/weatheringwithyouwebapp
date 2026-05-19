@@ -270,6 +270,22 @@ code {
   box-sizing: border-box;
 }
 
+/* Shared content width — used by TabNavigation, Dashboard, About */
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 2.5vw, 32px);
+  padding-bottom: calc(var(--nav-h) + 28px);
+  box-sizing: border-box;
+}
+
+/* Semantic contrast utilities (Dashboard / About / shared components) */
+.text-label-contrast { color: var(--txt-label); }
+.text-label-alt-contrast { color: var(--txt-label); }
+.text-secondary-contrast { color: var(--txt-secondary); }
+.text-tertiary-contrast { color: var(--txt-tertiary); }
+
 /* Universal tab container */
 .tab-container {
   min-height: 100vh;
@@ -1062,15 +1078,11 @@ code {
 /* Forecast page */
 .forecast-page {
   padding-top: 8px;
-  padding-bottom: calc(var(--nav-h) + 30px);
-  padding-bottom: 0;
 }
 .forecast-content {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 clamp(16px, 2.5vw, 28px) calc(var(--nav-h) + 30px);
-  overflow: visible;
   padding: 0 clamp(16px, 2.5vw, 28px) calc(var(--nav-h) + 48px);
   overflow-x: hidden;
   overflow-y: visible;
@@ -1385,7 +1397,7 @@ code {
 }
 
 .home-hero-card .tagline {
-  color: rgba(255,255,255,0.72) !important;
+  color: rgba(255,255,255,0.85) !important;
   text-shadow: 0 1px 8px rgba(0,0,0,0.62) !important;
 }
 
@@ -2422,80 +2434,6 @@ code {
   flex-wrap: wrap;
 }
 
-/* ── ML-enhanced badge with hover tooltip ── */
-.ml-badge-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  cursor: default;
-}
-
-.ml-enhanced-badge {
-  border: 1px solid rgba(56,189,248,0.34);
-  border-radius: 999px;
-  background: rgba(8,47,73,0.46);
-  color: #bae6fd;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.10em;
-  line-height: 1;
-  padding: 5px 7px;
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-.ml-enhanced-badge:first-child {
-  font-size: 13px;
-  padding: 4px 5px;
-  letter-spacing: 0;
-  animation: mlSparkle 2.4s ease-in-out infinite;
-}
-
-.ml-enhanced-badge-label {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-.ml-badge-tooltip {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 8px);
-  transform: translateX(-50%);
-  min-width: 240px;
-  max-width: 320px;
-  border: 1px solid rgba(56,189,248,0.28);
-  border-radius: 8px;
-  background: rgba(6,24,44,0.96);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.48);
-  color: #bae6fd;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1.45;
-  padding: 10px 14px;
-  text-transform: none;
-  white-space: normal;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.22s ease, transform 0.22s ease;
-  transform: translateX(-50%) translateY(4px);
-  z-index: 20;
-}
-
-.ml-badge-wrapper:hover .ml-badge-tooltip,
-.ml-badge-wrapper:focus-within .ml-badge-tooltip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-@keyframes mlSparkle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
-}
-
 .daylight-card h3 {
   color: rgba(255,255,255,0.98);
   font-family: var(--font-body);
@@ -2568,16 +2506,44 @@ code {
 }
 
 .weekly-outlook-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 8px;
 }
 
-.weekly-rain-axis {
+/* Shared 6-column grid: day | summary | rain bar | hi/lo | rain %/mm | badge */
+.weekly-grid-columns {
   display: grid;
-  grid-template-columns: 76px minmax(130px, 1.1fr) minmax(120px, 1fr) 86px 72px auto;
-  gap: 12px;
+  grid-template-columns: 4.75rem minmax(0, 1.15fr) minmax(6.5rem, 1fr) 5.25rem 4.5rem 4.75rem;
+  column-gap: 12px;
+  align-items: center;
+}
+
+.weekly-column-headers {
   margin-top: 10px;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.10em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.weekly-column-headers span:nth-child(4),
+.weekly-column-headers span:nth-child(5),
+.weekly-column-headers span:nth-child(6) {
+  text-align: right;
+}
+
+.weekly-column-headers span:nth-child(6) {
+  justify-self: end;
+}
+
+.weekly-rain-axis {
+  margin-top: 4px;
+  padding: 0 12px;
   color: #cbd5e1;
   font-size: 11px;
   font-weight: 900;
@@ -2586,37 +2552,45 @@ code {
   text-transform: uppercase;
 }
 
-.weekly-rain-axis::before {
+.weekly-rain-axis.weekly-grid-columns::before {
   content: "";
   grid-column: 3;
   grid-row: 1;
-  align-self: start;
+  align-self: end;
+  width: 100%;
+  margin-bottom: 4px;
   border-top: 1px solid rgba(255,255,255,0.18);
 }
 
-.weekly-rain-axis span:first-child {
+.weekly-rain-axis.weekly-grid-columns span:first-child {
   grid-column: 3;
   grid-row: 1;
-  padding-top: 7px;
+  align-self: end;
+  justify-self: start;
+  padding-bottom: 6px;
 }
 
-.weekly-rain-axis span:last-child {
+.weekly-rain-axis.weekly-grid-columns span:last-child {
   grid-column: 3;
   grid-row: 1;
+  align-self: end;
   justify-self: end;
-  padding-top: 7px;
+  padding-bottom: 6px;
 }
 
 .weekly-row {
-  display: grid;
-  grid-template-columns: 76px minmax(130px, 1.1fr) minmax(120px, 1fr) 86px 72px auto;
-  align-items: center;
-  gap: 12px;
   border: 1px solid rgba(255,255,255,0.14);
   border-left: 5px solid rgba(148,163,184,0.55);
   border-radius: 8px;
   background: rgba(255,255,255,0.07);
   padding: 10px 12px;
+}
+
+.weekly-day {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 .weekly-day strong,
@@ -2625,6 +2599,7 @@ code {
   display: block;
   color: rgba(255,255,255,0.98);
   font-weight: 900;
+  line-height: 1.15;
 }
 
 .weekly-day span,
@@ -2634,6 +2609,30 @@ code {
   color: #cbd5e1;
   font-size: 12px;
   font-weight: 800;
+  line-height: 1.2;
+}
+
+.weekly-summary {
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.weekly-temps,
+.weekly-rain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.weekly-row .intensity-badge {
+  justify-self: end;
+  align-self: center;
+  min-width: 4.5rem;
+  text-align: center;
 }
 
 .weekly-temp-range {
@@ -2788,32 +2787,70 @@ code {
     grid-template-rows: auto auto;
   }
 
-  .weekly-row {
-    grid-template-columns: 62px 1fr auto;
-    gap: 8px;
+  .weekly-grid-columns {
+    grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      "day temps badge"
+      "summary summary summary"
+      "bar bar bar"
+      "rain rain rain";
+    column-gap: 10px;
+    row-gap: 8px;
+  }
+
+  .weekly-column-headers {
+    display: none;
   }
 
   .weekly-rain-axis {
+    grid-template-areas: "bar";
     grid-template-columns: 1fr;
-    gap: 0;
+    margin-top: 8px;
+    padding: 0 12px;
   }
 
-  .weekly-rain-axis::before,
+  .weekly-rain-axis::before {
+    grid-area: bar;
+    grid-column: auto;
+    grid-row: auto;
+    margin-bottom: 6px;
+  }
+
   .weekly-rain-axis span:first-child,
   .weekly-rain-axis span:last-child {
-    grid-column: 1;
+    grid-area: bar;
+    grid-column: auto;
+    grid-row: auto;
+    padding-top: 0;
   }
 
-  .weekly-summary,
-  .weekly-temp-range {
-    grid-column: 1 / -1;
+  .weekly-rain-axis span:first-child {
+    justify-self: start;
+    align-self: end;
+    margin-bottom: 2px;
   }
 
+  .weekly-rain-axis span:last-child {
+    justify-self: end;
+    align-self: end;
+    margin-bottom: 2px;
+  }
+
+  .weekly-day { grid-area: day; }
+  .weekly-summary { grid-area: summary; }
+  .weekly-temp-range { grid-area: bar; min-height: 12px; }
+  .weekly-temps { grid-area: temps; align-items: flex-end; }
   .weekly-rain {
-    text-align: right;
+    grid-area: rain;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    white-space: normal;
   }
 
-  .intensity-badge {
+  .weekly-row .intensity-badge {
+    grid-area: badge;
     justify-self: end;
   }
 

@@ -1,33 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("Dashboard");
-  // Get dynamic text color based on background state
   const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
-
-  const handleNavigation = (label: string) => {
-    setActiveTab(label);
-    switch(label) {
-      case "Home":
-        navigate("/");
-        break;
-      case "Forecast":
-        navigate("/forecast");
-        break;
-      case "Dashboard":
-        navigate("/dashboard");
-        break;
-      case "About":
-        navigate("/about");
-        break;
-      default:
-        break;
-    }
-  };
 
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
@@ -57,7 +33,7 @@ const Dashboard: React.FC = () => {
               <div className="accuracy-metrics">
                 {/* 24h Accuracy */}
                 <div className="space-y-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-label-alt-contrast">24-Hour Forecast</p>
+                  <p className="accuracy-metric-label">24-Hour Forecast</p>
                   <div className="text-4xl font-bold text-gray-200">92%</div>
                   <div className="w-full bg-white/5 rounded-full h-2.5">
                     <div
@@ -65,12 +41,12 @@ const Dashboard: React.FC = () => {
                       style={{ width: '92%' }}
                     />
                   </div>
-                  <p className="text-xs text-label-alt-contrast">RMSE: 1.2°C | Validation: 847 observations</p>
+                  <p className="accuracy-metric-stat">RMSE: 1.2°C | Validation: 847 observations</p>
                 </div>
 
                 {/* 7d Accuracy */}
                 <div className="space-y-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-label-alt-contrast">7-Day Forecast</p>
+                  <p className="accuracy-metric-label">7-Day Forecast</p>
                   <div className="text-4xl font-bold text-gray-200">78%</div>
                   <div className="w-full bg-white/5 rounded-full h-2.5">
                     <div
@@ -78,12 +54,12 @@ const Dashboard: React.FC = () => {
                       style={{ width: '78%' }}
                     />
                   </div>
-                  <p className="text-xs text-label-alt-contrast">RMSE: 2.1°C | Validation: 156 observations</p>
+                  <p className="accuracy-metric-stat">RMSE: 2.1°C | Validation: 156 observations</p>
                 </div>
 
                 {/* Rain Detection */}
                 <div className="space-y-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-label-alt-contrast">Rain Detection</p>
+                  <p className="accuracy-metric-label">Rain Detection</p>
                   <div className="text-4xl font-bold text-gray-200">85%</div>
                   <div className="w-full bg-white/5 rounded-full h-2.5">
                     <div
@@ -91,18 +67,18 @@ const Dashboard: React.FC = () => {
                       style={{ width: '85%' }}
                     />
                   </div>
-                  <p className="text-xs text-label-alt-contrast">Precision: 87% | Recall: 83%</p>
+                  <p className="accuracy-metric-stat">Precision: 87% | Recall: 83%</p>
                 </div>
 
                 {/* Model Type */}
                 <div className="space-y-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-label-alt-contrast">Model Configuration</p>
+                  <p className="accuracy-metric-label">Model Configuration</p>
                   <div className="text-sm font-semibold text-gray-200">Polynomial Regression</div>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">Degree 4</span>
-                    <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">6-month training</span>
+                    <span className="chip">Degree 4</span>
+                    <span className="chip">6-month training</span>
                   </div>
-                  <p className="text-xs text-label-alt-contrast">Last trained: May 2026</p>
+                  <p className="accuracy-metric-stat">Last trained: May 2026</p>
                 </div>
               </div>
             </GlassCard>
@@ -231,41 +207,6 @@ const Dashboard: React.FC = () => {
           <p>Model validation: Live • System healthy ✓</p>
         </div>
 
-        {/* Bottom Navigation */}
-        <nav style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          background: "rgba(15,20,30,0.90)",
-          borderTop: "1px solid rgba(255,255,255,0.10)",
-          backdropFilter: "blur(16px)",
-          display: "flex", justifyContent: "center", gap: 8,
-          padding: "12px 0 16px",
-          zIndex: 100,
-        }}>
-          {[
-          { label: "Home", icon: "bi-house-fill" },
-            { label: "Forecast", icon: "bi-cloud-sun-fill" },
-            { label: "Dashboard", icon: "bi-graph-up" },
-            { label: "About", icon: "bi-info-circle-fill" },
-          ].map((tab) => (
-            <button
-              key={tab.label}
-              onClick={() => handleNavigation(tab.label)}
-              style={{
-                background: activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.08)",
-                border: "1px solid " + (activeTab === tab.label ? "#e07b39" : "rgba(255,255,255,0.12)"),
-                borderRadius: 24,
-                color: "#f5ede0",
-                padding: "8px 20px",
-                fontSize: 13,
-                cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 6,
-                transition: "all 0.2s",
-              }}
-            >
-              <i className={`bi ${tab.icon}`} aria-hidden="true"></i> {tab.label}
-            </button>
-          ))}
-        </nav>
       </div>
     </div>
   );
