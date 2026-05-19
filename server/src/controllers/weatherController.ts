@@ -56,6 +56,20 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
   }
 }
 
+export async function getAdvisories(req: Request, res: Response, next: NextFunction) {
+  try {
+    const forecastBundle = await getForecastBundle(getLocationQuery(req), { bypassCache: true });
+
+    res.json({
+      generatedAt: new Date().toISOString(),
+      source: 'openweather',
+      alerts: forecastBundle.alerts,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getSunshineWindows(req: Request, res: Response, next: NextFunction) {
   try {
     const rawData = await getForecast(getLocationQuery(req));

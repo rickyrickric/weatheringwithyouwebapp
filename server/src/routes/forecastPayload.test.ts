@@ -106,4 +106,27 @@ describe('forecast payload copy', () => {
       tone: 'advisory',
     });
   });
+
+  it('returns realtime advisories with no-store cache headers', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        list: [
+          forecastEntry(1, 0.7, 10, 30),
+          forecastEntry(4, 0.62, 7, 29),
+          forecastEntry(7, 0.42, 1, 28),
+        ],
+      },
+    });
+
+    const response = await request(createApp()).get('/api/v1/weather/advisories?city=Tagum%20Live');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['cache-control']).toContain('no-store');
+    expect(response.body.generatedAt).toBeTruthy();
+    expect(response.body.alerts[0]).toMatchObject({
+      title: 'Afternoon Thunderstorm Advisory',
+      urgency: 'Moderate',
+      tone: 'moderate',
+    });
+  });
 });

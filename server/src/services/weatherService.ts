@@ -419,7 +419,10 @@ export async function getForecast(location?: LocationQuery): Promise<ChartDataPo
   }
 }
 
-export async function getForecastBundle(location?: LocationQuery): Promise<{
+export async function getForecastBundle(
+  location?: LocationQuery,
+  options: { bypassCache?: boolean } = {},
+): Promise<{
   forecast: ChartDataPoint[];
   dailyOutlook: DailyOutlook[];
   alerts: WeatherAlert[];
@@ -432,12 +435,14 @@ export async function getForecastBundle(location?: LocationQuery): Promise<{
       appid: apiKey,
     };
     const cacheKey = `${getCacheKey('forecast', params)}:bundle:${FORECAST_CACHE_VERSION}`;
-    const cached = getCached<{
-      forecast: ChartDataPoint[];
-      dailyOutlook: DailyOutlook[];
-      alerts: WeatherAlert[];
-    }>(cacheKey);
-    if (cached) return cached;
+    if (!options.bypassCache) {
+      const cached = getCached<{
+        forecast: ChartDataPoint[];
+        dailyOutlook: DailyOutlook[];
+        alerts: WeatherAlert[];
+      }>(cacheKey);
+      if (cached) return cached;
+    }
 
     const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
     const forecast = mapOpenWeatherForecast(data);
@@ -448,7 +453,9 @@ export async function getForecastBundle(location?: LocationQuery): Promise<{
       alerts: mapTagumAlerts(dailyOutlook, forecast),
     };
 
-    setCached(cacheKey, bundle);
+    if (!options.bypassCache) {
+      setCached(cacheKey, bundle);
+    }
     return bundle;
   } catch (error) {
     throw new Error(getAxiosErrorMessage(error, 'forecast bundle'), { cause: error });

@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import {
+  getAdvisories,
   getAccuracy,
   getCurrent,
   getForecastData,
   getSunshineWindows,
 } from '../controllers/weatherController';
-import { setCacheHeaders } from '../middleware/cacheHeaders';
+import { setCacheHeaders, setNoStoreHeaders } from '../middleware/cacheHeaders';
 import { locationQuerySchema, validateQuery } from '../middleware/validateRequest';
 
 const router = Router();
@@ -42,6 +43,7 @@ router.get('/weather/current', validateQuery(locationQuerySchema), setCacheHeade
  */
 router.get('/weather/forecast', validateQuery(locationQuerySchema), setCacheHeaders(60 * 60), getForecastData);
 router.get('/weather/forecast/24h', validateQuery(locationQuerySchema), setCacheHeaders(60 * 60), getForecastData);
+router.get('/weather/advisories', validateQuery(locationQuerySchema), setNoStoreHeaders, getAdvisories);
 router.get(
   '/weather/sunshine-windows',
   validateQuery(locationQuerySchema),

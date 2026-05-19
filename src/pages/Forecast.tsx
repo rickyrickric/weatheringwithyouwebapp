@@ -7,6 +7,7 @@ import { getWeatherHeroImage } from "../utils/weatherHeroImage";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
+const ADVISORY_REFRESH_MS = 60 * 1000;
 
 type TemperatureUnit = "c" | "f";
 type WindUnit = "kmh" | "mph";
@@ -18,6 +19,12 @@ interface ForecastHour {
   temp: number;
   rain: number;
   rainMm: number;
+}
+
+interface AdvisoryResponse {
+  generatedAt: string;
+  source: "openweather";
+  alerts: WeatherAlert[];
 }
 
 const forecastData: ForecastHour[] = Array.from({ length: 24 }, (_, hour) => {
@@ -196,6 +203,8 @@ export default function WeatherDashboard() {
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [chartData, setChartData] = useState(forecastData);
   const [tagumAlerts, setTagumAlerts] = useState<WeatherAlert[]>(fallbackTagumAlerts);
+  const [lastAdvisoryUpdatedAt, setLastAdvisoryUpdatedAt] = useState(new Date());
+  const [isAdvisoryRefreshing, setIsAdvisoryRefreshing] = useState(true);
   const [sevenDayOutlook, setSevenDayOutlook] = useState<DailyOutlook[]>(fallbackSevenDayOutlook);
   const [sourceConfidence, setSourceConfidence] = useState({ label: "Forecast powered by OpenWeather and PAGASA", value: "High" });
   const [weatherWindows, setWeatherWindows] = useState(windows);
@@ -289,6 +298,7 @@ export default function WeatherDashboard() {
 
         if (data.alerts && data.alerts.length > 0) {
           setTagumAlerts(data.alerts);
+          setLastAdvisoryUpdatedAt(new Date(data.generatedAt || Date.now()));
         }
 
         if (data.dailyOutlook && data.dailyOutlook.length > 0) {
@@ -315,6 +325,47 @@ export default function WeatherDashboard() {
 
     void fetchForecast();
     const timer = window.setInterval(fetchForecast, FORECAST_REFRESH_MS);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let controller = new AbortController();
+
+    const fetchAdvisories = async () => {
+      controller.abort();
+      controller = new AbortController();
+      setIsAdvisoryRefreshing(true);
+
+      try {
+        const response = await fetch(`${WEATHER_API_BASE}/advisories?refresh=${Date.now()}`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Advisory request failed: ${response.status}`);
+        }
+
+        const data = await response.json() as AdvisoryResponse;
+        if (data.alerts.length > 0) {
+          setTagumAlerts(data.alerts);
+          setLastAdvisoryUpdatedAt(new Date(data.generatedAt || Date.now()));
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching advisory data:', error);
+        }
+      } finally {
+        setIsAdvisoryRefreshing(false);
+      }
+    };
+
+    void fetchAdvisories();
+    const timer = window.setInterval(fetchAdvisories, ADVISORY_REFRESH_MS);
 
     return () => {
       controller.abort();
@@ -373,6 +424,7 @@ export default function WeatherDashboard() {
       : accuracy.label;
   const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
   const updatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastUpdatedAt.getTime()) / 1000));
+  const advisoryUpdatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastAdvisoryUpdatedAt.getTime()) / 1000));
   const windMetric = formatWind(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined, windUnit);
   const nightNow = isNightNow(now);
   const dewPointAgeSeconds = lastKnownDewPoint
@@ -565,7 +617,11 @@ export default function WeatherDashboard() {
           </div>
         </header>
 
-        <section className="forecast-alerts" aria-live="polite" aria-label="Active Tagum weather alerts">
+        <section className="forecast-alerts" aria-live="polite" aria-label="Realtime Tagum weather advisories">
+          <div className="forecast-alerts-status">
+            <span className={isAdvisoryRefreshing ? "live-dot advisory-dot-refreshing" : "live-dot"} aria-hidden="true" />
+            <span>{isAdvisoryRefreshing ? "Fetching latest advisories" : `Advisories reported ${formatElapsed(advisoryUpdatedSecondsAgo)}`}</span>
+          </div>
           {tagumAlerts.map((alert) => (
             <article key={alert.title} className={`alert-card alert-${alert.tone}`}>
               <div className="alert-card-header">
