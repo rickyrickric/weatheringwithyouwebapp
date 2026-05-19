@@ -15,6 +15,15 @@ The project is designed as a school web application, but it is structured like a
 - Adapts the visual background to the active weather condition and time of day.
 - Includes a dashboard view for model and pipeline context.
 - Supports optional Supabase storage for daily observations and forecast snapshots.
+
+## Recent Updates (May 2026)
+
+- **Data Consistency:** Standardized time labels across the UI (for example, 23:59 → 23:00).
+- **NOW Marker:** Enhanced the "NOW" marker for clearer current-time visibility in timeline views.
+- **Redundancy Removal:** Removed duplicate window references and simplified sunshine-window logic.
+- **Visual Tweaks:** Promoted `DateAnchor` prominence, lightened UI icons, and adjusted visual hierarchy for readability.
+- **QA & Deployment:** Changes tested in-browser and deployed to GitHub with zero new errors.
+
 - Shows live system status (footer) with pipeline health and forecast accuracy.
 - Uses safe local environment files so API keys do not need to be committed.
 
