@@ -2170,6 +2170,131 @@ code {
   vertical-align: middle;
 }
 
+.skeleton-line,
+.skeleton-circle,
+.skeleton-pill,
+.skeleton-bar,
+.hourly-skeleton-chart {
+  display: block;
+  background: linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.28), rgba(255,255,255,0.10));
+  background-size: 220% 100%;
+  animation: skeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.skeleton-line {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.skeleton-line-short { width: 58%; }
+.skeleton-line-shorter { width: 42%; }
+.skeleton-line-title { width: 76%; height: 13px; }
+.skeleton-line-value { width: 68%; height: 24px; }
+.skeleton-line-temp { width: 46%; height: 58px; border-radius: 8px; }
+
+.skeleton-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.skeleton-pill {
+  width: 70px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.skeleton-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.condition-tile-skeleton {
+  justify-content: center;
+  gap: 10px;
+}
+
+.condition-tile-skeleton .skeleton-circle,
+.condition-tile-skeleton .skeleton-line {
+  margin-inline: auto;
+}
+
+.forecast-weather-card-loading > .forecast-weather-card-time,
+.forecast-weather-card-loading > .forecast-weather-card-body {
+  opacity: 0;
+}
+
+.forecast-weather-card-skeleton {
+  position: absolute;
+  inset: 18px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hourly-forecast-card-loading {
+  min-height: 330px;
+}
+
+.hourly-forecast-card-loading .hourly-chart-header {
+  min-height: 26px;
+}
+
+.hourly-skeleton-chart {
+  height: 196px;
+  min-width: 580px;
+  border-radius: 8px;
+  background-color: rgba(124, 95, 74, 0.10);
+}
+
+.hourly-strip-loading {
+  min-width: 580px;
+}
+
+.hourly-tile-skeleton {
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: rgba(255,255,255,0.52);
+}
+
+.hourly-tile-skeleton .skeleton-line {
+  width: 70%;
+  background: linear-gradient(90deg, rgba(124,95,74,0.12), rgba(124,95,74,0.28), rgba(124,95,74,0.12));
+  background-size: 220% 100%;
+}
+
+.hourly-tile-skeleton .skeleton-circle {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(90deg, rgba(124,95,74,0.12), rgba(124,95,74,0.28), rgba(124,95,74,0.12));
+  background-size: 220% 100%;
+}
+
+.weekly-row-skeleton {
+  pointer-events: none;
+}
+
+.weekly-row-skeleton .weekly-day {
+  gap: 7px;
+}
+
+.weather-window-card-skeleton {
+  min-height: 216px;
+  gap: 12px;
+}
+
+.weather-window-card-skeleton .weather-window-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .forecast-unit-toggles {
   display: flex;
   flex-wrap: wrap;

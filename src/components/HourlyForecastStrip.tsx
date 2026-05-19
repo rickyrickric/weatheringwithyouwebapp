@@ -15,6 +15,7 @@ interface HourlyForecastStripProps {
   hourlyData: HourlyData[];
   temperatureUnit?: 'c' | 'f';
   timeFormat?: '12h' | '24h';
+  isLoading?: boolean;
 }
 
 type RainIntensity = 'none' | 'light' | 'moderate' | 'heavy';
@@ -205,7 +206,32 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   hourlyData,
   temperatureUnit = 'c',
   timeFormat = '12h',
+  isLoading = false,
 }) => {
+  if (isLoading) {
+    return (
+      <article className="hourly-forecast-card hourly-forecast-card-loading" role="region" aria-label="Loading hourly forecast">
+        <div className="hourly-chart-header">
+          <span className="skeleton-line skeleton-line-title" />
+          <span className="skeleton-line skeleton-line-short" />
+        </div>
+        <div className="hourly-scroll-sync" aria-hidden="true">
+          <div className="hourly-skeleton-chart" />
+          <div className="hourly-strip hourly-strip-loading">
+            {Array.from({ length: 8 }, (_, index) => (
+              <div key={index} className="hourly-tile hourly-tile-skeleton">
+                <span className="skeleton-line skeleton-line-short" />
+                <span className="skeleton-circle" />
+                <span className="skeleton-line" />
+                <span className="skeleton-line skeleton-line-short" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   const normalizedData = expandToHourlyData(hourlyData, temperatureUnit, timeFormat);
 
   const temperatures = normalizedData.map((hour) => hour.temperature);

@@ -196,6 +196,7 @@ export default function WeatherDashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather>(MOCK_WEATHER);
   const [hasLiveCurrentWeather, setHasLiveCurrentWeather] = useState(false);
+  const [isCurrentWeatherLoading, setIsCurrentWeatherLoading] = useState(true);
   const [lastKnownDewPoint, setLastKnownDewPoint] = useState<{ value: number; observedAt: Date } | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(new Date());
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("c");
@@ -257,6 +258,8 @@ export default function WeatherDashboard() {
         if ((error as Error).name !== 'AbortError') {
           console.error('Error fetching current weather:', error);
         }
+      } finally {
+        setIsCurrentWeatherLoading(false);
       }
     };
 
@@ -481,6 +484,8 @@ export default function WeatherDashboard() {
           unit: "%",
         }]),
   ];
+  const showCurrentSkeleton = isCurrentWeatherLoading && !hasLiveCurrentWeather;
+  const showForecastSkeleton = isForecastLoading;
 
   return (
     <div className="forecast-scroll-root forecast-page">
@@ -651,7 +656,15 @@ export default function WeatherDashboard() {
             </span>
           </div>
           <div className="conditions-grid">
-            {conditionMetrics.map((item) => (
+            {showCurrentSkeleton ? (
+              Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="condition-tile condition-tile-skeleton" aria-hidden="true">
+                  <span className="skeleton-circle" />
+                  <span className="skeleton-line skeleton-line-short" />
+                  <span className="skeleton-line skeleton-line-value" />
+                </div>
+              ))
+            ) : conditionMetrics.map((item) => (
               <div key={item.label} className="condition-tile">
                 <div className="condition-tile-icon" style={{ fontSize: isMobile ? 16 : 18 }}>{item.icon}</div>
                 <div className="condition-tile-label" style={{ fontSize: isMobile ? 9 : 10 }}>{item.label}</div>
@@ -667,9 +680,17 @@ export default function WeatherDashboard() {
         <section className="forecast-chart-layout">
           <div className="forecast-hero-stack">
           <aside
-            className={`forecast-weather-card forecast-weather-card-${weatherHeroImage.kind}`}
+            className={`forecast-weather-card forecast-weather-card-${weatherHeroImage.kind} ${showCurrentSkeleton ? "forecast-weather-card-loading" : ""}`}
             style={{ backgroundImage: `url(${visibleHeroImage})` }}
           >
+            {showCurrentSkeleton && (
+              <div className="forecast-weather-card-skeleton" aria-hidden="true">
+                <span className="skeleton-line skeleton-line-short" />
+                <span className="skeleton-line skeleton-line-temp" />
+                <span className="skeleton-line skeleton-line-title" />
+                <span className="skeleton-line" />
+              </div>
+            )}
             <div className="forecast-weather-card-time">{timeStr}</div>
             <div className="forecast-weather-card-body">
               <div className="forecast-weather-card-temp">
@@ -704,7 +725,7 @@ export default function WeatherDashboard() {
             </aside>
           </div>
 
-          <HourlyForecastStrip hourlyData={chartData} temperatureUnit={temperatureUnit} timeFormat={timeFormat} />
+          <HourlyForecastStrip hourlyData={chartData} temperatureUnit={temperatureUnit} timeFormat={timeFormat} isLoading={showForecastSkeleton} />
         </section>
 
         <section className="weekly-outlook" aria-label="Seven day Tagum weather outlook">
@@ -732,7 +753,21 @@ export default function WeatherDashboard() {
             <span>{weeklyRainScaleMax} mm</span>
           </div>
           <div className="weekly-outlook-list">
-            {sevenDayOutlook.map((day) => {
+            {showForecastSkeleton ? (
+              Array.from({ length: 7 }, (_, index) => (
+                <article key={index} className="weekly-row weekly-grid-columns weekly-row-skeleton" aria-hidden="true">
+                  <div className="weekly-day">
+                    <span className="skeleton-line skeleton-line-short" />
+                    <span className="skeleton-line skeleton-line-shorter" />
+                  </div>
+                  <span className="skeleton-line skeleton-line-title" />
+                  <span className="skeleton-bar" />
+                  <span className="skeleton-line skeleton-line-short" />
+                  <span className="skeleton-line skeleton-line-short" />
+                  <span className="skeleton-pill" />
+                </article>
+              ))
+            ) : sevenDayOutlook.map((day) => {
               const intensity = day.intensity ?? getRainIntensity(day.rainMm);
               const rainWidth = Math.max(3, Math.min(100, (day.rainMm / weeklyRainScaleMax) * 100));
 
@@ -774,7 +809,23 @@ export default function WeatherDashboard() {
             <span>🔶</span> Optimal Weather Windows
           </label>
           <div className="weather-windows-grid">
-            {weatherWindows.map((w) => {
+            {showForecastSkeleton ? (
+              Array.from({ length: 3 }, (_, index) => (
+                <div key={index} className="weather-window-card weather-window-card-skeleton" aria-hidden="true">
+                  <div className="weather-window-header">
+                    <div>
+                      <span className="skeleton-circle" />
+                      <span className="skeleton-line skeleton-line-short" />
+                    </div>
+                    <span className="skeleton-pill" />
+                  </div>
+                  <span className="skeleton-line skeleton-line-title" />
+                  <span className="skeleton-line" />
+                  <span className="skeleton-line skeleton-line-short" />
+                  <span className="skeleton-line skeleton-line-title" />
+                </div>
+              ))
+            ) : weatherWindows.map((w) => {
               const insight = getWindowInsight(w.label);
 
               return (

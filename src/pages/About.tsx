@@ -77,20 +77,20 @@ const About: React.FC = () => {
                   </h3>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
                     <div className="p-2 bg-white/5 rounded border-l-4 border-amber-400/70 border border-white/10">
-                      <p className="font-semibold text-gray-200 text-sm">FastAPI</p>
-                      <p className="text-[10px] text-label-contrast">Async Python web framework</p>
+                      <p className="font-semibold text-gray-200 text-sm">Express API</p>
+                      <p className="text-[10px] text-label-contrast">Node weather service with circuit breaker</p>
                     </div>
                     <div className="p-2 bg-white/5 rounded border-l-4 border-fuchsia-400/70 border border-white/10">
-                      <p className="font-semibold text-gray-200 text-sm">Scikit-Learn</p>
-                      <p className="text-[10px] text-label-contrast">Polynomial Regression (Degree 4)</p>
+                      <p className="font-semibold text-gray-200 text-sm">Regression.js</p>
+                      <p className="text-[10px] text-label-contrast">Polynomial smoothing and climatology blend</p>
                     </div>
                     <div className="p-2 bg-white/5 rounded border-l-4 border-violet-400/70 border border-white/10">
                       <p className="font-semibold text-gray-200 text-sm">Supabase</p>
-                      <p className="text-[10px] text-label-contrast">PostgreSQL + Auth + Real-time</p>
+                      <p className="text-[10px] text-label-contrast">PostgreSQL cloud sync and fallback storage</p>
                     </div>
                     <div className="p-2 bg-white/5 rounded border border-white/10">
                       <p className="font-semibold text-gray-200 text-xs">OpenWeather API</p>
-                      <p className="text-[10px] text-label-contrast">Live weather data feed</p>
+                      <p className="text-[10px] text-label-contrast">Live current weather and forecast feed</p>
                     </div>
                   </div>
                 </div>
@@ -103,33 +103,33 @@ const About: React.FC = () => {
               <i className="bi bi-diagram-3-fill mr-2" aria-hidden="true"></i>Architecture Overview
             </h2>
             <p className="text-xs text-secondary-contrast mb-3">
-              End-to-end weather intelligence pipeline for Tagum City.
+              End-to-end weather intelligence pipeline for Tagum City with cloud-synced recovery when the live provider is unavailable.
             </p>
             <div className="grid gap-2 grid-auto-fit text-xs">
               <div className="arch-node">
                 <p className="node-label">CSV / APIs</p>
-                <p className="node-sub">OpenWeather + Visual Crossing</p>
+                <p className="node-sub">OpenWeather live feed</p>
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>
               </div>
               <div className="arch-node">
-                <p className="node-label">ML Model</p>
-                <p className="node-sub">Scikit-Learn (Poly Reg)</p>
+                <p className="node-label">Forecast Blend</p>
+                <p className="node-sub">Regression + climatology</p>
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>
               </div>
               <div className="arch-node">
-                <p className="node-label">FastAPI</p>
-                <p className="node-sub">Prediction + Cache</p>
+                <p className="node-label">Express API</p>
+                <p className="node-sub">Cache + circuit breaker</p>
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>
               </div>
               <div className="arch-node">
                 <p className="node-label">Supabase</p>
-                <p className="node-sub">Climate memory</p>
+                <p className="node-sub">Cloud sync fallback</p>
               </div>
               <div className="hidden md:flex items-center justify-center">
                 <span className="text-[#E8541A] text-xl">➜</span>
@@ -161,13 +161,13 @@ const About: React.FC = () => {
                 </li>
                 <li className="key-feature-item flex items-start gap-1.5">
                   <span className="text-[#E8541A]">→</span>
-                  <span><span className="key-feature-label">Climate Memory:</span> 6-month historical baseline</span>
+                  <span><span className="key-feature-label">Climate Memory:</span> 90-day hourly baseline</span>
                 </li>
               </ul>
               <ul className="space-y-2 text-xs">
                 <li className="key-feature-item flex items-start gap-1.5">
                   <span className="text-[#E8541A]">→</span>
-                  <span><span className="key-feature-label">Prayer System:</span> Log sunshine wishes (future: gamification)</span>
+                  <span><span className="key-feature-label">Cloud Sync Recovery:</span> Serves latest synced weather when OpenWeather is down</span>
                 </li>
                 <li className="key-feature-item flex items-start gap-1.5">
                   <span className="text-[#E8541A]">→</span>
