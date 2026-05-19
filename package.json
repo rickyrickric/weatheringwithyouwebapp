@@ -13,6 +13,7 @@
     "test:server": "npm --prefix server test"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",

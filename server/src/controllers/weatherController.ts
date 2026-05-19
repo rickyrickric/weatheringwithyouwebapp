@@ -44,8 +44,11 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
       dailyOutlook: forecastBundle.dailyOutlook,
       alerts: forecastBundle.alerts,
       sourceConfidence: {
-        label: FORECAST_SOURCE_LABEL,
-        value: 'High',
+        label:
+          forecastBundle.providerStatus === 'synced'
+            ? 'Forecast restored from cloud sync while OpenWeather is unavailable'
+            : FORECAST_SOURCE_LABEL,
+        value: forecastBundle.providerStatus === 'synced' ? 'Medium' : 'High',
       },
     };
 

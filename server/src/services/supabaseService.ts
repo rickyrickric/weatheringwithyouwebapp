@@ -30,6 +30,22 @@ type HourlyObservationRow = {
   raw_payload: unknown;
 };
 
+type SyncedCurrentWeatherRow = {
+  temperature: number | string | null;
+  rain_probability: number | string | null;
+  humidity: number | string | null;
+  wind_speed: number | string | null;
+  weather_id: number | string | null;
+  raw_payload: unknown;
+};
+
+type SyncedForecastRow = {
+  target_time: string | null;
+  predicted_temperature: number | string | null;
+  predicted_rain_probability: number | string | null;
+  raw_payload: unknown;
+};
+
 let climatologyCache:
   | {
       key: string;
@@ -90,6 +106,28 @@ const toNumber = (value: number | string | null | undefined, fallback = 0) => {
   if (value === null || value === undefined) return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const isCurrentWeatherPayload = (payload: unknown): payload is CurrentWeather => {
+  if (!payload || typeof payload !== 'object') return false;
+  const candidate = payload as Partial<CurrentWeather>;
+  return (
+    typeof candidate.temperature === 'number' &&
+    typeof candidate.rainChance === 'number' &&
+    typeof candidate.humidity === 'number' &&
+    typeof candidate.windSpeed === 'number'
+  );
+};
+
+const isForecastPointPayload = (payload: unknown): payload is { point: ChartDataPoint } => {
+  if (!payload || typeof payload !== 'object') return false;
+  const point = (payload as { point?: Partial<ChartDataPoint> }).point;
+  return (
+    !!point &&
+    typeof point.time === 'string' &&
+    typeof point.temperature === 'number' &&
+    typeof point.rainProbability === 'number'
+  );
 };
 
 export async function storeDailyObservation(weather: CurrentWeather) {
@@ -238,6 +276,89 @@ export async function getClimatology90d(): Promise<HourlyClimatologyPoint[]> {
   return value;
 }
 
+export async function getLatestSyncedCurrentWeather(): Promise<CurrentWeather | null> {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+
+  const endpoint = new URL(`${config.url}/rest/v1/${config.hourlyObservationsTable}`);
+  endpoint.searchParams.set('location_id', `eq.${config.locationId}`);
+  endpoint.searchParams.set(
+    'select',
+    [
+      'temperature',
+      'rain_probability',
+      'humidity',
+      'wind_speed',
+      'weather_id',
+      'raw_payload',
+    ].join(','),
+  );
+  endpoint.searchParams.set('order', 'observed_at.desc');
+  endpoint.searchParams.set('limit', '1');
+
+  const response = await fetch(endpoint, {
+    headers: postgrestHeaders(config.serviceRoleKey),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Supabase current weather read failed: ${response.status} ${message}`);
+  }
+
+  const [row] = (await response.json()) as SyncedCurrentWeatherRow[];
+  if (!row) return null;
+  if (isCurrentWeatherPayload(row.raw_payload)) return row.raw_payload;
+
+  return {
+    temperature: toNumber(row.temperature),
+    rainChance: toNumber(row.rain_probability),
+    humidity: toNumber(row.humidity),
+    windSpeed: toNumber(row.wind_speed),
+    weatherId: row.weather_id === null ? undefined : toNumber(row.weather_id),
+  };
+}
+
+export async function getLatestSyncedForecast(): Promise<ChartDataPoint[]> {
+  const config = getSupabaseConfig();
+  if (!config) return [];
+
+  const endpoint = new URL(`${config.url}/rest/v1/${config.forecastsTable}`);
+  endpoint.searchParams.set('location_id', `eq.${config.locationId}`);
+  endpoint.searchParams.set(
+    'select',
+    [
+      'target_time',
+      'predicted_temperature',
+      'predicted_rain_probability',
+      'raw_payload',
+    ].join(','),
+  );
+  endpoint.searchParams.set('order', 'generated_at.desc,target_time.asc');
+  endpoint.searchParams.set('limit', '24');
+
+  const response = await fetch(endpoint, {
+    headers: postgrestHeaders(config.serviceRoleKey),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Supabase forecast read failed: ${response.status} ${message}`);
+  }
+
+  const rows = (await response.json()) as SyncedForecastRow[];
+  return rows
+    .map((row) => {
+      if (isForecastPointPayload(row.raw_payload)) return row.raw_payload.point;
+
+      return {
+        time: row.target_time || '00:00',
+        temperature: toNumber(row.predicted_temperature),
+        rainProbability: toNumber(row.predicted_rain_probability),
+      };
+    })
+    .sort((left, right) => left.time.localeCompare(right.time));
+}
+
 export async function storeDailyForecast(response: ForecastResponse) {
   const config = getSupabaseConfig();
   if (!config) return;
@@ -277,6 +398,24 @@ export async function tryGetClimatology90d(): Promise<HourlyClimatologyPoint[]> 
     return await getClimatology90d();
   } catch (error) {
     logger.warn({ err: error }, 'Supabase climatology read skipped');
+    return [];
+  }
+}
+
+export async function tryGetLatestSyncedCurrentWeather(): Promise<CurrentWeather | null> {
+  try {
+    return await getLatestSyncedCurrentWeather();
+  } catch (error) {
+    logger.warn({ err: error }, 'Supabase current weather fallback skipped');
+    return null;
+  }
+}
+
+export async function tryGetLatestSyncedForecast(): Promise<ChartDataPoint[]> {
+  try {
+    return await getLatestSyncedForecast();
+  } catch (error) {
+    logger.warn({ err: error }, 'Supabase forecast fallback skipped');
     return [];
   }
 }

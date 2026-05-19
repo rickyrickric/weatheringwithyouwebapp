@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { createRequire } from 'module';
 import { LocationQuery } from '../middleware/validateRequest';
+import {
+  tryGetLatestSyncedCurrentWeather,
+  tryGetLatestSyncedForecast,
+} from './supabaseService';
 import { ChartDataPoint, CurrentWeather, DailyOutlook, RainIntensity, WeatherAlert } from '../types';
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
@@ -124,14 +128,116 @@ const getCacheKey = (endpoint: OpenWeatherEndpoint, params: OpenWeatherParams) =
     .map(([key, value]) => `${key}=${value}`)
     .join('&')}`;
 
-const getCached = <T>(key: string) => {
+const getCached = <T>(key: string, options: { allowStale?: boolean } = {}) => {
   const entry = responseCache.get(key);
   if (!entry) return null;
   if (entry.expiresAt < Date.now()) {
-    responseCache.delete(key);
-    return null;
+    if (!options.allowStale) return null;
+    return entry.value as T;
   }
   return entry.value as T;
+};
+
+const getFallbackCached = <T>(key: string) => getCached<T>(key, { allowStale: true });
+
+const getDailyOutlookFromForecast = (forecast: ChartDataPoint[]): DailyOutlook[] => {
+  if (forecast.length === 0) return [];
+
+  const rainMm = Number(forecast.reduce((sum, point) => sum + (point.rainMm ?? 0), 0).toFixed(1));
+  const rainChance = Math.max(...forecast.map((point) => point.rainProbability), 0);
+  const high = Math.round(Math.max(...forecast.map((point) => point.temperature)));
+  const low = Math.round(Math.min(...forecast.map((point) => point.temperature)));
+  const outlook: DailyOutlook[] = [
+    {
+      day: formatTagumDate(Date.now(), { weekday: 'short' }),
+      date: formatTagumDate(Date.now(), { month: 'short', day: 'numeric' }),
+      high,
+      low,
+      rainChance,
+      rainMm,
+      summary: getDailySummary(rainMm, rainChance, high),
+      intensity: getRainIntensity(rainMm),
+    },
+  ];
+
+  while (outlook.length < 7) {
+    const previous = outlook[outlook.length - 1];
+    const timestamp = Date.now() + outlook.length * 24 * 60 * 60 * 1000;
+    const nextRainMm = Number(Math.max(0.2, previous.rainMm * 0.76).toFixed(1));
+    const nextRainChance = Math.max(15, Math.round(previous.rainChance * 0.88));
+    outlook.push({
+      day: formatTagumDate(timestamp, { weekday: 'short' }),
+      date: formatTagumDate(timestamp, { month: 'short', day: 'numeric' }),
+      high: previous.high,
+      low: previous.low,
+      rainChance: nextRainChance,
+      rainMm: nextRainMm,
+      summary: 'Cloud synced trend from latest forecast',
+      intensity: getRainIntensity(nextRainMm),
+    });
+  }
+
+  return outlook;
+};
+
+const getForecastFallbackBundle = async (
+  cacheKey: string,
+): Promise<{
+  forecast: ChartDataPoint[];
+  dailyOutlook: DailyOutlook[];
+  alerts: WeatherAlert[];
+} | null> => {
+  const staleBundle = getFallbackCached<{
+    forecast: ChartDataPoint[];
+    dailyOutlook: DailyOutlook[];
+    alerts: WeatherAlert[];
+  }>(cacheKey);
+
+  if (staleBundle) return staleBundle;
+
+  const syncedForecast = await tryGetLatestSyncedForecast();
+  if (syncedForecast.length === 0) return null;
+
+  const dailyOutlook = getDailyOutlookFromForecast(syncedForecast);
+  return {
+    forecast: syncedForecast,
+    dailyOutlook,
+    alerts: mapTagumAlerts(dailyOutlook, syncedForecast),
+  };
+};
+
+const withOpenWeatherFallback = async <T>(
+  error: unknown,
+  endpoint: string,
+  fallback: () => Promise<T | null> | T | null,
+): Promise<T> => {
+  const fallbackValue = await fallback();
+  if (fallbackValue) return fallbackValue;
+  throw new Error(getAxiosErrorMessage(error, endpoint), { cause: error });
+};
+
+const isNonEmptyForecast = (forecast: ChartDataPoint[] | null): forecast is ChartDataPoint[] =>
+  Array.isArray(forecast) && forecast.length > 0;
+
+const getForecastFallback = async (cacheKey: string) => {
+  const staleForecast = getFallbackCached<ChartDataPoint[]>(cacheKey);
+  if (isNonEmptyForecast(staleForecast)) return staleForecast;
+
+  const syncedForecast = await tryGetLatestSyncedForecast();
+  return syncedForecast.length > 0 ? syncedForecast : null;
+};
+
+const getCurrentWeatherFallback = async (cacheKey: string) => {
+  const staleWeather = getFallbackCached<CurrentWeather>(cacheKey);
+  if (staleWeather) return staleWeather;
+
+  return tryGetLatestSyncedCurrentWeather();
+};
+
+const assertUsableForecast = (forecast: ChartDataPoint[], endpoint: string) => {
+  if (forecast.length === 0) {
+    throw new Error(`OpenWeather request failed (${endpoint}): provider returned no usable forecast data`);
+  }
 };
 
 const setCached = (key: string, value: unknown) => {
@@ -378,6 +484,7 @@ const weatherBreaker = new CircuitBreaker(requestOpenWeather, {
 });
 
 export async function getCurrentWeather(location?: LocationQuery): Promise<CurrentWeather> {
+  let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
     const params = {
@@ -385,7 +492,7 @@ export async function getCurrentWeather(location?: LocationQuery): Promise<Curre
       units: 'metric',
       appid: apiKey,
     };
-    const cacheKey = getCacheKey('weather', params);
+    cacheKey = getCacheKey('weather', params);
     const cached = getCached<CurrentWeather>(cacheKey);
     if (cached) return cached;
 
@@ -394,11 +501,14 @@ export async function getCurrentWeather(location?: LocationQuery): Promise<Curre
     setCached(cacheKey, weather);
     return weather;
   } catch (error) {
-    throw new Error(getAxiosErrorMessage(error, 'current'), { cause: error });
+    return withOpenWeatherFallback(error, 'current', () =>
+      cacheKey ? getCurrentWeatherFallback(cacheKey) : tryGetLatestSyncedCurrentWeather(),
+    );
   }
 }
 
 export async function getForecast(location?: LocationQuery): Promise<ChartDataPoint[]> {
+  let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
     const params = {
@@ -406,16 +516,23 @@ export async function getForecast(location?: LocationQuery): Promise<ChartDataPo
       units: 'metric',
       appid: apiKey,
     };
-    const cacheKey = `${getCacheKey('forecast', params)}:${FORECAST_CACHE_VERSION}`;
+    cacheKey = `${getCacheKey('forecast', params)}:${FORECAST_CACHE_VERSION}`;
     const cached = getCached<ChartDataPoint[]>(cacheKey);
     if (cached) return cached;
 
     const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
     const forecast = mapOpenWeatherForecast(data);
+    assertUsableForecast(forecast, 'forecast');
     setCached(cacheKey, forecast);
     return forecast;
   } catch (error) {
-    throw new Error(getAxiosErrorMessage(error, 'forecast'), { cause: error });
+    return withOpenWeatherFallback(error, 'forecast', () =>
+      cacheKey
+        ? getForecastFallback(cacheKey)
+        : tryGetLatestSyncedForecast().then((forecast) =>
+            forecast.length > 0 ? forecast : null,
+          ),
+    );
   }
 }
 
@@ -426,7 +543,9 @@ export async function getForecastBundle(
   forecast: ChartDataPoint[];
   dailyOutlook: DailyOutlook[];
   alerts: WeatherAlert[];
+  providerStatus: 'live' | 'synced';
 }> {
+  let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
     const params = {
@@ -434,23 +553,28 @@ export async function getForecastBundle(
       units: 'metric',
       appid: apiKey,
     };
-    const cacheKey = `${getCacheKey('forecast', params)}:bundle:${FORECAST_CACHE_VERSION}`;
+    cacheKey = `${getCacheKey('forecast', params)}:bundle:${FORECAST_CACHE_VERSION}`;
     if (!options.bypassCache) {
       const cached = getCached<{
         forecast: ChartDataPoint[];
         dailyOutlook: DailyOutlook[];
         alerts: WeatherAlert[];
+        providerStatus: 'live' | 'synced';
       }>(cacheKey);
       if (cached) return cached;
     }
 
     const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
     const forecast = mapOpenWeatherForecast(data);
+    assertUsableForecast(forecast, 'forecast bundle');
     const dailyOutlook = mapDailyOutlook(data);
+    const resolvedDailyOutlook =
+      dailyOutlook.length > 0 ? dailyOutlook : getDailyOutlookFromForecast(forecast);
     const bundle = {
       forecast,
-      dailyOutlook,
-      alerts: mapTagumAlerts(dailyOutlook, forecast),
+      dailyOutlook: resolvedDailyOutlook,
+      alerts: mapTagumAlerts(resolvedDailyOutlook, forecast),
+      providerStatus: 'live' as const,
     };
 
     if (!options.bypassCache) {
@@ -458,6 +582,15 @@ export async function getForecastBundle(
     }
     return bundle;
   } catch (error) {
-    throw new Error(getAxiosErrorMessage(error, 'forecast bundle'), { cause: error });
+    const fallback = await withOpenWeatherFallback(error, 'forecast bundle', async () => {
+      const fallbackBundle = cacheKey ? await getForecastFallbackBundle(cacheKey) : null;
+      if (!fallbackBundle) return null;
+      return {
+        ...fallbackBundle,
+        providerStatus: 'synced' as const,
+      };
+    });
+
+    return fallback;
   }
 }
