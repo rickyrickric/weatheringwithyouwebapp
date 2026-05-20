@@ -54,6 +54,7 @@ let climatologyCache:
     }
   | null = null;
 let hasWarnedMissingSupabaseConfig = false;
+let hasWarnedInvalidSupabaseKey = false;
 
 const warnMissingSupabaseConfig = (missingVars: string[]) => {
   if (hasWarnedMissingSupabaseConfig) return;
@@ -62,6 +63,15 @@ const warnMissingSupabaseConfig = (missingVars: string[]) => {
   logger.warn(
     { missingVars },
     'Supabase env vars missing; using in-memory mode until configuration is provided',
+  );
+};
+
+const warnInvalidSupabaseKey = () => {
+  if (hasWarnedInvalidSupabaseKey) return;
+
+  hasWarnedInvalidSupabaseKey = true;
+  logger.warn(
+    'SUPABASE_SERVICE_ROLE_KEY is using a publishable key; fallback persistence requires a service-role or secret server key',
   );
 };
 
@@ -76,6 +86,11 @@ const getSupabaseConfig = () => {
     ].filter((value): value is string => value !== null);
 
     warnMissingSupabaseConfig(missingVars);
+    return null;
+  }
+
+  if (serviceRoleKey.startsWith('sb_publishable_')) {
+    warnInvalidSupabaseKey();
     return null;
   }
 

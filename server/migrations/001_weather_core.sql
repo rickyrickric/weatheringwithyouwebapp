@@ -37,6 +37,10 @@ create table if not exists public.daily_weather_forecasts (
   unique (location_id, forecast_date, target_time)
 );
 
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.daily_weather_observations to service_role;
+grant select, insert, update, delete on public.daily_weather_forecasts to service_role;
+
 create index if not exists idx_weather_observations_location_date
 on public.daily_weather_observations (location_id, observed_date desc);
 

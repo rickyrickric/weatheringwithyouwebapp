@@ -31,7 +31,12 @@ export const toApiError = (error: unknown) => {
 
   const message = error instanceof Error ? error.message : String(error);
   if (message.toLowerCase().includes('openweather')) {
-    return new ApiError(502, 'UPSTREAM_UNAVAILABLE', 'Weather provider is temporarily unavailable');
+    return new ApiError(
+      502,
+      'UPSTREAM_UNAVAILABLE',
+      'Weather provider is temporarily unavailable',
+      message,
+    );
   }
 
   return new ApiError(500, 'INTERNAL_ERROR', 'Unexpected server error');

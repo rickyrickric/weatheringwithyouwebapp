@@ -95,7 +95,7 @@ export interface AccuracySummary {
 
 export interface ForecastResponse {
   generatedAt: string;
-  source: 'openweather';
+  source: 'openweather' | 'supabase-sync';
   forecast: ChartDataPoint[];
   climatology?: {
     hourly: HourlyClimatologyPoint[];

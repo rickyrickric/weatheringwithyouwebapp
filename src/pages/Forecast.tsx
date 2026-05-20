@@ -9,6 +9,20 @@ const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 const ADVISORY_REFRESH_MS = 60 * 1000;
 
+const getResponseErrorMessage = async (response: Response, fallbackLabel: string) => {
+  try {
+    const payload = await response.json() as {
+      error?: { message?: string; details?: string };
+    };
+    const message = payload.error?.details || payload.error?.message;
+    return message
+      ? `${fallbackLabel}: ${response.status} ${message}`
+      : `${fallbackLabel}: ${response.status}`;
+  } catch {
+    return `${fallbackLabel}: ${response.status}`;
+  }
+};
+
 type TemperatureUnit = "c" | "f";
 type WindUnit = "kmh" | "mph";
 type TimeFormat = "12h" | "24h";
@@ -23,7 +37,7 @@ interface ForecastHour {
 
 interface AdvisoryResponse {
   generatedAt: string;
-  source: "openweather";
+  source: "openweather" | "supabase-sync";
   alerts: WeatherAlert[];
 }
 
@@ -39,22 +53,7 @@ const forecastData: ForecastHour[] = Array.from({ length: 24 }, (_, hour) => {
   };
 });
 
-const fallbackTagumAlerts: WeatherAlert[] = [
-  {
-    title: "Afternoon Thunderstorm Advisory",
-    urgency: "Moderate",
-    tone: "moderate",
-    barangays: "Apokon, Mankilam, Canocotan",
-    guidance: "Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.",
-  },
-  {
-    title: "Evening Commuter Shower Watch",
-    urgency: "Advisory",
-    tone: "advisory",
-    barangays: "Magugpo Poblacion, Visayan Village, Madaum",
-    guidance: "Carry rain cover for tricycles and motorcycles. Give extra time along the national highway after sunset.",
-  },
-];
+const fallbackTagumAlerts: WeatherAlert[] = [];
 
 const fallbackSevenDayOutlook: DailyOutlook[] = [
   { day: "Mon", date: "May 11", high: 31, low: 24, rainChance: 68, rainMm: 8.8, summary: "PM storms near Apokon" },
@@ -228,11 +227,16 @@ export default function WeatherDashboard() {
   }, []);
 
   useEffect(() => {
-    let controller = new AbortController();
+    let isMounted = true;
+    let inFlight = false;
+    let activeController: AbortController | null = null;
 
     const fetchCurrentWeather = async () => {
-      controller.abort();
-      controller = new AbortController();
+      if (inFlight) return;
+
+      inFlight = true;
+      const controller = new AbortController();
+      activeController = controller;
 
       try {
         const response = await fetch(`${WEATHER_API_BASE}/current`, {
@@ -241,11 +245,13 @@ export default function WeatherDashboard() {
         });
 
         if (!response.ok) {
-          throw new Error(`Current weather request failed: ${response.status}`);
+          throw new Error(await getResponseErrorMessage(response, "Current weather request failed"));
         }
 
         const weather = await response.json() as CurrentWeather;
         const observedAt = new Date();
+
+        if (!isMounted) return;
 
         setCurrentWeather(weather);
         setLastUpdatedAt(observedAt);
@@ -259,7 +265,13 @@ export default function WeatherDashboard() {
           console.error('Error fetching current weather:', error);
         }
       } finally {
-        setIsCurrentWeatherLoading(false);
+        if (activeController === controller) {
+          activeController = null;
+        }
+        inFlight = false;
+        if (isMounted) {
+          setIsCurrentWeatherLoading(false);
+        }
       }
     };
 
@@ -267,17 +279,23 @@ export default function WeatherDashboard() {
     const timer = window.setInterval(fetchCurrentWeather, CURRENT_WEATHER_REFRESH_MS);
 
     return () => {
-      controller.abort();
+      isMounted = false;
+      activeController?.abort();
       window.clearInterval(timer);
     };
   }, []);
 
   useEffect(() => {
-    let controller = new AbortController();
+    let isMounted = true;
+    let inFlight = false;
+    let activeController: AbortController | null = null;
 
     const fetchForecast = async () => {
-      controller.abort();
-      controller = new AbortController();
+      if (inFlight) return;
+
+      inFlight = true;
+      const controller = new AbortController();
+      activeController = controller;
 
       try {
         const response = await fetch(`${WEATHER_API_BASE}/forecast/24h`, {
@@ -286,10 +304,12 @@ export default function WeatherDashboard() {
         });
 
         if (!response.ok) {
-          throw new Error(`Forecast request failed: ${response.status}`);
+          throw new Error(await getResponseErrorMessage(response, "Forecast request failed"));
         }
 
         const data = await response.json() as ForecastResponse;
+        if (!isMounted) return;
+
         if (data.forecast.length > 0) {
           setChartData(data.forecast.map((point) => ({
             time: point.time,
@@ -299,7 +319,7 @@ export default function WeatherDashboard() {
           })));
         }
 
-        if (data.alerts && data.alerts.length > 0) {
+        if (data.alerts) {
           setTagumAlerts(data.alerts);
           setLastAdvisoryUpdatedAt(new Date(data.generatedAt || Date.now()));
         }
@@ -322,7 +342,13 @@ export default function WeatherDashboard() {
           console.error('Error fetching forecast data:', error);
         }
       } finally {
-        setIsForecastLoading(false);
+        if (activeController === controller) {
+          activeController = null;
+        }
+        inFlight = false;
+        if (isMounted) {
+          setIsForecastLoading(false);
+        }
       }
     };
 
@@ -330,18 +356,26 @@ export default function WeatherDashboard() {
     const timer = window.setInterval(fetchForecast, FORECAST_REFRESH_MS);
 
     return () => {
-      controller.abort();
+      isMounted = false;
+      activeController?.abort();
       window.clearInterval(timer);
     };
   }, []);
 
   useEffect(() => {
-    let controller = new AbortController();
+    let isMounted = true;
+    let inFlight = false;
+    let activeController: AbortController | null = null;
 
     const fetchAdvisories = async () => {
-      controller.abort();
-      controller = new AbortController();
-      setIsAdvisoryRefreshing(true);
+      if (inFlight) return;
+
+      inFlight = true;
+      const controller = new AbortController();
+      activeController = controller;
+      if (isMounted) {
+        setIsAdvisoryRefreshing(true);
+      }
 
       try {
         const response = await fetch(`${WEATHER_API_BASE}/advisories?refresh=${Date.now()}`, {
@@ -350,20 +384,26 @@ export default function WeatherDashboard() {
         });
 
         if (!response.ok) {
-          throw new Error(`Advisory request failed: ${response.status}`);
+          throw new Error(await getResponseErrorMessage(response, "Advisory request failed"));
         }
 
         const data = await response.json() as AdvisoryResponse;
-        if (data.alerts.length > 0) {
-          setTagumAlerts(data.alerts);
-          setLastAdvisoryUpdatedAt(new Date(data.generatedAt || Date.now()));
-        }
+        if (!isMounted) return;
+
+        setTagumAlerts(data.alerts);
+        setLastAdvisoryUpdatedAt(new Date(data.generatedAt || Date.now()));
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Error fetching advisory data:', error);
         }
       } finally {
-        setIsAdvisoryRefreshing(false);
+        if (activeController === controller) {
+          activeController = null;
+        }
+        inFlight = false;
+        if (isMounted) {
+          setIsAdvisoryRefreshing(false);
+        }
       }
     };
 
@@ -371,7 +411,8 @@ export default function WeatherDashboard() {
     const timer = window.setInterval(fetchAdvisories, ADVISORY_REFRESH_MS);
 
     return () => {
-      controller.abort();
+      isMounted = false;
+      activeController?.abort();
       window.clearInterval(timer);
     };
   }, []);
@@ -627,7 +668,23 @@ export default function WeatherDashboard() {
             <span className={isAdvisoryRefreshing ? "live-dot advisory-dot-refreshing" : "live-dot"} aria-hidden="true" />
             <span>{isAdvisoryRefreshing ? "Fetching latest advisories" : `Advisories reported ${formatElapsed(advisoryUpdatedSecondsAgo)}`}</span>
           </div>
-          {tagumAlerts.map((alert) => (
+          {tagumAlerts.length === 0 ? (
+            <article className="alert-card alert-advisory">
+              <div className="alert-card-header">
+                <div>
+                  <h3>No Severe Weather Anomalies Present</h3>
+                  <p>Tagum City monitoring</p>
+                </div>
+                <span className="alert-badge">
+                  <span aria-hidden="true"><i className="bi bi-check-circle-fill" /></span>
+                  Clear
+                </span>
+              </div>
+              <p className="alert-guidance">
+                No active severe-weather advisories are currently affecting the monitored areas.
+              </p>
+            </article>
+          ) : tagumAlerts.map((alert) => (
             <article key={alert.title} className={`alert-card alert-${alert.tone}`}>
               <div className="alert-card-header">
                 <div>

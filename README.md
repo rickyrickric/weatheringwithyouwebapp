@@ -127,6 +127,27 @@ Stored payload includes:
 - source metadata
 - raw JSON payload for traceability/debugging
 
+## Supabase Outage Fallback Setup
+
+Supabase is not only optional persistence here. It also acts as the backend fallback store when OpenWeather is unavailable.
+
+To make that fallback work on a fresh Supabase project:
+
+1. Apply the SQL in `server/migrations/001_weather_core.sql` and `server/migrations/003_hourly_climatology.sql` or run the combined `server/supabase-schema.sql`.
+2. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `server/.env`.
+3. Keep the backend running long enough to sync live observations and forecast rows while OpenWeather is healthy.
+
+Important for new Supabase projects:
+
+- Supabase changed Data API defaults on April 28, 2026. New tables in `public` may not be reachable through `/rest/v1` unless you grant access explicitly.
+- This repo now includes explicit `service_role` grants in the schema SQL so the backend can still read and write its weather cache tables and climatology view.
+
+When OpenWeather fails, the backend now restores:
+
+- current conditions from the latest synced hourly observation
+- forecast data from the latest synced forecast rows
+- forecast response metadata with `source: "supabase-sync"` and medium confidence
+
 Schema changes now live in `server/migrations/`:
 
 - `001_weather_core.sql` creates the weather tables, RLS policies, uniqueness constraints, and query indexes.

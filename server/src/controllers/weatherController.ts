@@ -8,16 +8,22 @@ import {
   tryStoreDailyForecast,
   tryStoreDailyObservation,
 } from '../services/supabaseService';
-import { getCurrentWeather, getForecast, getForecastBundle } from '../services/weatherService';
+import {
+  getCurrentWeatherResult,
+  getForecastBundle,
+  getForecastResult,
+} from '../services/weatherService';
 import { ForecastResponse } from '../types';
 
 const getLocationQuery = (req: Request) => req.query as LocationQuery;
 
 export async function getCurrent(req: Request, res: Response, next: NextFunction) {
   try {
-    const weather = await getCurrentWeather(getLocationQuery(req));
-    await tryStoreDailyObservation(weather);
-    res.json(weather);
+    const result = await getCurrentWeatherResult(getLocationQuery(req));
+    if (result.providerStatus === 'live') {
+      await tryStoreDailyObservation(result.weather);
+    }
+    res.json(result.weather);
   } catch (error) {
     next(error);
   }
@@ -34,7 +40,7 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
 
     const response: ForecastResponse = {
       generatedAt: new Date().toISOString(),
-      source: 'openweather',
+      source: forecastBundle.providerStatus === 'synced' ? 'supabase-sync' : 'openweather',
       forecast: smoothedData,
       climatology: regression.blendInfo.climatologyUsed ? { hourly: climatology } : undefined,
       blendInfo: regression.blendInfo,
@@ -52,7 +58,9 @@ export async function getForecastData(req: Request, res: Response, next: NextFun
       },
     };
 
-    await tryStoreDailyForecast(response);
+    if (forecastBundle.providerStatus === 'live') {
+      await tryStoreDailyForecast(response);
+    }
     res.json(response);
   } catch (error) {
     next(error);
@@ -65,7 +73,7 @@ export async function getAdvisories(req: Request, res: Response, next: NextFunct
 
     res.json({
       generatedAt: new Date().toISOString(),
-      source: 'openweather',
+      source: forecastBundle.providerStatus === 'synced' ? 'supabase-sync' : 'openweather',
       alerts: forecastBundle.alerts,
     });
   } catch (error) {
@@ -75,11 +83,13 @@ export async function getAdvisories(req: Request, res: Response, next: NextFunct
 
 export async function getSunshineWindows(req: Request, res: Response, next: NextFunction) {
   try {
-    const rawData = await getForecast(getLocationQuery(req));
+    const forecastResult = await getForecastResult(getLocationQuery(req));
+    const rawData = forecastResult.forecast;
     const smoothedData = applyRegression(rawData, 3);
 
     res.json({
       generatedAt: new Date().toISOString(),
+      source: forecastResult.providerStatus === 'synced' ? 'supabase-sync' : 'openweather',
       sunshineWindows: computeSunshineWindows(smoothedData),
     });
   } catch (error) {

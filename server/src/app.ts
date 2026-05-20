@@ -36,6 +36,18 @@ export const createApp = () => {
     pinoHttp({
       logger,
       genReqId: (req) => req.headers['x-request-id']?.toString() || randomUUID(),
+      customLogLevel(req, res, err) {
+        if (req.aborted || err?.message?.toLowerCase().includes('aborted')) {
+          return 'debug';
+        }
+        if (err || res.statusCode >= 500) {
+          return 'error';
+        }
+        if (res.statusCode >= 400) {
+          return 'warn';
+        }
+        return 'info';
+      },
     }),
   );
   app.use(compression());

@@ -24,6 +24,7 @@ describe('forecast payload copy', () => {
   const previousCity = process.env.OPENWEATHER_CITY;
   const previousSupabaseUrl = process.env.SUPABASE_URL;
   const previousSupabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const originalFetch = global.fetch;
 
   beforeEach(() => {
     vi.setSystemTime(new Date('2026-05-12T00:00:00.000Z'));
@@ -56,15 +57,17 @@ describe('forecast payload copy', () => {
     } else {
       process.env.SUPABASE_SERVICE_ROLE_KEY = previousSupabaseKey;
     }
+    global.fetch = originalFetch;
+    vi.restoreAllMocks();
   });
 
   it('returns the revised source label and Working Advisory title for elevated rain risk', async () => {
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
         list: [
-          forecastEntry(1, 0.72, 12, 30),
-          forecastEntry(4, 0.65, 8, 29),
-          forecastEntry(7, 0.35, 1, 28),
+          forecastEntry(1, 0.96, 8, 30),
+          forecastEntry(4, 0.93, 7, 29),
+          forecastEntry(7, 0.72, 5, 28),
         ],
       },
     });
@@ -90,9 +93,9 @@ describe('forecast payload copy', () => {
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
         list: [
-          forecastEntry(1, 0.2, 0.4, 29),
-          forecastEntry(4, 0.24, 0.3, 30),
-          forecastEntry(7, 0.18, 0.2, 29),
+          forecastEntry(1, 0.86, 2.7, 29),
+          forecastEntry(4, 0.78, 1.5, 30),
+          forecastEntry(7, 0.68, 0.9, 29),
         ],
       },
     });
@@ -105,6 +108,24 @@ describe('forecast payload copy', () => {
       urgency: 'Advisory',
       tone: 'advisory',
     });
+    expect(response.body.alerts).toHaveLength(1);
+  });
+
+  it('returns no advisories when no severe anomaly signal is present', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        list: [
+          forecastEntry(1, 0.12, 0.1, 29),
+          forecastEntry(4, 0.16, 0.1, 30),
+          forecastEntry(7, 0.1, 0.1, 29),
+        ],
+      },
+    });
+
+    const response = await request(createApp()).get('/api/v1/weather/forecast/24h?city=Tagum%20Clear');
+
+    expect(response.status).toBe(200);
+    expect(response.body.alerts).toEqual([]);
   });
 
   it('returns realtime advisories with no-store cache headers', async () => {
@@ -128,5 +149,67 @@ describe('forecast payload copy', () => {
       urgency: 'Moderate',
       tone: 'moderate',
     });
+  });
+
+  it('restores the forecast from Supabase sync when OpenWeather fails', async () => {
+    process.env.SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+    vi.mocked(axios.get).mockRejectedValueOnce(new Error('provider offline'));
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [
+          {
+            target_time: '01:00',
+            predicted_temperature: 29,
+            predicted_rain_probability: 45,
+            raw_payload: {
+              point: {
+                time: '01:00',
+                temperature: 29,
+                rainProbability: 45,
+              },
+            },
+          },
+          {
+            target_time: '02:00',
+            predicted_temperature: 28,
+            predicted_rain_probability: 50,
+            raw_payload: {
+              point: {
+                time: '02:00',
+                temperature: 28,
+                rainProbability: 50,
+              },
+            },
+          },
+          {
+            target_time: '03:00',
+            predicted_temperature: 28,
+            predicted_rain_probability: 42,
+            raw_payload: {
+              point: {
+                time: '03:00',
+                temperature: 28,
+                rainProbability: 42,
+              },
+            },
+          },
+        ],
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      } as Response);
+
+    const response = await request(createApp()).get('/api/v1/weather/forecast/24h?city=Tagum%20Fallback');
+
+    expect(response.status).toBe(200);
+    expect(response.body.source).toBe('supabase-sync');
+    expect(response.body.sourceConfidence).toMatchObject({
+      value: 'Medium',
+    });
+    expect(response.body.forecast).toHaveLength(3);
   });
 });

@@ -56,6 +56,17 @@ type ForecastSourcePoint = {
   rainProbability: number;
   rainMmPerHour: number;
 };
+type ProviderStatus = 'live' | 'synced';
+type CurrentWeatherResult = {
+  weather: CurrentWeather;
+  providerStatus: ProviderStatus;
+};
+type ForecastBundleResult = {
+  forecast: ChartDataPoint[];
+  dailyOutlook: DailyOutlook[];
+  alerts: WeatherAlert[];
+  providerStatus: ProviderStatus;
+};
 
 const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
 
@@ -430,39 +441,56 @@ const mapDailyOutlook = (data: OpenWeatherForecastPayload): DailyOutlook[] => {
 };
 
 const mapTagumAlerts = (dailyOutlook: DailyOutlook[], forecast: ChartDataPoint[]): WeatherAlert[] => {
-  const peakDailyRain = Math.max(...dailyOutlook.map((day) => day.rainMm), 0);
+  void dailyOutlook;
+  const totalForecastRain = Number(
+    forecast.reduce((sum, point) => sum + (point.rainMm ?? 0), 0).toFixed(1),
+  );
   const peakHourlyRain = Math.max(...forecast.map((point) => point.rainMm ?? 0), 0);
-  const peakRainChance = Math.max(...dailyOutlook.map((day) => day.rainChance), 0);
+  const peakRainChance = Math.max(...forecast.map((point) => point.rainProbability), 0);
+  const hasSevereAdvisorySignal =
+    totalForecastRain >= 10 ||
+    peakHourlyRain >= 2.5 ||
+    (peakRainChance >= 90 && peakHourlyRain >= 1.5);
+  const hasMinorAdvisorySignal =
+    totalForecastRain >= 5 ||
+    peakHourlyRain >= 1.2 ||
+    (peakRainChance >= 85 && peakHourlyRain >= 1);
 
-  const primary: WeatherAlert =
-    peakDailyRain >= 7.6 || peakHourlyRain >= 7.6 || peakRainChance >= 65
-      ? {
-          title: 'Afternoon Thunderstorm Advisory',
-          urgency: 'Moderate',
-          tone: 'moderate',
-          barangays: 'Apokon, Mankilam, Canocotan',
-          guidance:
-            'Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.',
-        }
-      : {
-          title: 'Localized Shower Watch',
-          urgency: 'Advisory',
-          tone: 'advisory',
-          barangays: 'Apokon, Mankilam, Canocotan',
-          guidance:
-            'Keep rain cover nearby for short barangay trips. Watch shaded side streets where drizzle can leave slick pavement.',
-        };
+  if (hasSevereAdvisorySignal) {
+    return [
+      {
+        title: 'Afternoon Thunderstorm Advisory',
+        urgency: 'Moderate',
+        tone: 'moderate',
+        barangays: 'Apokon, Mankilam, Canocotan',
+        guidance:
+          'Plan school pickups before 3 PM where possible. Low-lying streets near drainage canals may pond quickly during short heavy bursts.',
+      },
+      {
+        title: 'Evening Commuter Shower Watch',
+        urgency: 'Advisory',
+        tone: 'advisory',
+        barangays: 'Magugpo Poblacion, Visayan Village, Madaum',
+        guidance:
+          'Carry rain cover for tricycles and motorcycles. Give extra time along the national highway after sunset.',
+      },
+    ];
+  }
 
-  const secondary: WeatherAlert = {
-    title: 'Evening Commuter Shower Watch',
-    urgency: 'Advisory',
-    tone: 'advisory',
-    barangays: 'Magugpo Poblacion, Visayan Village, Madaum',
-    guidance:
-      'Carry rain cover for tricycles and motorcycles. Give extra time along the national highway after sunset.',
-  };
+  if (hasMinorAdvisorySignal) {
+    return [
+      {
+        title: 'Localized Shower Watch',
+        urgency: 'Advisory',
+        tone: 'advisory',
+        barangays: 'Apokon, Mankilam, Canocotan',
+        guidance:
+          'Keep rain cover nearby for short barangay trips. Watch shaded side streets where drizzle can leave slick pavement.',
+      },
+    ];
+  }
 
-  return [primary, secondary];
+  return [];
 };
 
 const requestOpenWeather = async ({
@@ -483,7 +511,9 @@ const weatherBreaker = new CircuitBreaker(requestOpenWeather, {
   resetTimeout: Number(process.env.OPENWEATHER_CIRCUIT_RESET_MS || 30_000),
 });
 
-export async function getCurrentWeather(location?: LocationQuery): Promise<CurrentWeather> {
+export async function getCurrentWeatherResult(
+  location?: LocationQuery,
+): Promise<CurrentWeatherResult> {
   let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
@@ -494,20 +524,39 @@ export async function getCurrentWeather(location?: LocationQuery): Promise<Curre
     };
     cacheKey = getCacheKey('weather', params);
     const cached = getCached<CurrentWeather>(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      return {
+        weather: cached,
+        providerStatus: 'live',
+      };
+    }
 
     const data = (await weatherBreaker.fire({ endpoint: 'weather', params })) as OpenWeatherCurrentPayload;
     const weather = mapOpenWeatherCurrent(data);
     setCached(cacheKey, weather);
-    return weather;
+    return {
+      weather,
+      providerStatus: 'live',
+    };
   } catch (error) {
-    return withOpenWeatherFallback(error, 'current', () =>
+    const weather = await withOpenWeatherFallback(error, 'current', () =>
       cacheKey ? getCurrentWeatherFallback(cacheKey) : tryGetLatestSyncedCurrentWeather(),
     );
+    return {
+      weather,
+      providerStatus: 'synced',
+    };
   }
 }
 
-export async function getForecast(location?: LocationQuery): Promise<ChartDataPoint[]> {
+export async function getCurrentWeather(location?: LocationQuery): Promise<CurrentWeather> {
+  const result = await getCurrentWeatherResult(location);
+  return result.weather;
+}
+
+export async function getForecastResult(
+  location?: LocationQuery,
+): Promise<{ forecast: ChartDataPoint[]; providerStatus: ProviderStatus }> {
   let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
@@ -518,33 +567,45 @@ export async function getForecast(location?: LocationQuery): Promise<ChartDataPo
     };
     cacheKey = `${getCacheKey('forecast', params)}:${FORECAST_CACHE_VERSION}`;
     const cached = getCached<ChartDataPoint[]>(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      return {
+        forecast: cached,
+        providerStatus: 'live',
+      };
+    }
 
     const data = (await weatherBreaker.fire({ endpoint: 'forecast', params })) as OpenWeatherForecastPayload;
     const forecast = mapOpenWeatherForecast(data);
     assertUsableForecast(forecast, 'forecast');
     setCached(cacheKey, forecast);
-    return forecast;
+    return {
+      forecast,
+      providerStatus: 'live',
+    };
   } catch (error) {
-    return withOpenWeatherFallback(error, 'forecast', () =>
+    const forecast = await withOpenWeatherFallback(error, 'forecast', () =>
       cacheKey
         ? getForecastFallback(cacheKey)
         : tryGetLatestSyncedForecast().then((forecast) =>
             forecast.length > 0 ? forecast : null,
           ),
     );
+    return {
+      forecast,
+      providerStatus: 'synced',
+    };
   }
+}
+
+export async function getForecast(location?: LocationQuery): Promise<ChartDataPoint[]> {
+  const result = await getForecastResult(location);
+  return result.forecast;
 }
 
 export async function getForecastBundle(
   location?: LocationQuery,
   options: { bypassCache?: boolean } = {},
-): Promise<{
-  forecast: ChartDataPoint[];
-  dailyOutlook: DailyOutlook[];
-  alerts: WeatherAlert[];
-  providerStatus: 'live' | 'synced';
-}> {
+): Promise<ForecastBundleResult> {
   let cacheKey: string | undefined;
   try {
     const apiKey = requireEnv('OPENWEATHER_API_KEY');
@@ -559,7 +620,7 @@ export async function getForecastBundle(
         forecast: ChartDataPoint[];
         dailyOutlook: DailyOutlook[];
         alerts: WeatherAlert[];
-        providerStatus: 'live' | 'synced';
+        providerStatus: ProviderStatus;
       }>(cacheKey);
       if (cached) return cached;
     }

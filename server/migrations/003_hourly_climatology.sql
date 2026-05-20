@@ -15,6 +15,9 @@ create table if not exists public.weather_observations (
   unique (location_id, observed_at, source)
 );
 
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.weather_observations to service_role;
+
 create index if not exists idx_weather_observations_hourly_location_time
 on public.weather_observations (location_id, observed_at desc);
 
@@ -52,5 +55,8 @@ security definer
 as $$
   refresh materialized view concurrently public.hourly_climatology_90d;
 $$;
+
+grant select on public.hourly_climatology_90d to service_role;
+grant execute on function public.refresh_hourly_climatology_90d() to service_role;
 
 notify pgrst, 'reload schema';

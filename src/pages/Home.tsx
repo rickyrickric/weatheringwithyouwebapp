@@ -9,6 +9,20 @@ import backgroundHome from "../assets/background_home.png";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
 
+const getResponseErrorMessage = async (response: Response, fallbackLabel: string) => {
+  try {
+    const payload = await response.json() as {
+      error?: { message?: string; details?: string };
+    };
+    const message = payload.error?.details || payload.error?.message;
+    return message
+      ? `${fallbackLabel}: ${response.status} ${message}`
+      : `${fallbackLabel}: ${response.status}`;
+  } catch {
+    return `${fallbackLabel}: ${response.status}`;
+  }
+};
+
 const Home: FC = () => {
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
@@ -24,11 +38,16 @@ const Home: FC = () => {
   }, []);
 
   useEffect(() => {
-    let controller = new AbortController();
+    let isMounted = true;
+    let inFlight = false;
+    let activeController: AbortController | null = null;
 
     const fetchCurrentWeather = async () => {
-      controller.abort();
-      controller = new AbortController();
+      if (inFlight) return;
+
+      inFlight = true;
+      const controller = new AbortController();
+      activeController = controller;
 
       try {
         const response = await fetch(`${WEATHER_API_BASE}/current`, {
@@ -37,14 +56,22 @@ const Home: FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Current weather request failed: ${response.status}`);
+          throw new Error(await getResponseErrorMessage(response, "Current weather request failed"));
         }
 
-        setCurrentWeather(await response.json() as CurrentWeather);
+        const weather = await response.json() as CurrentWeather;
+        if (isMounted) {
+          setCurrentWeather(weather);
+        }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Error fetching current weather:', error);
         }
+      } finally {
+        if (activeController === controller) {
+          activeController = null;
+        }
+        inFlight = false;
       }
     };
 
@@ -52,7 +79,8 @@ const Home: FC = () => {
     const timer = window.setInterval(fetchCurrentWeather, CURRENT_WEATHER_REFRESH_MS);
 
     return () => {
-      controller.abort();
+      isMounted = false;
+      activeController?.abort();
       window.clearInterval(timer);
     };
   }, []);
