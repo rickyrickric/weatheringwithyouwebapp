@@ -19,6 +19,18 @@ export const createApp = () => {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+  const healthLimiter = rateLimit({
+    windowMs: Number(process.env.HEALTH_RATE_LIMIT_WINDOW_MS || 60_000),
+    limit: Number(process.env.HEALTH_RATE_LIMIT_MAX || 120),
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many health checks. Please try again shortly.',
+      },
+    },
+  });
 
   app.use(
     pinoHttp({
@@ -34,7 +46,7 @@ export const createApp = () => {
           defaultSrc: ["'self'"],
           baseUri: ["'self'"],
           objectSrc: ["'none'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:'],
         },
@@ -67,7 +79,12 @@ export const createApp = () => {
     },
   });
 
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  app.use(
+    '/api/docs',
+    helmet({ contentSecurityPolicy: false }),
+    swaggerUi.serve,
+    swaggerUi.setup(openApiSpec),
+  );
   app.get('/api/openapi.json', (_req, res) => res.json(openApiSpec));
   app.use('/api/v1', apiLimiter, apiRoutes);
   app.use('/api', apiLimiter, apiRoutes);
@@ -87,7 +104,7 @@ export const createApp = () => {
     });
   });
 
-  app.get('/health', (_req, res) => {
+  app.get('/health', healthLimiter, (_req, res) => {
     res.json({ status: 'ok', message: 'Atmospheric Intelligence API is running' });
   });
 

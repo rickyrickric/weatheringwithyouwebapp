@@ -1,8 +1,13 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createApp } from '../app';
 
 describe('weather API validation', () => {
+  afterEach(() => {
+    delete process.env.HEALTH_RATE_LIMIT_MAX;
+    delete process.env.HEALTH_RATE_LIMIT_WINDOW_MS;
+  });
+
   it('rejects coordinate requests missing lon', async () => {
     const response = await request(createApp()).get('/api/v1/weather/current?lat=7.4478');
 
@@ -31,5 +36,18 @@ describe('weather API validation', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.openapi).toBe('3.0.0');
+  });
+
+  it('rate limits health checks separately from API traffic', async () => {
+    process.env.HEALTH_RATE_LIMIT_MAX = '1';
+    process.env.HEALTH_RATE_LIMIT_WINDOW_MS = '60000';
+    const app = createApp();
+
+    const first = await request(app).get('/health');
+    const second = await request(app).get('/health');
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(429);
+    expect(second.body.error.code).toBe('RATE_LIMITED');
   });
 });

@@ -53,12 +53,29 @@ let climatologyCache:
       value: HourlyClimatologyPoint[];
     }
   | null = null;
+let hasWarnedMissingSupabaseConfig = false;
+
+const warnMissingSupabaseConfig = (missingVars: string[]) => {
+  if (hasWarnedMissingSupabaseConfig) return;
+
+  hasWarnedMissingSupabaseConfig = true;
+  logger.warn(
+    { missingVars },
+    'Supabase env vars missing; using in-memory mode until configuration is provided',
+  );
+};
 
 const getSupabaseConfig = () => {
   const url = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceRoleKey) {
+    const missingVars = [
+      !url ? 'SUPABASE_URL' : null,
+      !serviceRoleKey ? 'SUPABASE_SERVICE_ROLE_KEY' : null,
+    ].filter((value): value is string => value !== null);
+
+    warnMissingSupabaseConfig(missingVars);
     return null;
   }
 
@@ -426,4 +443,8 @@ export async function tryStoreDailyForecast(response: ForecastResponse) {
   } catch (error) {
     logger.warn({ err: error }, 'Supabase forecast persistence skipped');
   }
+}
+
+export function resetSupabaseWarningsForTests() {
+  hasWarnedMissingSupabaseConfig = false;
 }
