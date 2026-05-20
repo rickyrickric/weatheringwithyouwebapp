@@ -52,12 +52,61 @@ const Dashboard: React.FC = () => {
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
       <div className={`relative z-10 ${textColorClass}`}>
         <div className="text-center py-2 px-4 header-section">
-          <h1 className="page-title text-gray-100 mb-1">Technical Dashboard</h1>
+          <h1 className="page-title text-gray-100 mb-1">System Dashboard</h1>
           <div className="mt-3 h-1 w-24 bg-slate-600 mx-auto rounded-full opacity-60" />
         </div>
 
         <div className="page-container py-3 space-y-3 main-content dashboard-layout">
           <div className="dashboard-grid">
+            <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
+              <h3 className="text-lg font-semibold text-gray-200 mb-3">
+                <i className="bi bi-phone mr-2" aria-hidden="true"></i>
+                App Usage
+              </h3>
+              <p className="text-xs text-secondary-contrast mb-3">
+                The dashboard summarizes how users interact with the weather system and what each
+                screen is intended to support.
+              </p>
+
+              <div className="accuracy-metrics">
+                <div className="space-y-3">
+                  <p className="accuracy-metric-label">Primary User Goal</p>
+                  <div className="text-sm font-semibold text-gray-200">Daily weather decision support</div>
+                  <p className="accuracy-metric-stat">
+                    Users open the app to check current conditions, rainfall risk, and the best
+                    time for outdoor or travel activity in Tagum City.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="accuracy-metric-label">Home Screen Usage</p>
+                  <div className="text-sm font-semibold text-gray-200">Quick glance entry point</div>
+                  <p className="accuracy-metric-stat">
+                    The Home tab gives a fast summary of live weather so a user can immediately
+                    decide whether to continue into deeper forecast analysis.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="accuracy-metric-label">Forecast Screen Usage</p>
+                  <div className="text-sm font-semibold text-gray-200">Operational weather view</div>
+                  <p className="accuracy-metric-stat">
+                    The Forecast tab is the main working screen for hourly outlook, advisories,
+                    7-day trend review, and sunshine-window recommendations.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="accuracy-metric-label">System Benefit</p>
+                  <div className="text-sm font-semibold text-gray-200">Readable weather intelligence</div>
+                  <p className="accuracy-metric-stat">
+                    The app reduces the need to interpret raw weather data manually by converting
+                    forecast values into understandable planning guidance.
+                  </p>
+                </div>
+              </div>
+            </GlassCard>
+
             <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
                 <i className="bi bi-graph-up-arrow mr-2" aria-hidden="true"></i>
@@ -100,165 +149,22 @@ const Dashboard: React.FC = () => {
                   <p className="accuracy-metric-label">Observation Coverage</p>
                   <div className="text-4xl font-bold text-gray-200">{accuracy?.sampleSize ?? 0}</div>
                   <p className="accuracy-metric-stat">
-                    Stored observations supporting validation and fallback behavior.
+                    Stored observations currently available to support model validation.
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <p className="accuracy-metric-label">Model Configuration</p>
+                  <p className="accuracy-metric-label">Current Method</p>
                   <div className="text-sm font-semibold text-gray-200">Polynomial Regression</div>
                   <div className="flex flex-wrap gap-1.5">
                     <span className="chip">Degree 3</span>
+                    <span className="chip">24h forecast</span>
                     <span className="chip">90-day climatology</span>
                   </div>
                   <p className="accuracy-metric-stat">
-                    Blend source: latest synced forecast plus hourly climatology.
+                    Short-term forecasts are smoothed and can blend with climatology once enough
+                    historical observations are available.
                   </p>
-                </div>
-              </div>
-            </GlassCard>
-
-            <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
-              <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                <i className="bi bi-arrow-repeat mr-2" aria-hidden="true"></i>
-                Data Pipeline
-              </h3>
-              <p className="text-secondary-contrast mb-3 text-xs">
-                Resilient data ingestion for Tagum City weather intelligence, with cached recovery
-                when OpenWeather is unavailable.
-              </p>
-
-              <div className="space-y-3">
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
-                        <i className="bi bi-bar-chart-fill mr-1" aria-hidden="true"></i> Historical Archive
-                      </p>
-                      <p className="text-xs text-label-contrast">Open-Meteo backfill for climatology</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-400/60 shadow-[0_0_8px_rgba(96,165,250,0.25)]">
-                      Source
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-                      <i className="bi bi-broadcast mr-1" aria-hidden="true"></i>Backfill: manual
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-                      <i className="bi bi-calendar-range mr-1" aria-hidden="true"></i>Window: 90d
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-folder-fill mr-1" aria-hidden="true"></i>Hourly rows
-                    </span>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
-                    <ul className="mt-2 text-xs text-gray-400 space-y-1">
-                      <li>Hourly archive: temperature, rain probability, rain amount, weather code</li>
-                      <li>Refresh command: `npm --prefix server run backfill:hourly`</li>
-                      <li>Materialized view: hourly_climatology_90d</li>
-                    </ul>
-                  </details>
-                </div>
-
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
-                        <i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API
-                      </p>
-                      <p className="text-xs text-label-contrast">Live observations and forecast feed</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_8px_rgba(52,211,153,0.25)]">
-                      Live Feed
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-                      <i className="bi bi-clock-fill mr-1" aria-hidden="true"></i>Current: 5 min
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-                      <i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i>Latency: &lt;2s
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-cloud-rain-fill mr-1" aria-hidden="true"></i>Forecast: 10 min
-                    </span>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
-                    <ul className="mt-2 text-xs text-gray-400 space-y-1">
-                      <li>Current endpoint: temperature, humidity, pressure, wind, clouds</li>
-                      <li>Forecast endpoint: 24-hour rain probability, rainfall, 7-day outlook</li>
-                      <li>Circuit breaker: upstream timeout and reset protection</li>
-                    </ul>
-                  </details>
-                </div>
-
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
-                        <i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i> Node Weather API
-                      </p>
-                      <p className="text-xs text-label-contrast">Express API, regression smoothing, stale recovery</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-600/20 text-amber-300 border border-amber-400/60 shadow-[0_0_8px_rgba(217,119,6,0.25)]">
-                      Processing
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-gear-fill mr-1" aria-hidden="true"></i>Cache: 1h TTL
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-shield-check mr-1" aria-hidden="true"></i>Fallback: stale
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-cpu-fill mr-1" aria-hidden="true"></i>Regression: degree 3
-                    </span>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
-                    <ul className="mt-2 text-xs text-gray-400 space-y-1">
-                      <li>Forecast endpoint: `/api/v1/weather/forecast/24h`</li>
-                      <li>Fallback order: fresh OpenWeather, stale memory, Supabase cloud sync</li>
-                      <li>Confidence drops to Medium when restored from synced data</li>
-                    </ul>
-                  </details>
-                </div>
-
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
-                        <i className="bi bi-server mr-1" aria-hidden="true"></i> Supabase PostgreSQL
-                      </p>
-                      <p className="text-xs text-label-contrast">Cloud sync, climatology, fallback recovery</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-600/20 text-violet-300 border border-violet-400/60 shadow-[0_0_8px_rgba(139,92,246,0.25)]">
-                      Cloud Sync
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-table mr-1" aria-hidden="true"></i>Forecasts + observations
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-calendar-fill mr-1" aria-hidden="true"></i>Climatology: 90d
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
-                      <i className="bi bi-cloud-check-fill mr-1" aria-hidden="true"></i>Latest synced
-                    </span>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="text-xs text-tertiary-contrast cursor-pointer">Details</summary>
-                    <ul className="mt-2 text-xs text-secondary-contrast space-y-1">
-                      <li>Stores current observations, hourly observations, and daily forecasts</li>
-                      <li>Feeds 90-day hourly climatology into forecast blending</li>
-                      <li>Restores current weather and forecast payloads during provider downtime</li>
-                    </ul>
-                  </details>
                 </div>
               </div>
             </GlassCard>
@@ -266,7 +172,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="text-center py-2 text-label-contrast text-xs">
-          <p>Model validation: live status, cloud sync ready.</p>
+          <p>Dashboard focus: user-facing app usage and forecast accuracy status.</p>
         </div>
       </div>
     </div>

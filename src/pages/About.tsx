@@ -183,6 +183,119 @@ const About: React.FC = () => {
               </ul>
             </div>
           </GlassCard>
+
+          <GlassCard>
+            <h2 className="text-lg font-bold text-gray-100 mb-3">
+              <i className="bi bi-arrow-repeat mr-2" aria-hidden="true"></i>
+              Data Pipeline
+            </h2>
+            <p className="text-secondary-contrast mb-3 text-xs">
+              This section explains how weather data moves through the system, from live provider
+              requests up to the app interface and cloud fallback storage.
+            </p>
+
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                      <i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API
+                    </p>
+                    <p className="text-xs text-label-contrast">Live observations and forecast feed</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_8px_rgba(52,211,153,0.25)]">
+                    Source
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    Current weather
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    24h forecast
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    Rain probability
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                      <i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i> Express Processing Layer
+                    </p>
+                    <p className="text-xs text-label-contrast">Validation, caching, smoothing, and advisory logic</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-600/20 text-amber-300 border border-amber-400/60 shadow-[0_0_8px_rgba(217,119,6,0.25)]">
+                    Processing
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    Cache protection
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    Regression smoothing
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    Advisory generation
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                      <i className="bi bi-server mr-1" aria-hidden="true"></i> Supabase Cloud Sync
+                    </p>
+                    <p className="text-xs text-label-contrast">Fallback storage, forecast snapshots, and climatology</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-600/20 text-violet-300 border border-violet-400/60 shadow-[0_0_8px_rgba(139,92,246,0.25)]">
+                    Storage
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    Observations
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    Forecast rows
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                    90-day climatology
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                      <i className="bi bi-window mr-1" aria-hidden="true"></i> React App Interface
+                    </p>
+                    <p className="text-xs text-label-contrast">Delivers weather intelligence to the end user</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-600/20 text-sky-300 border border-sky-400/60 shadow-[0_0_8px_rgba(56,189,248,0.25)]">
+                    Output
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    Home
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    Forecast
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                    Dashboard
+                  </span>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
         </div>
 
         <div className="text-center py-2 text-gray-500 text-xs">
