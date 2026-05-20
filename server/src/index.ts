@@ -1,15 +1,21 @@
 import dotenv from 'dotenv';
-import { createApp } from './app';
-import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config();
 dotenv.config({ path: 'src/.env', override: false });
 
-const port = process.env.PORT || 3000;
-const app = createApp();
+async function bootstrap() {
+  const [{ createApp }, { logger }] = await Promise.all([
+    import('./app'),
+    import('./utils/logger'),
+  ]);
 
-// Start server
-app.listen(port, () => {
-  logger.info({ port }, 'Server is running');
-});
+  const port = process.env.PORT || 3000;
+  const app = createApp();
+
+  app.listen(port, () => {
+    logger.info({ port }, 'Server is running');
+  });
+}
+
+void bootstrap();

@@ -11,13 +11,14 @@ import { errorHandler, notFoundHandler } from './utils/errors';
 import { logger } from './utils/logger';
 import { openApiSpec } from './openapi';
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
 export const createApp = () => {
   const app = express();
+  const allowedOrigins = (
+    process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.use(
     pinoHttp({

@@ -1,104 +1,140 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import GlassCard from '../components/GlassCard';
 import { useBackgroundState } from '../hooks/useBackgroundState';
+import type { AccuracySummary } from '../types/weather';
+import { WEATHER_API_BASE } from '../utils/api';
 
 const Dashboard: React.FC = () => {
   const { textColorClass } = useBackgroundState(undefined, new Date().getHours());
+  const [accuracy, setAccuracy] = useState<AccuracySummary | null>(null);
+  const [accuracyError, setAccuracyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchAccuracy = async () => {
+      try {
+        const response = await fetch(`${WEATHER_API_BASE}/accuracy`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Accuracy request failed: ${response.status}`);
+        }
+
+        const data = (await response.json()) as AccuracySummary;
+        setAccuracy(data);
+        setAccuracyError(null);
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') return;
+        setAccuracyError('Accuracy telemetry is temporarily unavailable.');
+      }
+    };
+
+    void fetchAccuracy();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const accuracyStatus =
+    accuracy?.status === 'measured'
+      ? `${accuracy.value ?? 0}% validated`
+      : 'Dataset still warming up';
+  const accuracyDetail =
+    accuracy?.status === 'measured'
+      ? `${accuracy.sampleSize} observations available for validation`
+      : 'Historical observations are not populated enough yet for measured forecast accuracy.';
 
   return (
     <div className="relative min-h-screen page-enter bg-[#121826] technical-page tab-container">
-
       <div className={`relative z-10 ${textColorClass}`}>
-        {/* Header */}
         <div className="text-center py-2 px-4 header-section">
-          <h1 className="page-title text-gray-100 mb-1">
-            Technical Dashboard
-          </h1>
+          <h1 className="page-title text-gray-100 mb-1">Technical Dashboard</h1>
           <div className="mt-3 h-1 w-24 bg-slate-600 mx-auto rounded-full opacity-60" />
         </div>
 
-        {/* Main container */}
         <div className="page-container py-3 space-y-3 main-content dashboard-layout">
-          {/* Dual-Column Layout: Prediction Accuracy + Data Pipeline */}
           <div className="dashboard-grid">
-            {/* Model Accuracy */}
             <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                <i className="bi bi-graph-up-arrow mr-2" aria-hidden="true"></i>Prediction Accuracy
+                <i className="bi bi-graph-up-arrow mr-2" aria-hidden="true"></i>
+                Prediction Accuracy
               </h3>
               <p className="text-xs text-secondary-contrast mb-3">
-                Live OpenWeather validation blended with Supabase climate history and cloud-synced fallbacks.
+                Live validation status from the backend accuracy endpoint.
               </p>
-              
+
               <div className="accuracy-metrics">
-                {/* 24h Accuracy */}
                 <div className="space-y-3">
-                  <p className="accuracy-metric-label">24-Hour Forecast</p>
-                  <div className="text-4xl font-bold text-gray-200">92%</div>
+                  <p className="accuracy-metric-label">Forecast Reliability</p>
+                  <div className="text-4xl font-bold text-gray-200">{accuracyStatus}</div>
                   <div className="w-full bg-white/5 rounded-full h-2.5">
                     <div
                       className="bg-[#D4622A]/70 h-2.5 rounded-full"
-                      style={{ width: '92%' }}
+                      style={{
+                        width:
+                          accuracy?.status === 'measured'
+                            ? `${Math.max(8, Math.min(100, accuracy.value ?? 0))}%`
+                            : '18%',
+                      }}
                     />
                   </div>
-                  <p className="accuracy-metric-stat">RMSE: 1.2°C | Validation: 847 observations</p>
+                  <p className="accuracy-metric-stat">{accuracyError ?? accuracyDetail}</p>
                 </div>
 
-                {/* 7d Accuracy */}
                 <div className="space-y-3">
-                  <p className="accuracy-metric-label">7-Day Forecast</p>
-                  <div className="text-4xl font-bold text-gray-200">78%</div>
-                  <div className="w-full bg-white/5 rounded-full h-2.5">
-                    <div
-                      className="bg-[#D4622A]/70 h-2.5 rounded-full"
-                      style={{ width: '78%' }}
-                    />
+                  <p className="accuracy-metric-label">Source Label</p>
+                  <div className="text-sm font-semibold text-gray-200">
+                    {accuracy?.label ?? 'Loading backend telemetry'}
                   </div>
-                  <p className="accuracy-metric-stat">RMSE: 2.1°C | Validation: 156 observations</p>
+                  <p className="accuracy-metric-stat">
+                    Confidence reporting is live, but richer validation slices should wait until
+                    the backend exposes them explicitly.
+                  </p>
                 </div>
 
-                {/* Rain Detection */}
                 <div className="space-y-3">
-                  <p className="accuracy-metric-label">Rain Detection</p>
-                  <div className="text-4xl font-bold text-gray-200">85%</div>
-                  <div className="w-full bg-white/5 rounded-full h-2.5">
-                    <div
-                      className="bg-[#D4622A]/70 h-2.5 rounded-full"
-                      style={{ width: '85%' }}
-                    />
-                  </div>
-                  <p className="accuracy-metric-stat">Precision: 87% | Recall: 83%</p>
+                  <p className="accuracy-metric-label">Observation Coverage</p>
+                  <div className="text-4xl font-bold text-gray-200">{accuracy?.sampleSize ?? 0}</div>
+                  <p className="accuracy-metric-stat">
+                    Stored observations supporting validation and fallback behavior.
+                  </p>
                 </div>
 
-                {/* Model Type */}
                 <div className="space-y-3">
                   <p className="accuracy-metric-label">Model Configuration</p>
                   <div className="text-sm font-semibold text-gray-200">Polynomial Regression</div>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="chip">Degree 4</span>
+                    <span className="chip">Degree 3</span>
                     <span className="chip">90-day climatology</span>
                   </div>
-                  <p className="accuracy-metric-stat">Blend source: latest synced forecast + hourly climatology</p>
+                  <p className="accuracy-metric-stat">
+                    Blend source: latest synced forecast plus hourly climatology.
+                  </p>
                 </div>
               </div>
             </GlassCard>
 
-            {/* Data Pipeline */}
             <GlassCard className="dashboard-card" style={{ scrollSnapAlign: 'start' }}>
               <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                <i className="bi bi-arrow-repeat mr-2" aria-hidden="true"></i>Data Pipeline
+                <i className="bi bi-arrow-repeat mr-2" aria-hidden="true"></i>
+                Data Pipeline
               </h3>
               <p className="text-secondary-contrast mb-3 text-xs">
-                Resilient data ingestion for Tagum City weather intelligence, with cached recovery when OpenWeather is unavailable.
+                Resilient data ingestion for Tagum City weather intelligence, with cached recovery
+                when OpenWeather is unavailable.
               </p>
 
-              {/* QA Fix: Subdued the gradient borders to neutral glass styling */}
               <div className="space-y-3">
-                {/* Historical Archive */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-bar-chart-fill mr-1" aria-hidden="true"></i> Historical Archive</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                        <i className="bi bi-bar-chart-fill mr-1" aria-hidden="true"></i> Historical Archive
+                      </p>
                       <p className="text-xs text-label-contrast">Open-Meteo backfill for climatology</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-400/60 shadow-[0_0_8px_rgba(96,165,250,0.25)]">
@@ -106,9 +142,15 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-broadcast mr-1" aria-hidden="true"></i>Backfill: manual</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-calendar-range mr-1" aria-hidden="true"></i>Window: 90d</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-folder-fill mr-1" aria-hidden="true"></i>Hourly rows</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                      <i className="bi bi-broadcast mr-1" aria-hidden="true"></i>Backfill: manual
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                      <i className="bi bi-calendar-range mr-1" aria-hidden="true"></i>Window: 90d
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-folder-fill mr-1" aria-hidden="true"></i>Hourly rows
+                    </span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -120,11 +162,12 @@ const Dashboard: React.FC = () => {
                   </details>
                 </div>
 
-                {/* OpenWeather API */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                        <i className="bi bi-globe2 mr-1" aria-hidden="true"></i> OpenWeather API
+                      </p>
                       <p className="text-xs text-label-contrast">Live observations and forecast feed</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_8px_rgba(52,211,153,0.25)]">
@@ -132,9 +175,15 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-clock-fill mr-1" aria-hidden="true"></i>Current: 5 min</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300"><i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i>Latency: &lt;2s</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-cloud-rain-fill mr-1" aria-hidden="true"></i>Forecast: 10 min</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                      <i className="bi bi-clock-fill mr-1" aria-hidden="true"></i>Current: 5 min
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                      <i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i>Latency: &lt;2s
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-cloud-rain-fill mr-1" aria-hidden="true"></i>Forecast: 10 min
+                    </span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -146,11 +195,12 @@ const Dashboard: React.FC = () => {
                   </details>
                 </div>
 
-                {/* Node Backend */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i> Node Weather API</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                        <i className="bi bi-lightning-fill mr-1" aria-hidden="true"></i> Node Weather API
+                      </p>
                       <p className="text-xs text-label-contrast">Express API, regression smoothing, stale recovery</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-600/20 text-amber-300 border border-amber-400/60 shadow-[0_0_8px_rgba(217,119,6,0.25)]">
@@ -158,9 +208,15 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-gear-fill mr-1" aria-hidden="true"></i>Cache: 1h TTL</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-shield-check mr-1" aria-hidden="true"></i>Fallback: stale</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-cpu-fill mr-1" aria-hidden="true"></i>Regression: degree 3</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-gear-fill mr-1" aria-hidden="true"></i>Cache: 1h TTL
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-shield-check mr-1" aria-hidden="true"></i>Fallback: stale
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-cpu-fill mr-1" aria-hidden="true"></i>Regression: degree 3
+                    </span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-gray-400 cursor-pointer">Details</summary>
@@ -172,11 +228,12 @@ const Dashboard: React.FC = () => {
                   </details>
                 </div>
 
-                {/* Supabase PostgreSQL */}
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-300 mb-0.5 text-sm"><i className="bi bi-server mr-1" aria-hidden="true"></i> Supabase PostgreSQL</p>
+                      <p className="font-semibold text-gray-300 mb-0.5 text-sm">
+                        <i className="bi bi-server mr-1" aria-hidden="true"></i> Supabase PostgreSQL
+                      </p>
                       <p className="text-xs text-label-contrast">Cloud sync, climatology, fallback recovery</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-600/20 text-violet-300 border border-violet-400/60 shadow-[0_0_8px_rgba(139,92,246,0.25)]">
@@ -184,9 +241,15 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-table mr-1" aria-hidden="true"></i>Forecasts + observations</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-calendar-fill mr-1" aria-hidden="true"></i>Climatology: 90d</span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast"><i className="bi bi-cloud-check-fill mr-1" aria-hidden="true"></i>Latest synced</span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-table mr-1" aria-hidden="true"></i>Forecasts + observations
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-calendar-fill mr-1" aria-hidden="true"></i>Climatology: 90d
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-label-alt-contrast">
+                      <i className="bi bi-cloud-check-fill mr-1" aria-hidden="true"></i>Latest synced
+                    </span>
                   </div>
                   <details className="mt-2">
                     <summary className="text-xs text-tertiary-contrast cursor-pointer">Details</summary>
@@ -202,11 +265,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center py-2 text-label-contrast text-xs">
-          <p>Model validation: Live • Cloud sync ready ✓</p>
+          <p>Model validation: live status, cloud sync ready.</p>
         </div>
-
       </div>
     </div>
   );
