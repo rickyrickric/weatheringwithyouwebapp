@@ -21,7 +21,7 @@ export default tseslint.config(
         project: [
           path.join(__dirname, 'tsconfig.app.json'),
           path.join(__dirname, 'tsconfig.node.json'),
-          path.join(__dirname, 'server', 'tsconfig.json'),
+          path.join(__dirname, 'server', 'tsconfig.eslint.json'),
         ],
       },
     },

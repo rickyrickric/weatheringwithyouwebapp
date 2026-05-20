@@ -114,12 +114,12 @@ export interface ForecastResponse {
 
 // Shared optimal time windows used by Forecast and other pages
 export const OPTIMAL_WINDOWS: OptimalWindow[] = [
-  { start: 8, end: 11 },   // 08:00 – 11:00
-  { start: 14, end: 16 },  // 14:00 – 16:00
-  { start: 19, end: 21 },  // 19:00 – 21:00
+  { start: 8, end: 11 },   // 08:00 - 11:00
+  { start: 14, end: 16 },  // 14:00 - 16:00
+  { start: 19, end: 21 },  // 19:00 - 21:00
 ];
 
-// Derive a time-of-day label from an hour (0–23)
+// Derive a time-of-day label from an hour (0-23)
 export function getTimeOfDay(
   hour: number,
 ): 'morning' | 'afternoon' | 'evening' | 'night' | 'sunset' {

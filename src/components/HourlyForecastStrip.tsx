@@ -44,9 +44,8 @@ interface HourlyTooltipPayload {
 }
 
 /**
- * Centralized hour formatter — mirrors formatClock in Forecast.tsx so every
- * time string in the app (header clock, sunrise/sunset, hourly tiles, optimal
- * windows) uses the exact same 12h / 24h representation.
+ * Centralized hour formatter mirrors formatClock in Forecast.tsx so every
+ * time string in the app uses the same 12h / 24h representation.
  */
 const formatHour = (time: string, timeFormat: '12h' | '24h') => {
   const [hourPart, minutePart = '00'] = time.split(':');
@@ -113,7 +112,7 @@ const HourlyTooltip: React.FC<{
       <div className="hourly-tooltip-time">{point.label}</div>
       <div className="hourly-tooltip-row">
         <span className="hourly-tooltip-swatch hourly-tooltip-temp" />
-        <span>Temp: {point.temperature}&deg;</span>
+        <span>Temp: {point.temperature}°</span>
       </div>
       <div className="hourly-tooltip-row">
         <span className="hourly-tooltip-swatch hourly-tooltip-precip" />
@@ -195,12 +194,12 @@ const expandToHourlyData = (
 
 const formatChartTemperatureLabel = (value: unknown) => {
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? `${Math.round(numericValue)}\u00B0` : '';
+  return Number.isFinite(numericValue) ? `${Math.round(numericValue)}°` : '';
 };
 
 const TILE_PX = 72;
 const TILE_GAP = 4;
-const STRIP_PAD_R = 32;
+const STRIP_PAD_R = 48;
 
 const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   hourlyData,
@@ -243,13 +242,11 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
   const averageTemperature = temperatures.length
     ? Math.round(temperatures.reduce((sum, temperature) => sum + temperature, 0) / temperatures.length)
     : 0;
-  const averageLabel = `Avg ${averageTemperature}\u00B0`;
+  const averageLabel = `Avg ${averageTemperature}°`;
   const yAxisTicks = Array.from(
     new Set(hasRange ? [minTemperature, averageTemperature, maxTemperature] : [minTemperature]),
   ).sort((left, right) => left - right);
 
-  /* Compute a shared content width so chart and tiles always cover the
-     same time range and scroll together inside one container. */
   const n = normalizedData.length;
   const tileStripWidth = n * TILE_PX + Math.max(0, n - 1) * TILE_GAP + STRIP_PAD_R;
   const scrollContentWidth = Math.max(tileStripWidth, 480);
@@ -264,22 +261,21 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
         </span>
       </div>
 
-      {/* Single scroll container keeps chart + tiles in sync */}
       <div className="hourly-scroll-sync">
         <div className="hourly-scroll-content" style={{ minWidth: scrollContentWidth }}>
           <div className="hourly-chart-frame">
-            <LineChart width={scrollContentWidth} height={196} data={normalizedData} margin={{ top: 34, right: 30, left: 18, bottom: 14 }}>
+            <LineChart width={scrollContentWidth} height={196} data={normalizedData} margin={{ top: 34, right: 38, left: 28, bottom: 14 }}>
               <CartesianGrid
                 vertical={false}
                 stroke="rgba(124, 95, 74, 0.18)"
                 strokeDasharray="3 5"
               />
-              <XAxis dataKey="time" hide />
+              <XAxis dataKey="time" hide padding={{ left: 16, right: 16 }} />
               <YAxis
                 dataKey="temperature"
                 tickLine={{ stroke: 'rgba(124, 95, 74, 0.42)' }}
                 axisLine={{ stroke: 'rgba(124, 95, 74, 0.34)' }}
-                width={54}
+                width={62}
                 tick={{ fontSize: 12, fill: '#5f4634', fontWeight: 800 }}
                 ticks={yAxisTicks}
                 tickFormatter={formatChartTemperatureLabel}
@@ -288,7 +284,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
                   value: temperatureUnit === 'f' ? 'Temp (°F)' : 'Temp (°C)',
                   angle: -90,
                   position: 'insideLeft',
-                  offset: 0,
+                  offset: -4,
                   fill: '#6f503a',
                   fontSize: 11,
                   fontWeight: 900,
@@ -350,7 +346,7 @@ const HourlyForecastStrip: React.FC<HourlyForecastStripProps> = ({
                 <WeatherIcon rainProbability={hour.rainProbability} />
                 <span className="hourly-rain">{hour.rainProbability}%</span>
                 <span className="hourly-mm">{hour.rainMm.toFixed(1)} mm</span>
-                <span className="hourly-temp">{hour.temperature}&deg;</span>
+                <span className="hourly-temp">{hour.temperature}°</span>
               </div>
             ))}
           </div>
