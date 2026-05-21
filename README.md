@@ -300,6 +300,8 @@ The Vite frontend proxies `/api` requests to the backend at `http://127.0.0.1:30
 
 Backend variables live in `server/.env`.
 
+Frontend variables for production builds live in a root `.env` file or your hosting provider's project settings.
+
 Required:
 
 | Variable | Description |
@@ -332,6 +334,22 @@ Optional:
 | `CLIMATOLOGY_CACHE_TTL_MS` | In-memory climatology cache TTL. | `900000` |
 | `BACKFILL_START_DATE` | Default hourly backfill start date. | `2026-04-12` |
 | `BACKFILL_END_DATE` | Optional hourly backfill end date. | current date |
+
+Frontend:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `VITE_WEATHER_API_BASE` | Absolute or relative base URL for the weather API used by the frontend. Set this in Vercel when the backend is deployed separately. | `/api/v1/weather` |
+
+## Vercel Deployment Note
+
+This repo does not currently expose the Express backend as a Vercel serverless function by default. If you deploy only the Vite frontend to Vercel, `/api/v1/weather/*` will not exist unless you also deploy the backend separately or add Vercel API routing for the server.
+
+For a frontend-only Vercel deployment:
+
+1. Deploy the backend somewhere reachable over HTTPS.
+2. Set `VITE_WEATHER_API_BASE` in Vercel to that backend's weather base URL, for example `https://your-api.example.com/api/v1/weather`.
+3. Re-deploy the frontend.
 
 ## API Routes
 
@@ -372,6 +390,7 @@ Error responses use a standard envelope:
 The backend fetches OpenWeather forecast points, limits them to the next 24 hours, and applies a lightweight regression smoothing step before returning data to the client.
 
 The full algorithm note is in `docs/regression-algorithm.md`.
+The architecture diagram is in `docs/data-pipeline-visualization.md`.
 
 Sunshine windows are scored from:
 

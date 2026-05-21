@@ -3,6 +3,7 @@ import HourlyForecastStrip from "../components/HourlyForecastStrip";
 import { MOCK_WEATHER } from "../types/weather";
 import type { AccuracySummary, CurrentWeather, DailyOutlook, ForecastResponse, WeatherAlert } from "../types/weather";
 import { WEATHER_API_BASE } from "../utils/api";
+import { sanitizeCurrentWeather } from "../utils/weatherPayload";
 import { getWeatherHeroImage } from "../utils/weatherHeroImage";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
@@ -83,7 +84,7 @@ const formatMetricValue = (
   options: { divisor?: number; fallback?: string } = {},
 ) => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return options.fallback ?? "NaN";
+    return options.fallback ?? "--";
   }
 
   const normalizedValue = value / (options.divisor ?? 1);
@@ -248,7 +249,7 @@ export default function WeatherDashboard() {
           throw new Error(await getResponseErrorMessage(response, "Current weather request failed"));
         }
 
-        const weather = await response.json() as CurrentWeather;
+        const weather = sanitizeCurrentWeather(await response.json(), MOCK_WEATHER);
         const observedAt = new Date();
 
         if (!isMounted) return;
@@ -469,7 +470,7 @@ export default function WeatherDashboard() {
   const pressureDivisor = typeof currentWeather.pressure === "number" && currentWeather.pressure > 2000 ? 100 : 1;
   const updatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastUpdatedAt.getTime()) / 1000));
   const advisoryUpdatedSecondsAgo = Math.max(0, Math.floor((now.getTime() - lastAdvisoryUpdatedAt.getTime()) / 1000));
-  const windMetric = formatWind(hasLiveCurrentWeather ? currentWeather.windSpeed : undefined, windUnit);
+  const windMetric = formatWind(currentWeather.windSpeed, windUnit);
   const nightNow = isNightNow(now);
   const dewPointAgeSeconds = lastKnownDewPoint
     ? Math.max(0, Math.floor((now.getTime() - lastKnownDewPoint.observedAt.getTime()) / 1000))
@@ -488,19 +489,19 @@ export default function WeatherDashboard() {
     {
       icon: <i className="bi bi-droplet-fill" aria-hidden="true"></i>,
       label: "Humidity",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.humidity : undefined),
+      val: formatMetricValue(currentWeather.humidity),
       unit: "%",
     },
     {
       icon: <i className="bi bi-eye-fill" aria-hidden="true"></i>,
       label: "Visibility",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.visibility : undefined),
+      val: formatMetricValue(currentWeather.visibility),
       unit: "km",
     },
     {
       icon: <i className="bi bi-thermometer-half" aria-hidden="true"></i>,
       label: "Pressure",
-      val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.pressure : undefined, { divisor: pressureDivisor }),
+      val: formatMetricValue(currentWeather.pressure, { divisor: pressureDivisor }),
       unit: "hPa",
     },
     {
@@ -521,7 +522,7 @@ export default function WeatherDashboard() {
       : [{
           icon: <i className="bi bi-cloud-rain-fill" aria-hidden="true"></i>,
           label: "Rain Chance",
-          val: formatMetricValue(hasLiveCurrentWeather ? currentWeather.rainChance : undefined, { fallback: "Checking" }),
+          val: formatMetricValue(currentWeather.rainChance, { fallback: "Checking" }),
           unit: "%",
         }]),
   ];

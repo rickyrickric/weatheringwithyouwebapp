@@ -5,6 +5,7 @@ import { useBackgroundState } from "../hooks/useBackgroundState";
 import { OPTIMAL_WINDOWS, getTimeOfDay, MOCK_WEATHER } from "../types/weather";
 import type { CurrentWeather } from "../types/weather";
 import { WEATHER_API_BASE } from "../utils/api";
+import { sanitizeCurrentWeather } from "../utils/weatherPayload";
 import backgroundHome from "../assets/background_home.png";
 
 const CURRENT_WEATHER_REFRESH_MS = 5 * 60 * 1000;
@@ -59,7 +60,7 @@ const Home: FC = () => {
           throw new Error(await getResponseErrorMessage(response, "Current weather request failed"));
         }
 
-        const weather = await response.json() as CurrentWeather;
+        const weather = sanitizeCurrentWeather(await response.json(), MOCK_WEATHER);
         if (isMounted) {
           setCurrentWeather(weather);
         }
