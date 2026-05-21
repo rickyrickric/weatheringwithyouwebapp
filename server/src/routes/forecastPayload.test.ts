@@ -151,6 +151,53 @@ describe('forecast payload copy', () => {
     });
   });
 
+  it('includes UV index in current weather when OpenWeather supplies it', async () => {
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({
+        data: {
+          coord: { lat: 7.4478, lon: 125.8078 },
+          main: {
+            temp: 31,
+            feels_like: 36,
+            humidity: 72,
+            pressure: 1008,
+          },
+          wind: { speed: 2.5 },
+          clouds: { all: 18 },
+          weather: [{ description: 'few clouds', id: 801 }],
+          visibility: 10000,
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          current: {
+            uvi: 10,
+          },
+        },
+      });
+
+    const response = await request(createApp()).get('/api/v1/weather/current?city=Tagum%20UV%20City');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      temperature: 31,
+      uvIndex: 10,
+      weatherId: 801,
+    });
+    expect(vi.mocked(axios.get).mock.calls[1]).toMatchObject([
+      'https://api.openweathermap.org/data/3.0/onecall',
+      {
+        params: {
+          lat: 7.4478,
+          lon: 125.8078,
+          exclude: 'minutely,hourly,daily,alerts',
+          units: 'metric',
+          appid: 'test-key',
+        },
+      },
+    ]);
+  });
+
   it('restores the forecast from Supabase sync when OpenWeather fails', async () => {
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
