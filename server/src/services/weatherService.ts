@@ -8,6 +8,7 @@ import {
 import { ChartDataPoint, CurrentWeather, DailyOutlook, RainIntensity, WeatherAlert } from '../types';
 
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const OPENWEATHER_ONE_CALL_URL = 'https://api.openweathermap.org/data/3.0/onecall';
 const WEATHER_CACHE_TTL_MS = Number(process.env.WEATHER_CACHE_TTL_MS || 60 * 60 * 1000);
 const FORECAST_CACHE_VERSION = 'hourly-v2';
 const nodeRequire = createRequire(__filename);
@@ -26,6 +27,10 @@ type CircuitBreakerConstructor = new <TArgs extends unknown[], TResult>(
   fire(...args: TArgs): Promise<TResult>;
 };
 type OpenWeatherCurrentPayload = {
+  coord?: {
+    lat?: number;
+    lon?: number;
+  };
   main?: {
     temp?: number;
     feels_like?: number;
@@ -46,6 +51,11 @@ type OpenWeatherForecastEntry = {
 };
 type OpenWeatherForecastPayload = {
   list?: OpenWeatherForecastEntry[];
+};
+type OpenWeatherOneCallPayload = {
+  current?: {
+    uvi?: number;
+  };
 };
 type OpenWeatherForecastEntryWithTimestamp = OpenWeatherForecastEntry & {
   dt: number;
@@ -286,7 +296,10 @@ const calculateDewPoint = (temperature: unknown, humidity: unknown) => {
   return Number(((magnusB * gamma) / (magnusA - gamma)).toFixed(1));
 };
 
-const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather => {
+const mapOpenWeatherCurrent = (
+  data: OpenWeatherCurrentPayload,
+  uvIndex?: number,
+): CurrentWeather => {
   const windSpeedKmH = data.wind?.speed ? data.wind.speed * 3.6 : 0;
   const cloudCover = typeof data.clouds?.all === 'number' ? data.clouds.all : 0;
 
@@ -299,10 +312,47 @@ const mapOpenWeatherCurrent = (data: OpenWeatherCurrentPayload): CurrentWeather 
     condition: data.weather?.[0]?.description,
     visibility: data.visibility ? Math.round(data.visibility / 1000) : undefined,
     pressure: data.main?.pressure,
-    uvIndex: undefined,
+    uvIndex,
     dewPoint: calculateDewPoint(data.main?.temp, data.main?.humidity),
     weatherId: data.weather?.[0]?.id,
   };
+};
+
+const getUvLocationParams = (
+  data: OpenWeatherCurrentPayload,
+  params: OpenWeatherParams,
+): { lat: number; lon: number } | null => {
+  if (isFiniteNumber(data.coord?.lat) && isFiniteNumber(data.coord?.lon)) {
+    return { lat: data.coord.lat, lon: data.coord.lon };
+  }
+
+  const lat = Number(params.lat);
+  const lon = Number(params.lon);
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    return { lat, lon };
+  }
+
+  return null;
+};
+
+const fetchOpenWeatherUvIndex = async (
+  locationParams: { lat: number; lon: number },
+  apiKey: string,
+) => {
+  try {
+    const response = await axios.get(OPENWEATHER_ONE_CALL_URL, {
+      params: {
+        ...locationParams,
+        exclude: 'minutely,hourly,daily,alerts',
+        units: 'metric',
+        appid: apiKey,
+      },
+    });
+    const data = response.data as OpenWeatherOneCallPayload;
+    return isFiniteNumber(data.current?.uvi) ? data.current.uvi : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const hasUsableForecastTimestamp = (
@@ -532,7 +582,11 @@ export async function getCurrentWeatherResult(
     }
 
     const data = (await weatherBreaker.fire({ endpoint: 'weather', params })) as OpenWeatherCurrentPayload;
-    const weather = mapOpenWeatherCurrent(data);
+    const uvLocationParams = getUvLocationParams(data, params);
+    const uvIndex = uvLocationParams
+      ? await fetchOpenWeatherUvIndex(uvLocationParams, apiKey)
+      : undefined;
+    const weather = mapOpenWeatherCurrent(data, uvIndex);
     setCached(cacheKey, weather);
     return {
       weather,
